@@ -105,6 +105,9 @@ module = [
     "pydantic.*",
     "pydantic_settings.*",
     "pandas.*",
+    "torchgeo.*",
+    "torch.*",
+    "rasterio.*",
     "mkdocs_gen_files.*",
 ]
 ignore_missing_imports = true
