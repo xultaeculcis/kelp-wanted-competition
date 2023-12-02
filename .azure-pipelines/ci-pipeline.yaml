@@ -1,0 +1,24 @@
+trigger: none
+
+pr:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+
+  - bash: |
+      set -e
+      cd $(Build.SourcesDirectory)
+      conda env create -f ./.azure-pipelines/ci-env.yaml
+    displayName: Create Anaconda environment
+
+  - bash: |
+      set -e
+      source activate ci-env
+      pre-commit install
+      SKIP=pytest-check pre-commit run --all-files
+    displayName: Run simplified pre-commit hooks

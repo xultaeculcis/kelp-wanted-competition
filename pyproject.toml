@@ -1,0 +1,138 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = 'kelp-wanted-competition'
+description = 'Estimating the extent of Giant Kelp Forests by segmenting Landsat imagery'
+version = '0.0.1'
+requires-python = '>=3.10.0'
+authors = [
+    { name = 'xultaeculcis' }
+]
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Environment :: Console',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: System Administrators',
+    'License :: OSI Approved :: MIT',
+    'Operating System :: POSIX :: Linux',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+]
+dependencies = [
+    'typing_extensions; python_version < "3.12.0"'
+]
+license = { text = "MIT" }
+
+[project.urls]
+Homepage = 'https://github.com/xultaeculcis/kelp-wanted-competition'
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"]}
+
+[tool.black]
+color = true
+line-length = 120
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+combine_as_imports = true
+color_output = true
+
+[tool.pytest.ini_options]
+addopts = "--ignore data --ignore notebooks --ignore build_tools --ignore examples --ignore docs"
+asyncio_mode = "auto"
+markers = [
+    "unit: mark a test as a unit test.",
+    "integration: mark test as an integration test.",
+    "e2e: mark test as an end to end test.",
+]
+filterwarnings = [
+    "ignore::UserWarning",
+]
+
+[tool.check-manifest]
+ignore = [
+    ".binder/**",
+    ".all-contributorsrc",
+    ".coveragerc",
+    "examples/**",
+    "build_tools/**",
+    "__check_build/**",
+    "docs/**",
+    "Makefile",
+    "CODEOWNERS",
+    "CONTRIBUTING.md",
+    "*.yaml",
+    "*.yml"
+]
+
+[tool.mypy]
+exclude = [
+    'venv',
+    '\.venv',
+    '\.git',
+    '__pycache__',
+    'configs',
+    'data',
+    'logs',
+    'outputs',
+    'models',
+]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+warn_unused_configs = true
+plugins = "numpy.typing.mypy_plugin"
+
+[[tool.mypy.overrides]]
+module = [
+    "pydantic.*",
+    "pydantic_settings.*",
+    "pandas.*",
+    "mkdocs_gen_files.*",
+]
+ignore_missing_imports = true
+ignore_errors = true
+
+[tool.interrogate]
+ignore-init-module = true
+ignore_init_method = true
+exclude = ["tests", "docs", "site"]
+fail-under = 1
+omit-covered-files = true
+
+[tool.coverage.run]
+source = ['kelp']
+branch = true
+omit = ["tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+precision = 2
+exclude_lines = [
+    'pragma: no cover',
+    'raise NotImplementedError',
+    'if TYPE_CHECKING:',
+    '@overload',
+]
+
+[tool.pydocstyle]
+convention = "google"
+add-ignore = "D100,D101,D102,D103,D104,D105,D106,D107"

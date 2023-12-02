@@ -1,0 +1,16 @@
+# Flake8 and the corresponding tools cannot be configured via pyproject.toml
+[flake8]
+# Default flake8 3.5 ignored flags
+ignore = E121, E123, E126, E226, E24, E704, W503, W504, B024
+# inline with Black code formatter
+max-line-length = 120
+exclude =
+    data/*
+    logs/*
+    docs/*
+    tools/*
+
+extend-ignore =
+    # See https://github.com/PyCQA/pycodestyle/issues/373
+    E203
+max-complexity = 10

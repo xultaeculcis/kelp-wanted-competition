@@ -1,0 +1,85 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+        args: [ '--maxkb=1000' ]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+      - id: isort
+        name: isort (cython)
+        types: [ cython ]
+      - id: isort
+        name: isort (pyi)
+        types: [ pyi ]
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [ flake8-bugbear, flake8-print ]
+
+  - repo: https://github.com/fsouza/autoflake8
+    rev: v0.4.0
+    hooks:
+      - id: autoflake8
+        language_version: python3
+        args: [
+          '--in-place',
+        ]
+
+  - repo: https://github.com/mgedmin/check-manifest
+    rev: "0.49"
+    hooks:
+      - id: check-manifest
+        stages: [ manual ]
+
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.7.0
+    hooks:
+      - id: nbqa-black
+        additional_dependencies: [ black==23.3.0 ]
+      - id: nbqa-isort
+        args: [ "-p=sr" ]
+        additional_dependencies: [ isort==5.12.0 ]
+      - id: nbqa-flake8
+        args: [ "--extend-ignore=E402,E203" ]
+        additional_dependencies: [ flake8==6.0.0 ]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.4.1"
+    hooks:
+      - id: mypy
+        # Use pyproject.toml if possible instead of adding command line parameters here
+        args: []
+        additional_dependencies:
+          # Type stubs
+          - pytest
+          - types-all
+
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest -v
+        language: system
+        pass_filenames: false
+        always_run: true
