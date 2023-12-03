@@ -107,7 +107,13 @@ module = [
     "pandas.*",
     "torchgeo.*",
     "torch.*",
+    "pytorch_lightning.*",
+    "kornia.*",
+    "dask.*",
+    "distributed.*",
     "rasterio.*",
+    "matplotlib.*",
+    "seaborn.*",
     "mkdocs_gen_files.*",
 ]
 ignore_missing_imports = true

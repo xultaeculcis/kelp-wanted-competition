@@ -1,3 +1,3 @@
-from kelp.consts import directories, logging, splits
+from kelp.consts import classes, directories, logging, splits
 
-__all__ = ["directories", "logging", "splits"]
+__all__ = ["classes", "directories", "logging", "splits"]
