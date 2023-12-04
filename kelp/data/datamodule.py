@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -13,75 +12,11 @@ from torch.utils.data import DataLoader
 from kelp.data.dataset import KelpForestSegmentationDataset
 
 
-@dataclass
-class ExtraBandsConfig:
-    adjusted_transformed_soil_adjusted_vegetation_index: bool = False
-    aerosol_free_vegetation_index: bool = False
-    ashburn_vegetation_index: bool = False
-    atmospherically_resistant_vegetation_index: bool = False
-    blue_wide_dynamic_range_vegetation_index: bool = False
-    chlorophyll_index_green: bool = False
-    chlorophyll_vegetation_index: bool = False
-    coloration_index: bool = False
-    diff_nir_green: bool = False
-    diff_vegetation_index_mss: bool = False
-    enhanced_vegetation_index: bool = False
-    enhanced_vegetation_index_2: bool = False
-    enhanced_vegetation_index_3: bool = False
-    global_atmospherically_resistant_vegetation_index: bool = False
-    green_blue_nd_vegetation_index: bool = False
-    green_ndvi: bool = False
-    green_red_ndvi: bool = False
-    global_vegetation_moisture_index: bool = False
-    hue: bool = False
-    infrared_percentage_vegetation_index: bool = False
-    intensity: bool = False
-    log_ratio: bool = False
-    mcrig: bool = False
-    mid_infrared_vegetation_index: bool = False
-    modified_ndwi: bool = False
-    modified_chlorophyll_absorption_ratio_index: bool = False
-    modified_simple_ratio_nir_red: bool = False
-    modified_soil_adjusted_vegetation_index: bool = False
-    nonlinear_vegetation_index: bool = False
-    ndvi: bool = False
-    ndvi_water_mask: bool = False
-    ndwi: bool = False
-    ndwi_water_mask: bool = False
-    norm_green: bool = False
-    norm_nir: bool = False
-    norm_blue: bool = False
-    pan_ndvi: bool = False
-    ratio_green_red: bool = False
-    ratio_nir_green: bool = False
-    ratio_nir_red: bool = False
-    ratio_nir_swir: bool = False
-    ratio_swir_nir: bool = False
-    red_blue_ndvi: bool = False
-    sqrt_nir_red: bool = False
-    transformed_ndvi: bool = False
-    transformed_vegetation_index: bool = False
-    visible_atmospherically_resistant_index_green: bool = False
-    wide_dynamic_range_vegetation_index: bool = False
-    dem_water_mask: bool = False
-
-
 class KelpForestDataModule(pl.LightningDataModule):
-    bands = [
-        "swir",
-        "nir",
-        "red",
-        "green",
-        "blue",
-        "cloud_mask",
-        "dem",
-    ]
-
     def __init__(
         self,
         root_dir: Path,
         metadata_fp: Path,
-        extra_bands_config: ExtraBandsConfig,
         batch_size: int = 32,
         num_workers: int = 0,
         **kwargs: Any,
@@ -89,7 +24,6 @@ class KelpForestDataModule(pl.LightningDataModule):
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.metadata_fp = metadata_fp
-        self.extra_bands_config = extra_bands_config
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.mean, self.std = self.resolve_normalization_stats()
