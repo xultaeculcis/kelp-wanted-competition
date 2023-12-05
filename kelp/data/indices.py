@@ -627,7 +627,7 @@ INDICES = {
     "SQRTNIRR": AppendSQRTNIRR(index_nir=1, index_red=2),
     "TNDVI": AppendTNDVI(index_nir=1, index_red=2),
     "TVI": AppendTVI(index_red=2, index_green=3),
-    "VARIgreen": AppendVARIGreen(index_red=2, index_green=3, index_blue=4),
+    "VARIGreen": AppendVARIGreen(index_red=2, index_green=3, index_blue=4),
     "WDRVI": AppendWDRVI(index_nir=1, index_red=2),
     "DEMWM": AppendDEMWM(index_dem=7),
 }
