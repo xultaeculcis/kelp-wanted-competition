@@ -1,4 +1,6 @@
+# mypy: disable-error-code="override"
 import abc
+from typing import Any
 
 import torch
 from torch import Tensor, nn
@@ -7,585 +9,275 @@ from torchgeo.transforms import AppendNDVI, AppendNDWI
 _EPSILON = 1e-10
 
 
-class AppendIndex(nn.Module):
-    def __init__(self) -> None:
+class AppendIndex(nn.Module, abc.ABC):
+    def __init__(self, **band_kwargs: Any) -> None:
         super().__init__()
+        assert all(k.startswith("index_") for k in band_kwargs), (
+            "Passed keyword arguments must start with 'index_' followed by band name! "
+            f"Found following keys: {list(band_kwargs.keys())}"
+        )
         self.dim = -3
+        self.band_kwargs = band_kwargs
 
-    def append_index(self, sample: dict[str, torch.Tensor], index: torch.Tensor) -> dict[str, torch.Tensor]:
+    def _append_index(self, sample: dict[str, torch.Tensor], index: torch.Tensor) -> dict[str, torch.Tensor]:
         index = index.unsqueeze(self.dim)
         sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
         return sample
 
-
-class NirRedBandIndex(nn.Module, abc.ABC):
-    def __init__(self, index_nir: int, index_red: int) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
     @abc.abstractmethod
-    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+    def _compute_index(self, **kwargs: Any) -> Tensor:
         pass
 
     def forward(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
         if "image" in sample:
-            index = self._compute_index(
-                nir=sample["image"][..., self.index_nir, :, :],
-                red=sample["image"][..., self.index_red, :, :],
-            )
+            compute_kwargs: dict[str, Tensor] = {
+                k.replace("index_", ""): sample["image"][..., v, :, :] for k, v in self.band_kwargs.items()
+            }
+            index = self._compute_index(**compute_kwargs)
             self.append_index(sample=sample, index=index)
-
         return sample
 
 
-class AppendATSAVI(NirRedBandIndex):
+class AppendATSAVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return 1.22 * (nir - 1.22 * red - 0.03) / (1.22 * nir + red - 1.22 * 0.03 + 0.08 * (1 + 1.22 * 1.22))
+        return 1.22 * (nir - 1.22 * red - 0.03) / (1.22 * nir + red - 1.22 * 0.03 + 0.08 * (1 + 1.22**2))
 
 
 class AppendAFRI1600(AppendIndex):
-    def __init__(self, index_swir: int, index_nir: int) -> None:
-        super().__init__()
-        self.index_swir = index_swir
-        self.index_nir = index_nir
-
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
         return nir - 0.66 * (swir / (nir + 0.66 * swir))
 
-    def forward(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
-        if "image" in sample:
-            index = self._compute_index(
-                swir=sample["image"][..., self.index_swir, :, :],
-                nir=sample["image"][..., self.index_nir, :, :],
-            )
-            self.append_index(sample=sample, index=index)
 
-        return sample
-
-
-class AppendAVI(NirRedBandIndex):
+class AppendAVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
         return 2 * nir - red
 
 
-class AppendARVI(NirRedBandIndex):
+class AppendARVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
         return -0.18 + 1.17 * ((nir - red) / (nir + red))
 
 
 class AppendBWDRVI(AppendIndex):
-    def __init__(self, index_swir: int, index_nir: int) -> None:
-        super().__init__()
-        self.index_swir = index_swir
-        self.index_nir = index_nir
-
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
         return nir - 0.66 * (swir / (nir + 0.66 * swir))
 
-    def forward(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
-        if "image" in sample:
-            index = self._compute_index(
-                swir=sample["image"][..., self.index_swir, :, :],
-                nir=sample["image"][..., self.index_nir, :, :],
-            )
-            self.append_index(sample=sample, index=index)
-
-        return sample
-
-
-class AppendBWDRV:
-    def __init__(self, index_nir: int, index_blue: int) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_blue = index_blue
-
-
-class AppendClGreen:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-
-
-class AppendCVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendDEMWM:
-    def __init__(self, index_dem: int) -> None:
-        super().__init__()
-        self.index_dem = index_dem
-
-
-class AppendWDRVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendVARIGreen:
-    def __init__(
-        self,
-        index_red: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_red = index_red
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendTVI:
-    def __init__(
-        self,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendTNDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendSQRTNIRR:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendRBNDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_blue = index_blue
-
-
-class AppendSRSWIRNIR:
-    def __init__(
-        self,
-        index_swir: int,
-        index_nir: int,
-    ) -> None:
-        super().__init__()
-        self.index_swir = index_swir
-        self.index_nir = index_nir
-
-
-class AppendSRNIRSWIR:
-    def __init__(
-        self,
-        index_swir: int,
-        index_nir: int,
-    ) -> None:
-        super().__init__()
-        self.index_swir = index_swir
-        self.index_nir = index_nir
-
-
-class AppendSRNIRR:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendSRNIRG:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-
-
-class AppendSRGR:
-    def __init__(
-        self,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendPNDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendNormR:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendNormNIR:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendNormG:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendNDWIWM:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-
-
-class AppendNDVIWM:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendNLI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendMSAVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendMSRNirRed:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendMCARI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendMVI:
-    def __init__(
-        self,
-        index_swir: int,
-        index_nir: int,
-    ) -> None:
-        super().__init__()
-        self.index_swir = index_swir
-        self.index_nir = index_nir
-
-
-class AppendMCRIG:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendLogR:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendH:
-    def __init__(
-        self,
-        index_red: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_red = index_red
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendI:
-    def __init__(
-        self,
-        index_red: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_red = index_red
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendIPVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-
-
-class AppendGVMI:
-    def __init__(
-        self,
-        index_swir: int,
-        index_nir: int,
-    ) -> None:
-        super().__init__()
-        self.index_swir = index_swir
-        self.index_nir = index_nir
-
-
-class AppendGBNDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendGRNDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendGNDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-
-
-class AppendGARI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_green: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_green = index_green
-        self.index_blue = index_blue
-
-
-class AppendEVI22:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendEVI2:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendEVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-        self.index_blue = index_blue
-
-
-class AppendDVIMSS:
-    def __init__(
-        self,
-        index_nir: int,
-        index_red: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_red = index_red
-
-
-class AppendGDVI:
-    def __init__(
-        self,
-        index_nir: int,
-        index_green: int,
-    ) -> None:
-        super().__init__()
-        self.index_nir = index_nir
-        self.index_green = index_green
-
-
-class AppendCI:
-    def __init__(
-        self,
-        index_red: int,
-        index_blue: int,
-    ) -> None:
-        super().__init__()
-        self.index_red = index_red
-        self.index_blue = index_blue
+
+class AppendBWDRV(AppendIndex):
+    def _compute_index(self, nir: Tensor, blue: Tensor) -> Tensor:
+        return (0.1 * nir - blue) / (0.1 * nir + blue)
+
+
+class AppendClGreen(AppendIndex):
+    def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
+        return nir / green - 1
+
+
+class AppendCVI(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return nir * (red / (green**2))
+
+
+class AppendDEMWM(AppendIndex):
+    def _compute_index(self, dem: Tensor) -> Tensor:
+        return torch.maximum(dem, torch.zeros_like(dem))
+
+
+class AppendWDRVI(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return (0.1 * nir - red) / (0.1 * nir + red)
+
+
+class AppendVARIGreen(AppendIndex):
+    def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (green - red) / (green + red - blue)
+
+
+class AppendTVI(AppendIndex):
+    def _compute_index(self, red: Tensor, green: Tensor) -> Tensor:
+        return torch.sqrt(((red - green) / (red + green)) + 0.5)
+
+
+class AppendTNDVI(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return torch.sqrt((nir - red) / (nir + red) + 0.5)
+
+
+class AppendSQRTNIRR(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return torch.sqrt(nir / red)
+
+
+class AppendRBNDVI(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor, blue: Tensor) -> Tensor:
+        return (nir - (red + blue)) / (nir + red + blue)
+
+
+class AppendSRSWIRNIR(AppendIndex):
+    def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
+        return swir / nir
+
+
+class AppendSRNIRSWIR(AppendIndex):
+    def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
+        return nir / swir
+
+
+class AppendSRNIRR(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return nir / red
+
+
+class AppendSRNIRG(AppendIndex):
+    def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
+        return nir / green
+
+
+class AppendSRGR(AppendIndex):
+    def _compute_index(self, red: Tensor, green: Tensor) -> Tensor:
+        return green / red
+
+
+class AppendPNDVI(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (nir - (red + green + blue)) / (nir + red + green + blue)
+
+
+class AppendNormR(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return red / (nir + red + green)
+
+
+class AppendNormNIR(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return nir / (nir + red + green)
+
+
+class AppendNormG(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return green / (nir + red + green)
+
+
+class AppendNDWIWM(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return torch.maximum((nir - red) / (nir + red), torch.zeros_like(nir))
+
+
+class AppendNDVIWM(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendNLI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendMSAVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendMSRNirRed(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendMCARI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendMVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendMCRIG(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendLogR(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendH(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendIPVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendGVMI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendGBNDVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendGRNDVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendGNDVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendGARI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendEVI22(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendEVI2(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendEVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendDVIMSS(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendGDVI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
+
+
+class AppendCI(AppendIndex):
+    def _compute_index(self, **kwargs: Any) -> Tensor:
+        pass
 
 
 INDICES = {
-    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),
-    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),
-    "AVI": AppendAVI(index_nir=1, index_red=2),
-    "ARVI": AppendARVI(index_nir=1, index_red=2),
+    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),  #
+    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),  #
+    "AVI": AppendAVI(index_nir=1, index_red=2),  #
+    "ARVI": AppendARVI(index_nir=1, index_red=2),  #
     "BWDRVI": AppendBWDRV(index_nir=1, index_blue=4),
     "ClGreen": AppendClGreen(index_nir=1, index_green=3),
     "CVI": AppendCVI(index_nir=1, index_red=2, index_green=3),
