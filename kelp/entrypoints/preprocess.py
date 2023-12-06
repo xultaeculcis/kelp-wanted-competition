@@ -4,6 +4,7 @@ from pathlib import Path
 import rasterio
 import torch
 from rasterio.errors import NotGeoreferencedWarning
+from tqdm import tqdm
 
 from kelp import consts
 from kelp.data.indices import INDICES
@@ -18,7 +19,7 @@ def process_single_image(fp: Path, output_dir: Path) -> None:
     with rasterio.open(fp) as src:
         sample = {"image": torch.from_numpy(src.read()).unsqueeze(0).float()}
 
-    for _, transform in INDICES.items():
+    for _, transform in tqdm(INDICES.items(), desc=f"Calculating indices for {fp.name}"):
         sample = transform(sample)
     _logger.info(f"Processed image: {fp.as_posix()}, shape: {sample['image'].shape}")
 

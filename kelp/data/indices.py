@@ -34,7 +34,7 @@ class AppendIndex(nn.Module, abc.ABC):
                 k.replace("index_", ""): sample["image"][..., v, :, :] for k, v in self.band_kwargs.items()
             }
             index = self._compute_index(**compute_kwargs)
-            self.append_index(sample=sample, index=index)
+            self._append_index(sample=sample, index=index)
         return sample
 
 
@@ -159,118 +159,118 @@ class AppendNormG(AppendIndex):
 
 
 class AppendNDWIWM(AppendIndex):
+    def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
+        return torch.maximum((nir - green) / (nir + green), torch.zeros_like(nir))
+
+
+class AppendNDVIWM(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
         return torch.maximum((nir - red) / (nir + red), torch.zeros_like(nir))
 
 
-class AppendNDVIWM(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
-
-
 class AppendNLI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return (nir**2 - red) / (nir**2 + red)
 
 
 class AppendMSAVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return (2 * nir + 1 - torch.sqrt((2 * nir + 1) ** 2 - 8 * (nir - red))) / 2
 
 
 class AppendMSRNirRed(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return ((nir / red) - 1) / torch.sqrt((nir / red) + 1)
 
 
 class AppendMCARI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return ((nir - red) - 0.2 * (nir - green)) * (nir / red)
 
 
 class AppendMVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
+        return nir / swir
 
 
 class AppendMCRIG(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (blue**-1 - green**-1) * nir
 
 
 class AppendLogR(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return torch.log(nir / red)
 
 
 class AppendH(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return torch.arctan(((2 * red - green - blue) / 30.5) * (green - blue))
 
 
 class AppendI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (1 / 30.5) * (red + green + blue)
 
 
 class AppendIPVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return (nir / (nir + red) / 2) * (((red - green) / red + green) + 1)
 
 
 class AppendGVMI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
+        return ((nir + 0.1) - (swir + 0.02)) / ((nir + 0.1) + (swir + 0.02))
 
 
 class AppendGBNDVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (nir - (green + blue)) / (nir + green + blue)
 
 
 class AppendGRNDVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
+        return (nir - (red + green)) / (nir + red + green)
 
 
 class AppendGNDVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
+        return (nir - green) / (nir + green)
 
 
 class AppendGARI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (nir - (green - (blue - red))) / (nir - (green + (blue - red)))
 
 
 class AppendEVI22(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return 2.5 * (nir - red) / (nir + 2.4 * red + 1)
 
 
 class AppendEVI2(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return 2.4 * (nir - red) / (nir + red + 1)
 
 
 class AppendEVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor, blue: Tensor) -> Tensor:
+        return 2.5 * ((nir - red) / ((nir + 6 * red - 7.5 * blue) + 1))
 
 
 class AppendDVIMSS(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return 2.4 * nir - red
 
 
 class AppendGDVI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
+        return nir - green
 
 
 class AppendCI(AppendIndex):
-    def _compute_index(self, **kwargs: Any) -> Tensor:
-        pass
+    def _compute_index(self, red: Tensor, blue: Tensor) -> Tensor:
+        return (red - blue) / red
 
 
 INDICES = {
@@ -289,8 +289,8 @@ INDICES = {
     "EVI22": AppendEVI22(index_nir=1, index_red=2),
     "GARI": AppendGARI(index_nir=1, index_red=2, index_green=3, index_blue=4),
     "GNDVI": AppendGNDVI(index_nir=1, index_green=3),
-    "GRNDVI": AppendGRNDVI(index_nir=1, index_green=3, index_blue=4),
-    "GBNDVI": AppendGBNDVI(index_nir=1, index_red=2),
+    "GRNDVI": AppendGRNDVI(index_nir=1, index_red=2, index_green=3),
+    "GBNDVI": AppendGBNDVI(index_nir=1, index_green=3, index_blue=4),
     "GVMI": AppendGVMI(index_swir=0, index_nir=1),
     "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),
     "I": AppendI(index_red=2, index_green=3, index_blue=4),
