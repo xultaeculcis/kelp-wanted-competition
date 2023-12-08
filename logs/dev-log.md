@@ -8,7 +8,8 @@ Checklist:
 - [ ] Log confusion matrix
 - [ ] Log segmentation metrics
 - [ ] Unet baseline with pre-trained ResNet-50 backbone
-- [ ] Pre-process data and add extra channels: NDVI, NDWI, EVI, water masks from different sources (NDVI, DEM) etc.
+- [x] Pre-process data and add extra channels: NDVI, NDWI, EVI, water masks from different sources (NDVI, DEM) etc.
+- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
 - [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [ ] Use metadata csv as lookup for the dataset
 - [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
@@ -43,3 +44,13 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 Findings:
 * DEM will need to be clipped due to nan values -> use `np.maximum(0, arr)`
 * Cloud mask is actually the QA mask - it also contains faulty pixels
+
+# 2023-12-08
+
+* -32k pixels are also in the main bands not just the DEM layer -> substitute them with zeroes
+* Spent last few days implementing spectral indices for Landsat scenes
+* Standardization will not work due to data corruption issues - clouds, saturated pixels, striping etc
+* Mask indices using QA band after computation
+* Clamp values using quantiles (1-99)
+* Add option to use min-max normalize using quantiles (1-99)
+* WIP. Calculate stats using masked and clamped data

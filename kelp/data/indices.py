@@ -42,11 +42,11 @@ class AppendIndex(nn.Module, abc.ABC):
         return index
 
     def _maybe_normalize(self, index: Tensor) -> Tensor:
-        if not self.normalize:
-            return index
         min_val = torch.nanquantile(index, self.normalize_percentile_low)
         max_val = torch.nanquantile(index, self.normalize_percentile_high)
         index = torch.clamp(index, min_val, max_val)
+        if not self.normalize:
+            return index
         return (index - min_val) / (max_val - min_val)
 
     @abc.abstractmethod
