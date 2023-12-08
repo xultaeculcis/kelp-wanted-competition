@@ -15,7 +15,7 @@ from kelp import consts
 
 
 class KelpForestSegmentationDataset(VisionDataset):
-    classes = consts.classes.CLASSES
+    classes = consts.data.CLASSES
     cmap = ListedColormap(["black", "lightseagreen"])
 
     def __init__(
@@ -23,7 +23,7 @@ class KelpForestSegmentationDataset(VisionDataset):
         data_dir: Path,
         metadata_fp: Path,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        split: str = consts.splits.TRAIN,
+        split: str = consts.data.TRAIN,
     ) -> None:
         self.data_dir = data_dir
         self.metadata = pd.read_csv(metadata_fp)
