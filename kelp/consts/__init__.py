@@ -1,3 +1,3 @@
-from kelp.consts import directories, logging
+from kelp.consts import data, directories, logging
 
-__all__ = ["directories", "logging"]
+__all__ = ["data", "directories", "logging"]
