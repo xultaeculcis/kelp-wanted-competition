@@ -59,3 +59,4 @@ Findings:
 
 * Finally, computed stats for whole dataset
 * Added code to find images with a lot of invalid values in the QA mask
+* Added sample plotting logic on `Dataset` class

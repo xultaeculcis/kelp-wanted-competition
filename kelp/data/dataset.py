@@ -15,6 +15,8 @@ from torch import Tensor
 from torchgeo.datasets import VisionDataset
 
 from kelp import consts
+from kelp.data import indices
+from kelp.data.plotting import plot_sample
 
 warnings.filterwarnings(
     action="ignore",
@@ -38,6 +40,7 @@ class KelpForestSegmentationDataset(VisionDataset):
         self.transforms = transforms
         self.split = split
         self.image_fps, self.mask_fps = self.resolve_file_paths()
+        self.append_ndvi = indices.INDICES["NDVI"]
 
     def __len__(self) -> int:
         return len(self.image_fps)
@@ -49,7 +52,10 @@ class KelpForestSegmentationDataset(VisionDataset):
         with rasterio.open(self.mask_fps[index]) as src:
             target = torch.from_numpy(src.read())
 
-        sample = {"image": img, "mask": target}
+        sample = {"image": img, "mask": target, "tile_id": self.image_fps[index].stem.split("_")[0]}
+
+        # Always append NDVI index
+        sample = self.append_ndvi(sample)
 
         if self.transforms:
             sample = self.transforms(sample)
@@ -86,29 +92,14 @@ class KelpForestSegmentationDataset(VisionDataset):
 
         """
         image = sample["image"].numpy()
-        mask = sample["mask"].numpy()
+        mask = sample["mask"].squeeze().numpy()
+        predictions = sample["prediction"].numpy() if "predictions" in sample else None
 
-        num_panels = 2
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            predictions = sample["prediction"].numpy()
-            num_panels += 1
-
-        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
-        axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(mask, cmap=self.cmap, interpolation="none")
-        axs[1].axis("off")
-        if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
-
-        if showing_predictions:
-            axs[2].imshow(predictions, cmap=self.cmap, interpolation="none")
-            axs[2].axis("off")
-            if show_titles:
-                axs[2].set_title("Predictions")
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
+        fig = plot_sample(
+            input_arr=image,
+            target_arr=mask,
+            predictions_arr=predictions,
+            show_titles=show_titles,
+            suptitle=suptitle or f"Tile ID: {sample['tile_id']}",
+        )
         return fig

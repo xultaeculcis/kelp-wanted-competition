@@ -1,3 +1,5 @@
+from matplotlib.colors import ListedColormap
+
 TRAIN = "train"
 VAL = "val"
 TEST = "test"
@@ -11,3 +13,5 @@ KELP = "kelp"
 CLASSES = [BACKGROUND, KELP]
 
 ORIGINAL_BANDS = ["SWIR", "NIR", "R", "G", "B", "QA", "DEM"]
+
+CMAP = ListedColormap(["black", "lightseagreen"])

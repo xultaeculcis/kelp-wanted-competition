@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+
 from kelp.core.configs import ConfigBase
 from kelp.data.datamodule import KelpForestDataModule
 from kelp.utils.logging import get_logger
@@ -58,11 +60,9 @@ def main() -> None:
         num_workers=cfg.num_workers,
     )
     dm.setup()
-
-    for _, batch in enumerate(dm.train_dataloader()):
-        _logger.info(batch["image"].shape)
-        _logger.info(batch["mask"].shape)
-        break
+    fig = dm.plot(dm.train_dataset[1])
+    plt.show()
+    plt.close(fig)
 
 
 if __name__ == "__main__":

@@ -11,19 +11,19 @@ import numpy as np
 import pandas as pd
 import rasterio
 import seaborn as sns
-from matplotlib.colors import ListedColormap
 from PIL import Image
 from pydantic import BaseModel
 from rasterio.errors import NotGeoreferencedWarning
 from tqdm import tqdm
 
 from kelp.core.configs import ConfigBase
+from kelp.data.normalization import min_max_normalize
+from kelp.data.plotting import plot_sample
 from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(action="ignore", category=NotGeoreferencedWarning, message="Dataset has no geotransform")
 
 _logger = get_logger(__name__)
-_EPSILON = 1e-10
 
 
 class SatelliteImageStats(BaseModel):
@@ -70,15 +70,6 @@ def parse_args() -> PreProcessingConfig:
     return cfg
 
 
-def min_max_normalize(arr: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
-    vmin = np.nanmin(arr, axis=(0, 1))
-    vmax = np.nanmax(arr, axis=(0, 1))
-    arr = arr.clip(0, vmax)
-    arr = (arr - vmin) / (vmax - vmin + _EPSILON)
-    arr = arr.clip(0, 1)
-    return arr
-
-
 def plot_single_image(tile_id_split_tuple: tuple[str, str], data_dir: Path, output_dir: Path) -> None:
     tile_id, split = tile_id_split_tuple
     out_dir = output_dir / "plots"
@@ -88,52 +79,14 @@ def plot_single_image(tile_id_split_tuple: tuple[str, str], data_dir: Path, outp
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
         input_arr = src.read()
 
-    tci = np.rollaxis(input_arr[[2, 3, 4]], 0, 3)
-    tci = min_max_normalize(tci)
-
-    false_color = np.rollaxis(input_arr[[1, 2, 3]], 0, 3)
-    false_color = min_max_normalize(false_color)
-
-    agriculture = np.rollaxis(input_arr[[0, 1, 2]], 0, 3)
-    agriculture = min_max_normalize(agriculture)
-
-    ndvi = (input_arr[1] - input_arr[2]) / (input_arr[1] + input_arr[2])
-
-    qa_mask = input_arr[5]
-
-    dem = input_arr[6]
-    dem = min_max_normalize(dem)
-
-    fig, axes = plt.subplots(nrows=1, ncols=7 if split != "test" else 6, figsize=(20, 4), sharey=True)
-    axes[0].imshow(tci)
-    axes[0].set_xlabel("True Color (red, green, blue)")
-
-    axes[1].imshow(false_color)
-    axes[1].set_xlabel("False Color (nir, red, green)")
-
-    axes[2].imshow(agriculture)
-    axes[2].set_xlabel("Agriculture (swir, nir, red)")
-
-    axes[3].imshow(ndvi, cmap="RdYlGn", vmin=-1, vmax=1)
-    axes[3].set_xlabel("NDVI")
-
-    axes[4].imshow(dem, cmap="viridis")
-    axes[4].set_xlabel("DEM")
-
-    axes[5].imshow(qa_mask, cmap="gray", interpolation=None)
-    axes[5].set_xlabel("QA Mask")
-
+    target_arr: np.ndarray | None = None  # type: ignore[type-arg]
     if split != "test":
         with rasterio.open(data_dir / split / "masks" / f"{tile_id}_kelp.tif") as src:
             target_arr = src.read(1)
 
-        axes[6].imshow(target_arr, cmap=ListedColormap(["black", "lightseagreen"]), interpolation=None)
-        axes[6].set_xlabel("Kelp Mask")
-
-    plt.suptitle(f"Tile ID = {tile_id}")
-    plt.tight_layout()
+    fig = plot_sample(input_arr=input_arr, target_arr=target_arr, suptitle=f"Tile ID = {tile_id}")
     plt.savefig(out_dir / f"{tile_id}_plot.png", dpi=500)
-    plt.close()
+    plt.close(fig)
 
 
 def extract_composite(

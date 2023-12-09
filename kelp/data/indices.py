@@ -4,7 +4,6 @@ from typing import Any
 
 import torch
 from torch import Tensor, nn
-from torchgeo.transforms import AppendNDVI, AppendNDWI
 
 _EPSILON = 1e-10
 
@@ -63,6 +62,16 @@ class AppendIndex(nn.Module, abc.ABC):
             index = self._maybe_normalize(index)
             self._append_index(sample=sample, index=index)
         return sample
+
+
+class AppendNDVI(AppendIndex):
+    def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
+        return (nir - red) / (nir + red + _EPSILON)
+
+
+class AppendNDWI(AppendIndex):
+    def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
+        return (nir - green) / (nir + green + _EPSILON)
 
 
 class AppendATSAVI(AppendIndex):
