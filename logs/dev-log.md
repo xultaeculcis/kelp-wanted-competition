@@ -54,3 +54,8 @@ Findings:
 * Clamp values using quantiles (1-99)
 * Add option to use min-max normalize using quantiles (1-99)
 * WIP. Calculate stats using masked and clamped data
+
+# 2023-12-09
+
+* Finally, computed stats for whole dataset
+* Added code to find images with a lot of invalid values in the QA mask

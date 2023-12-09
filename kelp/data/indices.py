@@ -13,7 +13,7 @@ class AppendIndex(nn.Module, abc.ABC):
     def __init__(
         self,
         index_qa: int = 5,
-        normalize: bool = True,
+        normalize: bool = False,
         normalize_percentile_low: float = 0.01,
         normalize_percentile_high: float = 0.99,
         **band_kwargs: Any,

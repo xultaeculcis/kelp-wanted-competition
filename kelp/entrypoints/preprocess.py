@@ -1,10 +1,13 @@
 import argparse
+import json
 import warnings
 from pathlib import Path
 
+import dask.bag
 import numpy as np
 import rasterio
 import torch
+from dask.diagnostics import ProgressBar
 from rasterio.errors import NotGeoreferencedWarning
 from tqdm import tqdm
 
@@ -12,12 +15,13 @@ from kelp import consts
 from kelp.core.configs import ConfigBase
 from kelp.data import indices
 from kelp.data.indices import INDICES
-from kelp.utils.logging import get_logger
+from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(
     action="ignore",
     category=NotGeoreferencedWarning,
 )
+ProgressBar().register()
 _logger = get_logger(__name__)
 
 
@@ -48,9 +52,11 @@ def parse_args() -> StatisticsCalculationConfig:
     return cfg
 
 
+@timed
 def calculate_band_statistics(
     image_paths: list[Path],
     band_names: list[str],
+    output_dir: Path,
 ) -> dict[str, dict[str, float]]:
     # Initialize statistics arrays
     num_bands = len(band_names)
@@ -78,8 +84,12 @@ def calculate_band_statistics(
             raise ValueError(f"Image at {image_path} does not have {num_bands} bands")
 
         # Update min and max
-        min_per_band = np.minimum(min_per_band, np.nanmin(image, axis=(1, 2)))
-        max_per_band = np.maximum(max_per_band, np.nanmax(image, axis=(1, 2)))
+        current_image_min = np.nanmin(image, axis=(1, 2))
+        current_image_min = np.where(np.isnan(current_image_min), np.inf, current_image_min)
+        current_image_max = np.nanmax(image, axis=(1, 2))
+        current_image_max = np.where(np.isnan(current_image_max), -np.inf, current_image_max)
+        min_per_band = np.minimum(min_per_band, current_image_min)
+        max_per_band = np.maximum(max_per_band, current_image_max)
 
         # Update sum and sum of squares for mean and std calculation
         sum_per_band += np.nansum(image, axis=(1, 2))
@@ -102,16 +112,46 @@ def calculate_band_statistics(
         for idx, band_name in enumerate(band_names)
     }
 
+    for band, band_stats in stats.items():
+        if band.endswith("WM") or band == "QA":
+            band_stats["min"] = 0.0
+            band_stats["max"] = 1.0
+            band_stats["mean"] = 0.0
+            band_stats["std"] = 1.0
+
+    stats_str = json.dumps(stats, indent=4)
+    _logger.info("Per band statistics calculated. Review and adjust!")
+    _logger.info(stats_str)
+    (output_dir / "stats.json").write_text(stats_str)
+
     return stats
+
+
+def verify_qa_band_for_single_image(fp: Path) -> tuple[bool, float]:
+    with rasterio.open(fp) as src:
+        qa_band = src.read(6)
+    nan_vals = qa_band.sum()
+    all_pixels = np.prod(qa_band.shape)
+    return nan_vals >= (all_pixels / 2), nan_vals.item() / all_pixels.item()
+
+
+@timed
+def find_nan_images(image_paths: list[Path], output_dir: Path) -> None:
+    results = dask.bag.from_sequence(image_paths).map(verify_qa_band_for_single_image).compute()
+    nan_imgs = [(fp, nan_pct) for fp, (is_over_50_pct_nan, nan_pct) in zip(image_paths, results) if is_over_50_pct_nan]
+    nan_imgs_json = json.dumps({fp.as_posix(): nan_pct for fp, nan_pct in nan_imgs}, indent=4)
+    _logger.info(f"Found {len(nan_imgs)} images. {nan_imgs_json}")
+    (output_dir / "nan_images.json").write_text(nan_imgs_json)
 
 
 def main() -> None:
     cfg = parse_args()
-    stats = calculate_band_statistics(
+    find_nan_images(image_paths=cfg.file_paths, output_dir=cfg.output_dir)
+    calculate_band_statistics(
         image_paths=cfg.file_paths,
         band_names=consts.data.ORIGINAL_BANDS + list(indices.INDICES.keys()),
+        output_dir=cfg.output_dir,
     )
-    _logger.info(stats)
 
 
 if __name__ == "__main__":
