@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import rasterio
+import torch
 from matplotlib.colors import ListedColormap
 from rasterio import DatasetReader
 from rasterio.errors import NotGeoreferencedWarning
@@ -29,21 +30,24 @@ class KelpForestSegmentationDataset(VisionDataset):
         self,
         data_dir: Path,
         metadata_fp: Path,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         split: str = consts.data.TRAIN,
     ) -> None:
         self.data_dir = data_dir
-        self.metadata = pd.read_csv(metadata_fp)
+        self.metadata = pd.read_parquet(metadata_fp)
         self.transforms = transforms
         self.split = split
         self.image_fps, self.mask_fps = self.resolve_file_paths()
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __len__(self) -> int:
+        return len(self.image_fps)
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
-            img = src.read()
+            img = torch.from_numpy(src.read())
         with rasterio.open(self.mask_fps[index]) as src:
-            target = src.read()
+            target = torch.from_numpy(src.read())
 
         sample = {"image": img, "mask": target}
 
@@ -52,11 +56,17 @@ class KelpForestSegmentationDataset(VisionDataset):
 
         return sample
 
-    def __len__(self) -> int:
-        return len(self.metadata)
-
     def resolve_file_paths(self) -> tuple[list[Path], list[Path]]:
-        return [], []
+        split_data = self.metadata[self.metadata["split"] == self.split]
+        image_paths = split_data.apply(
+            lambda row: self.data_dir / self.split / "images" / f"{row['tile_id']}_satellite.tif",
+            axis=1,
+        )
+        mask_paths = split_data.apply(
+            lambda row: self.data_dir / self.split / "masks" / f"{row['tile_id']}_kelp.tif",
+            axis=1,
+        )
+        return image_paths, mask_paths
 
     def plot(
         self,

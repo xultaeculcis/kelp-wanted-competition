@@ -29,6 +29,16 @@ def parse_args() -> TrainConfig:
         required=True,
     )
     parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=32,
+    )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=4,
+    )
+    parser.add_argument(
         "--output_dir",
         type=str,
         required=True,
@@ -51,6 +61,7 @@ def main() -> None:
 
     for _, batch in enumerate(dm.train_dataloader()):
         _logger.info(batch["image"].shape)
+        _logger.info(batch["mask"].shape)
         break
 
 
