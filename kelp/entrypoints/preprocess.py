@@ -3,7 +3,6 @@ import json
 import warnings
 from pathlib import Path
 
-import dask.bag
 import numpy as np
 import rasterio
 import torch
@@ -127,26 +126,8 @@ def calculate_band_statistics(
     return stats
 
 
-def verify_qa_band_for_single_image(fp: Path) -> tuple[bool, float]:
-    with rasterio.open(fp) as src:
-        qa_band = src.read(6)
-    nan_vals = qa_band.sum()
-    all_pixels = np.prod(qa_band.shape)
-    return nan_vals >= (all_pixels / 2), nan_vals.item() / all_pixels.item()
-
-
-@timed
-def find_nan_images(image_paths: list[Path], output_dir: Path) -> None:
-    results = dask.bag.from_sequence(image_paths).map(verify_qa_band_for_single_image).compute()
-    nan_imgs = [(fp, nan_pct) for fp, (is_over_50_pct_nan, nan_pct) in zip(image_paths, results) if is_over_50_pct_nan]
-    nan_imgs_json = json.dumps({fp.as_posix(): nan_pct for fp, nan_pct in nan_imgs}, indent=4)
-    _logger.info(f"Found {len(nan_imgs)} images. {nan_imgs_json}")
-    (output_dir / "nan_images.json").write_text(nan_imgs_json)
-
-
 def main() -> None:
     cfg = parse_args()
-    find_nan_images(image_paths=cfg.file_paths, output_dir=cfg.output_dir)
     calculate_band_statistics(
         image_paths=cfg.file_paths,
         band_names=consts.data.ORIGINAL_BANDS + list(indices.INDICES.keys()),

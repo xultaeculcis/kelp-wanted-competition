@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Any, Callable
 
@@ -8,10 +9,16 @@ import pandas as pd
 import rasterio
 from matplotlib.colors import ListedColormap
 from rasterio import DatasetReader
+from rasterio.errors import NotGeoreferencedWarning
 from torch import Tensor
 from torchgeo.datasets import VisionDataset
 
 from kelp import consts
+
+warnings.filterwarnings(
+    action="ignore",
+    category=NotGeoreferencedWarning,
+)
 
 
 class KelpForestSegmentationDataset(VisionDataset):
@@ -80,14 +87,14 @@ class KelpForestSegmentationDataset(VisionDataset):
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis("off")
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
+        axs[1].imshow(mask, cmap=self.cmap, interpolation="none")
         axs[1].axis("off")
         if show_titles:
             axs[0].set_title("Image")
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
+            axs[2].imshow(predictions, cmap=self.cmap, interpolation="none")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")

@@ -35,6 +35,7 @@ class SatelliteImageStats(BaseModel):
     kelp_pixels: int | None = None
     non_kelp_pixels: int | None = None
     dem_nan_pixels: int
+    qa_corrupted_pixels_pct: float | None = None
 
 
 class PreProcessingConfig(ConfigBase):
@@ -156,14 +157,27 @@ def extract_composite(
     img.save(out_dir / f"{tile_id}_{name}.png")
 
 
+def verify_qa_band_for_single_image(fp: Path) -> tuple[bool, float]:
+    with rasterio.open(fp) as src:
+        qa_band = src.read(6)
+    nan_vals = qa_band.sum()
+    all_pixels = np.prod(qa_band.shape)
+    return nan_vals >= (all_pixels / 2), nan_vals.item() / all_pixels.item()
+
+
 def calculate_stats(tile_id_split_tuple: tuple[str, str], data_dir: Path) -> SatelliteImageStats:
     tile_id, split = tile_id_split_tuple
     src: rasterio.DatasetReader
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
         input_arr = src.read()
-        dem_nan_pixels = np.where(input_arr[6] < 0, 1, 0).sum()
+        dem_band = input_arr[6]
+        qa_band = input_arr[5]
+        dem_nan_pixels = np.where(dem_band < 0, 1, 0).sum()
         dem_has_nans = dem_nan_pixels > 0
-        qa_ok = input_arr[5].sum() == 0
+        nan_vals = qa_band.sum()
+        qa_ok = nan_vals == 0
+        all_pixels = np.prod(qa_band.shape)
+        qa_corrupted_pixels_pct = nan_vals.item() / all_pixels.item()
 
     if split != "test":
         with rasterio.open(data_dir / split / "masks" / f"{tile_id}_kelp.tif") as src:
@@ -185,6 +199,7 @@ def calculate_stats(tile_id_split_tuple: tuple[str, str], data_dir: Path) -> Sat
         dem_has_nans=dem_has_nans,
         dem_nan_pixels=dem_nan_pixels,
         qa_ok=qa_ok,
+        qa_corrupted_pixels_pct=qa_corrupted_pixels_pct,
     )
 
 
