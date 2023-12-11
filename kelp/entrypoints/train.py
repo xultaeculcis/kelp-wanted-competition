@@ -6,14 +6,17 @@ from pathlib import Path
 from typing import Any, Literal
 
 import pytorch_lightning as pl
+import torch
 from pytorch_lightning import Callback
 from pytorch_lightning.callbacks import DeviceStatsMonitor, EarlyStopping, LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import Logger, MLFlowLogger
 
 from kelp.core.configs import ConfigBase
 from kelp.data.datamodule import KelpForestDataModule
+from kelp.models.segmentation import KelpForestSegmentationTask
 from kelp.utils.logging import get_logger
 
+torch.set_float32_matmul_precision("medium")
 _logger = get_logger(__name__)
 
 
@@ -21,19 +24,25 @@ class TrainConfig(ConfigBase):
     # data params
     data_dir: Path
     metadata_fp: Path
+    num_classes: int = 2
     batch_size: int = 32
     num_workers: int = 4
     output_dir: Path
 
     # model params
-    architecture_config_fp: Path
-    encoder_config_fp: Path
-    optimizer_config_fp: Path
-    lr_scheduler_config_fp: Path
+    architecture: str
+    encoder: str
+    encoder_weights: str
+    ignore_index: int | None = None
+    optimizer: Literal["adam", "adamw"] = "adamw"
+    weight_decay: float = 1e-4
+    lr_scheduler: str
     strategy: Literal["freeze", "no-freeze", "freeze-unfreeze"] = "no-freeze"
     lr: float = 3e-4
     pretrained: bool = False
+    objective: Literal["binary", "multiclass"] = "binary"
     loss: Literal[
+        "ce",
         "jaccard",
         "dice",
         "tversky",
@@ -59,14 +68,6 @@ class TrainConfig(ConfigBase):
     log_every_n_steps: int = 50
     accumulate_grad_batches: int = 1
     benchmark: bool = False
-
-    @property
-    def architecture_config(self) -> dict[str, Any]:
-        return {}
-
-    @property
-    def encoder_config(self) -> dict[str, Any]:
-        return {}
 
     @property
     def optimizer_config(self) -> dict[str, Any]:
@@ -114,27 +115,46 @@ def parse_args() -> TrainConfig:
         required=True,
     )
     parser.add_argument(
-        "--architecture_config_fp",
+        "--architecture",
         type=str,
         required=True,
     )
     parser.add_argument(
-        "--encoder_config_fp",
+        "--encoder",
         type=str,
         required=True,
     )
     parser.add_argument(
-        "--optimizer_config_fp",
+        "--encoder_weights",
         type=str,
         required=True,
     )
     parser.add_argument(
-        "--lr_scheduler_config_fp",
+        "--objective",
         type=str,
-        required=True,
+        choices=["binary", "multiclass"],
+        default="binary",
     )
-    parser.add_argument("--strategy", type=str, choices=["freeze", "no-freeze", "freeze-unfreeze"], default="no-freeze")
-    parser.add_argument("--lr", type=float, default=3e-4)
+    parser.add_argument(
+        "--optimizer",
+        type=str,
+        choices=["adam", "adamw"],
+        default="adamw",
+    )
+    parser.add_argument(
+        "--lr_scheduler", type=str, choices=["onecycle", "cosine", "reduce_lr_on_plateau"], default="onecycle"
+    )
+    parser.add_argument(
+        "--strategy",
+        type=str,
+        choices=["freeze", "no-freeze", "freeze-unfreeze"],
+        default="no-freeze",
+    )
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=3e-4,
+    )
     parser.add_argument(
         "--pretrained",
         action="store_true",
@@ -143,6 +163,7 @@ def parse_args() -> TrainConfig:
         "--loss",
         type=str,
         choices=[
+            "ce",
             "jaccard",
             "dice",
             "tversky",
@@ -152,11 +173,23 @@ def parse_args() -> TrainConfig:
             "soft_cross_entropy_with_logits",
             "mcc",
         ],
-        default="soft_bce_with_logits",
+        default="ce",
     )
-    parser.add_argument("--monitor_metric", type=str, default="val/dice")
-    parser.add_argument("--save_top_k", type=int, default=1)
-    parser.add_argument("--early_stopping_patience", type=int, default=3)
+    parser.add_argument(
+        "--monitor_metric",
+        type=str,
+        default="val/dice",
+    )
+    parser.add_argument(
+        "--save_top_k",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--early_stopping_patience",
+        type=int,
+        default=3,
+    )
     parser.add_argument(
         "--precision",
         type=str,
@@ -248,13 +281,27 @@ def make_callbacks(
 
 def main() -> None:
     cfg = parse_args()
-    _ = KelpForestDataModule(
+    datamodule = KelpForestDataModule(
         root_dir=cfg.data_dir,
         metadata_fp=cfg.metadata_fp,
         batch_size=cfg.batch_size,
         num_workers=cfg.num_workers,
     )
-    _ = pl.Trainer(
+    segmentation_task = KelpForestSegmentationTask(
+        architecture=cfg.architecture,
+        encoder=cfg.encoder,
+        encoder_weights=cfg.encoder_weights,
+        pretrained=cfg.pretrained,
+        in_channels=datamodule.in_channels,
+        num_classes=cfg.num_classes,
+        loss=cfg.loss,
+        objective=cfg.objective,
+        ignore_index=cfg.ignore_index,
+        optimizer=cfg.optimizer,
+        lr=cfg.lr,
+        weight_decay=cfg.weight_decay,
+    )
+    trainer = pl.Trainer(
         precision=cfg.precision,
         logger=make_loggers(
             experiment=cfg.experiment,
@@ -275,6 +322,8 @@ def main() -> None:
         accumulate_grad_batches=cfg.accumulate_grad_batches,
         benchmark=cfg.benchmark,
     )
+    trainer.fit(model=segmentation_task, datamodule=datamodule)
+    trainer.test(model=segmentation_task, datamodule=datamodule)
 
 
 if __name__ == "__main__":

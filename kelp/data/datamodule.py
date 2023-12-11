@@ -26,7 +26,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.metadata_fp = metadata_fp
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.mean, self.std = self.resolve_normalization_stats()
+        self.mean, self.std, self.in_channels = self.resolve_normalization_stats()
 
     def on_after_batch_transfer(self, batch: dict[str, Any], batch_idx: int) -> dict[str, Any]:
         """Apply batch augmentations after batch is transferred to the device.
@@ -144,5 +144,5 @@ class KelpForestDataModule(pl.LightningDataModule):
         return self.val_dataset.plot(*args, **kwargs)
 
     @staticmethod
-    def resolve_normalization_stats() -> tuple[torch.Tensor, torch.Tensor]:
-        return torch.Tensor(), torch.Tensor()
+    def resolve_normalization_stats() -> tuple[torch.Tensor, torch.Tensor, int]:
+        return torch.Tensor(), torch.Tensor(), 8
