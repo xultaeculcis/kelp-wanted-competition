@@ -32,12 +32,14 @@ class KelpForestSegmentationDataset(VisionDataset):
         self,
         data_dir: Path,
         metadata_fp: Path,
+        cv_split: int = 0,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         split: str = consts.data.TRAIN,
     ) -> None:
         self.data_dir = data_dir
         self.metadata = pd.read_parquet(metadata_fp)
         self.transforms = transforms
+        self.cv_split = cv_split
         self.split = split
         self.image_fps, self.mask_fps = self.resolve_file_paths()
         self.append_ndvi = indices.INDICES["NDVI"]
@@ -48,9 +50,10 @@ class KelpForestSegmentationDataset(VisionDataset):
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
-            img = torch.from_numpy(src.read())
+            # we need to clamp values to account for corrupted pixels
+            img = torch.from_numpy(src.read()).clamp(min=0)
         with rasterio.open(self.mask_fps[index]) as src:
-            target = torch.from_numpy(src.read())
+            target = torch.from_numpy(src.read(1))
 
         sample = {"image": img, "mask": target, "tile_id": self.image_fps[index].stem.split("_")[0]}
 
@@ -60,19 +63,36 @@ class KelpForestSegmentationDataset(VisionDataset):
         if self.transforms:
             sample = self.transforms(sample)
 
+        sample = self.ensure_proper_sample_format(sample)
+
         return sample
 
     def resolve_file_paths(self) -> tuple[list[Path], list[Path]]:
-        split_data = self.metadata[self.metadata["split"] == self.split]
+        split_data = self.metadata[self.metadata[f"split_{self.cv_split}"] == self.split]
+        img_folder = consts.data.TRAIN if self.split in [consts.data.TRAIN, consts.data.VAL] else consts.data.TEST
         image_paths = split_data.apply(
-            lambda row: self.data_dir / self.split / "images" / f"{row['tile_id']}_satellite.tif",
+            lambda row: self.data_dir / img_folder / "images" / f"{row['tile_id']}_satellite.tif",
             axis=1,
-        )
+        ).tolist()
         mask_paths = split_data.apply(
-            lambda row: self.data_dir / self.split / "masks" / f"{row['tile_id']}_kelp.tif",
+            lambda row: self.data_dir / img_folder / "masks" / f"{row['tile_id']}_kelp.tif",
             axis=1,
-        )
+        ).tolist()
         return image_paths, mask_paths
+
+    def ensure_proper_sample_format(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: dictionary containing image and mask
+
+        Returns:
+            preprocessed sample
+        """
+        sample["image"] = sample["image"].float()
+        sample["mask"] = sample["mask"].long()
+
+        return sample
 
     def plot(
         self,

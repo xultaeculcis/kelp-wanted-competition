@@ -10,51 +10,6 @@ from torchmetrics import Accuracy, ConfusionMatrix, F1Score, JaccardIndex, Metri
 
 
 class KelpForestSegmentationTask(pl.LightningModule):
-    def resolve_loss(self) -> nn.Module:
-        loss_fn = self.hyperparams["loss"]
-        ignore_index = self.hyperparams["ignore_index"]
-        num_classes = self.hyperparams["num_classes"]
-        objective = self.hyperparams["objective"]
-
-        if loss_fn == "ce":
-            loss = nn.CrossEntropyLoss(ignore_index=ignore_index)
-        elif loss_fn == "jaccard":
-            loss = smp.losses.JaccardLoss(mode=objective, classes=num_classes)
-        elif loss_fn == "dice":
-            loss = smp.losses.DiceLoss(mode=objective, classes=num_classes, ignore_index=ignore_index)
-        elif loss_fn == "focal":
-            loss = smp.losses.FocalLoss(mode=objective, ignore_index=ignore_index)
-        elif loss_fn == "lovasz":
-            loss = smp.losses.LovaszLoss(mode=objective, ignore_index=ignore_index)
-        elif loss_fn == "tversky":
-            loss = smp.losses.TverskyLoss(mode=objective, ignore_index=ignore_index)
-        elif loss_fn == "soft_ce":
-            loss = smp.losses.SoftCrossEntropyLoss(ignore_index=ignore_index)
-        elif loss_fn == "soft_bce_with_logits":
-            loss = smp.losses.SoftBCEWithLogitsLoss(ignore_index=ignore_index)
-        else:
-            raise ValueError(f"{loss_fn=} is not supported.")
-        return loss
-
-    def config_task(self) -> nn.Module:
-        architecture = self.hyperparams["architecture"]
-        encoder = self.hyperparams["encoder"]
-        encoder_weights = self.hyperparams["encoder_weights"]
-        in_channels = self.hyperparams["in_channels"]
-        classes = self.hyperparams["num_classes"]
-
-        if architecture == "unet":
-            model = smp.Unet(
-                encoder_name=encoder,
-                encoder_weights=encoder_weights,
-                in_channels=in_channels,
-                classes=classes,
-            )
-        else:
-            raise ValueError(f"{architecture=} is not supported.")
-
-        return model
-
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
@@ -80,6 +35,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
 
         self.ignore_index = self.hyperparams["ignore_index"]
 
+        self.loss = self.resolve_loss()
         self.model = self.config_task()
 
         self.train_metrics = MetricCollection(
@@ -131,6 +87,51 @@ class KelpForestSegmentationTask(pl.LightningModule):
             prefix="val/",
         )
         self.test_metrics = self.val_metrics.clone(prefix="test/")
+
+    def resolve_loss(self) -> nn.Module:
+        loss_fn = self.hyperparams["loss"]
+        ignore_index = self.hyperparams["ignore_index"]
+        num_classes = self.hyperparams["num_classes"]
+        objective = self.hyperparams["objective"]
+
+        if loss_fn == "ce":
+            loss = nn.CrossEntropyLoss(ignore_index=ignore_index or -100)
+        elif loss_fn == "jaccard":
+            loss = smp.losses.JaccardLoss(mode=objective, classes=num_classes)
+        elif loss_fn == "dice":
+            loss = smp.losses.DiceLoss(mode=objective, classes=num_classes, ignore_index=ignore_index)
+        elif loss_fn == "focal":
+            loss = smp.losses.FocalLoss(mode=objective, ignore_index=ignore_index)
+        elif loss_fn == "lovasz":
+            loss = smp.losses.LovaszLoss(mode=objective, ignore_index=ignore_index)
+        elif loss_fn == "tversky":
+            loss = smp.losses.TverskyLoss(mode=objective, ignore_index=ignore_index)
+        elif loss_fn == "soft_ce":
+            loss = smp.losses.SoftCrossEntropyLoss(ignore_index=ignore_index)
+        elif loss_fn == "soft_bce_with_logits":
+            loss = smp.losses.SoftBCEWithLogitsLoss(ignore_index=ignore_index)
+        else:
+            raise ValueError(f"{loss_fn=} is not supported.")
+        return loss
+
+    def config_task(self) -> nn.Module:
+        architecture = self.hyperparams["architecture"]
+        encoder = self.hyperparams["encoder"]
+        encoder_weights = self.hyperparams["encoder_weights"]
+        in_channels = self.hyperparams["in_channels"]
+        classes = self.hyperparams["num_classes"]
+
+        if architecture == "unet":
+            model = smp.Unet(
+                encoder_name=encoder,
+                encoder_weights=encoder_weights,
+                in_channels=in_channels,
+                classes=classes,
+            )
+        else:
+            raise ValueError(f"{architecture=} is not supported.")
+
+        return model
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         return self.model(*args, **kwargs)

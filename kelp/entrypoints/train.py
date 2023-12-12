@@ -24,7 +24,9 @@ class TrainConfig(ConfigBase):
     # data params
     data_dir: Path
     metadata_fp: Path
+    cv_split: int = 0
     num_classes: int = 2
+    image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
     output_dir: Path
@@ -100,9 +102,19 @@ def parse_args() -> TrainConfig:
         required=True,
     )
     parser.add_argument(
+        "--cv_split",
+        type=int,
+        default=0,
+    )
+    parser.add_argument(
         "--batch_size",
         type=int,
         default=32,
+    )
+    parser.add_argument(
+        "--image_size",
+        type=int,
+        default=352,
     )
     parser.add_argument(
         "--num_workers",
@@ -245,7 +257,11 @@ def make_loggers(
     output_dir: Path,
 ) -> list[Logger]:
     mlflow_logger = MLFlowLogger(
-        experiment_name=experiment, tags=tags, save_dir=output_dir.as_posix(), run_name=experiment
+        experiment_name=experiment,
+        tags=tags,
+        save_dir=output_dir.as_posix(),
+        run_name=experiment,
+        tracking_uri=f"file:{output_dir.as_posix()}/ml-runs",
     )
     return [mlflow_logger]
 
@@ -284,7 +300,9 @@ def main() -> None:
     datamodule = KelpForestDataModule(
         root_dir=cfg.data_dir,
         metadata_fp=cfg.metadata_fp,
+        cv_split=cfg.cv_split,
         batch_size=cfg.batch_size,
+        image_size=cfg.image_size,
         num_workers=cfg.num_workers,
     )
     segmentation_task = KelpForestSegmentationTask(
