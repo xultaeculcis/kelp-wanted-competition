@@ -5,8 +5,9 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torchgeo.datasets import unbind_samples
-from torchmetrics import Accuracy, ConfusionMatrix, F1Score, JaccardIndex, MetricCollection, Precision, Recall
+from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
+
+from kelp.data.utils import unbind_samples
 
 
 class KelpForestSegmentationTask(pl.LightningModule):
@@ -41,6 +42,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.train_metrics = MetricCollection(
             metrics={
                 "iou": JaccardIndex(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
@@ -49,36 +51,47 @@ class KelpForestSegmentationTask(pl.LightningModule):
         )
         self.val_metrics = MetricCollection(
             metrics={
+                "dice": Dice(
+                    num_classes=self.hyperparams["num_classes"],
+                    ignore_index=self.ignore_index,
+                ),
                 "iou": JaccardIndex(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
                 "per_class_iou": JaccardIndex(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
-                    reduction="none",
                 ),
                 "accuracy": Accuracy(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
                 "recall": Recall(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
                 "precision": Precision(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
                 "f1": F1Score(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
                 "conf_mtrx": ConfusionMatrix(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
                 "norm_conf_mtrx": ConfusionMatrix(
+                    task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                     normalize="true",
@@ -164,7 +177,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        self.log("val/loss", loss, on_step=False, on_epoch=True)
+        self.log("val/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.val_metrics(y_hat_hard, y)
 
         if batch_idx < 10:
@@ -182,7 +195,11 @@ class KelpForestSegmentationTask(pl.LightningModule):
                 pass
 
     def on_validation_epoch_end(self) -> None:
-        self.log_dict(self.val_metrics.compute())
+        metrics = self.val_metrics.compute()
+        metrics.pop("val/per_class_iou")
+        metrics.pop("val/norm_conf_mtrx")
+        metrics.pop("val/conf_mtrx")
+        self.log_dict(metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -195,7 +212,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         loss = self.loss(y_hat, y)
 
         # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss, on_step=False, on_epoch=True)
+        self.log("test_loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.test_metrics(y_hat_hard, y)
 
     def on_test_epoch_end(self) -> None:

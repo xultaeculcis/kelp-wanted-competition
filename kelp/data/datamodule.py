@@ -10,16 +10,29 @@ import torchvision.transforms as T
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 
+from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import KelpForestSegmentationDataset
 
 TILE_SIZE = 350
 
 
 class KelpForestDataModule(pl.LightningDataModule):
+    base_bands = [
+        "SWIR",
+        "NIR",
+        "R",
+        "G",
+        "B",
+        "QA",
+        "DEM",
+        "NDVI",
+    ]
+
     def __init__(
         self,
         root_dir: Path,
         metadata_fp: Path,
+        spectral_indices: list[str] | None = None,
         cv_split: int = 0,
         batch_size: int = 32,
         image_size: int = 352,
@@ -30,6 +43,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
         self.root_dir = root_dir
         self.metadata_fp = metadata_fp
+        self.spectral_indices = spectral_indices
         self.cv_split = cv_split
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -93,15 +107,13 @@ class KelpForestDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        train_transforms = self.common_transforms
-        val_test_transforms = self.common_transforms
 
         self.train_dataset = KelpForestSegmentationDataset(
             data_dir=self.root_dir,
             metadata_fp=self.metadata_fp,
             cv_split=self.cv_split,
             split="train",
-            transforms=train_transforms,
+            transforms=self.common_transforms,
         )
 
         self.val_dataset = KelpForestSegmentationDataset(
@@ -109,7 +121,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             metadata_fp=self.metadata_fp,
             cv_split=self.cv_split,
             split="val",
-            transforms=val_test_transforms,
+            transforms=self.common_transforms,
         )
 
         self.test_dataset = KelpForestSegmentationDataset(
@@ -117,7 +129,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             metadata_fp=self.metadata_fp,
             cv_split=self.cv_split,
             split="test",
-            transforms=val_test_transforms,
+            transforms=self.common_transforms,
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -163,6 +175,11 @@ class KelpForestDataModule(pl.LightningDataModule):
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot`."""
         return self.val_dataset.plot(*args, **kwargs)
 
-    @staticmethod
-    def resolve_normalization_stats() -> tuple[torch.Tensor, torch.Tensor, int]:
-        return torch.Tensor(), torch.Tensor(), 8
+    def resolve_normalization_stats(self) -> tuple[torch.Tensor, torch.Tensor, int]:
+        band_stats = {band: DATASET_STATS[band] for band in self.base_bands}
+        if self.spectral_indices:
+            extra_band_stats = {index: DATASET_STATS[index] for index in self.spectral_indices}
+            band_stats.update(extra_band_stats)
+        mean = [val["mean"] for val in band_stats.values()]
+        std = [val["std"] for val in band_stats.values()]
+        return torch.Tensor(mean), torch.Tensor(std), len(band_stats)

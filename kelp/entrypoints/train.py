@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
+import warnings
 from pathlib import Path
 from typing import Any, Literal
 
@@ -13,9 +13,19 @@ from pytorch_lightning.loggers import Logger, MLFlowLogger
 
 from kelp.core.configs import ConfigBase
 from kelp.data.datamodule import KelpForestDataModule
+from kelp.data.indices import INDICES
 from kelp.models.segmentation import KelpForestSegmentationTask
+from kelp.utils.gpu import set_gpu_power_limit_if_needed
 from kelp.utils.logging import get_logger
 
+# Filter warning from Kornia's `RandomRotation` as we have no control over it
+warnings.filterwarnings(
+    action="ignore",
+    category=UserWarning,
+    message="Default grid_sample and affine_grid behavior has changed to align_corners=False",
+)
+
+# Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
 _logger = get_logger(__name__)
 
@@ -26,10 +36,11 @@ class TrainConfig(ConfigBase):
     metadata_fp: Path
     cv_split: int = 0
     num_classes: int = 2
+    spectral_indices: str | None = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
-    output_dir: Path
+    seed: int = 42
 
     # model params
     architecture: str
@@ -70,6 +81,7 @@ class TrainConfig(ConfigBase):
     log_every_n_steps: int = 50
     accumulate_grad_batches: int = 1
     benchmark: bool = False
+    output_dir: Path
 
     @property
     def optimizer_config(self) -> dict[str, Any]:
@@ -85,8 +97,27 @@ class TrainConfig(ConfigBase):
 
     @property
     def experiment(self) -> str:
-        now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-        return f"kelp-seg-training-exp-{now}"
+        return "kelp-seg-training-exp"
+
+    @property
+    def indices(self) -> list[str]:
+        if not self.spectral_indices:
+            return []
+
+        indices = [index.strip() for index in self.spectral_indices.split(",")]
+        assert len(indices) <= 5, f"Please provide at most 5 spectral indices. You provided: {len(indices)}"
+
+        unknown_indices = set(indices).difference(list(INDICES.keys()))
+        assert not unknown_indices, (
+            f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
+            f"Please provide at most 5 comma separated indices: {', '.join(INDICES.keys())}."
+        )
+
+        if "NDVI" in indices:
+            _logger.warning("NDVI is automatically added during training. No need to add it twice.")
+            indices.remove("NDVI")
+
+        return indices
 
 
 def parse_args() -> TrainConfig:
@@ -120,6 +151,16 @@ def parse_args() -> TrainConfig:
         "--num_workers",
         type=int,
         default=4,
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+    )
+    parser.add_argument(
+        "--spectral_indices",
+        type=str,
+        help="A comma separated list of spectral indices to append to the samples during training",
     )
     parser.add_argument(
         "--output_dir",
@@ -282,7 +323,7 @@ def make_callbacks(
     device_stats_monitor = DeviceStatsMonitor()
 
     sanitized_monitor_metric = monitor_metric.replace("/", "_")
-    filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}" f"{{{monitor_metric}}}:.2f}}"
+    filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.2f}}"
     checkpoint = ModelCheckpoint(
         monitor="val/dice",
         mode="max",
@@ -297,6 +338,8 @@ def make_callbacks(
 
 def main() -> None:
     cfg = parse_args()
+    set_gpu_power_limit_if_needed()
+    pl.seed_everything(cfg.seed, workers=True)
     datamodule = KelpForestDataModule(
         root_dir=cfg.data_dir,
         metadata_fp=cfg.metadata_fp,
@@ -341,7 +384,6 @@ def main() -> None:
         benchmark=cfg.benchmark,
     )
     trainer.fit(model=segmentation_task, datamodule=datamodule)
-    trainer.test(model=segmentation_task, datamodule=datamodule)
 
 
 if __name__ == "__main__":

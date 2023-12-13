@@ -35,9 +35,9 @@ class AppendIndex(nn.Module, abc.ABC):
         return sample
 
     def _mask_using_qa_band(self, index: Tensor, sample: dict[str, Tensor]) -> Tensor:
+        min_val = index.min()
         qa_band = sample["image"][..., self.index_qa, :, :]
-        qa_band = torch.where(qa_band == 0, 1, torch.nan)
-        index = index * qa_band
+        index = torch.where(qa_band == 0, index, min_val)
         return index
 
     def _maybe_normalize(self, index: Tensor) -> Tensor:

@@ -12,7 +12,7 @@ from matplotlib.colors import ListedColormap
 from rasterio import DatasetReader
 from rasterio.errors import NotGeoreferencedWarning
 from torch import Tensor
-from torchgeo.datasets import VisionDataset
+from torch.utils.data import Dataset
 
 from kelp import consts
 from kelp.data import indices
@@ -24,7 +24,7 @@ warnings.filterwarnings(
 )
 
 
-class KelpForestSegmentationDataset(VisionDataset):
+class KelpForestSegmentationDataset(Dataset):
     classes = consts.data.CLASSES
     cmap = ListedColormap(["black", "lightseagreen"])
 
