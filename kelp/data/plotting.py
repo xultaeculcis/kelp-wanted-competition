@@ -54,9 +54,9 @@ def plot_sample(
         axes[7].imshow(predictions_arr, cmap=mask_cmap, interpolation=None)
 
     if show_titles:
-        axes[0].set_xlabel("True Color (red, green, blue)")
-        axes[1].set_xlabel("False Color (nir, red, green)")
-        axes[2].set_xlabel("Agriculture (swir, nir, red)")
+        axes[0].set_xlabel("Natural Color (R, G, B)")
+        axes[1].set_xlabel("Color Infrared (NIR, R, B)")
+        axes[2].set_xlabel("Short Wave Infrared (SWIR, NIR, R)")
         axes[3].set_xlabel("NDVI")
         axes[4].set_xlabel("DEM")
         axes[5].set_xlabel("QA Mask")

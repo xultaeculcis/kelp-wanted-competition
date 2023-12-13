@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from matplotlib import pyplot as plt
 from torch import Tensor
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
@@ -54,6 +55,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
                 "dice": Dice(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
+                    average="macro",
                 ),
                 "iou": JaccardIndex(
                     task=self.hparams["objective"],
@@ -180,19 +182,20 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.log("val/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.val_metrics(y_hat_hard, y)
 
-        if batch_idx < 10:
-            try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-                batch["prediction"] = y_hat_hard
-                for key in ["image", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                for sample in unbind_samples(batch):
-                    fig = datamodule.plot(sample, suptitle=f"Tile ID: {sample['tile_id']}")
-                    self.logger.add(
-                        f"image/{sample['tile_id']}_{self.current_epoch:02d}", fig, global_step=self.global_step
-                    )
-            except AttributeError:
-                pass
+        # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
+        if batch_idx < 3 and self.global_step > 0:
+            datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+            batch["prediction"] = y_hat_hard
+            for key in ["image", "mask", "prediction"]:
+                batch[key] = batch[key].cpu()
+            for sample in unbind_samples(batch):
+                fig = datamodule.plot(sample, suptitle=f"Tile ID: {sample['tile_id']}")
+                self.logger.experiment.log_figure(
+                    run_id=self.logger.run_id,
+                    figure=fig,
+                    artifact_file=f"image/{sample['tile_id']}_{self.current_epoch:02d}.jpg",
+                )
+                plt.close(fig)
 
     def on_validation_epoch_end(self) -> None:
         metrics = self.val_metrics.compute()

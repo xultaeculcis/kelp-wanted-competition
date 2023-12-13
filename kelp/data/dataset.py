@@ -113,7 +113,7 @@ class KelpForestSegmentationDataset(Dataset):
         """
         image = sample["image"].numpy()
         mask = sample["mask"].squeeze().numpy()
-        predictions = sample["prediction"].numpy() if "predictions" in sample else None
+        predictions = sample["prediction"].numpy() if "prediction" in sample else None
 
         fig = plot_sample(
             input_arr=image,

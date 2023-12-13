@@ -106,7 +106,7 @@ module = [
     "pydantic_settings.*",
     "pandas.*",
     "sklearn.*",
-    "torchgeo.*",
+    "mlflow.*",
     "torch.*",
     "torchvision.*",
     "pytorch_lightning.*",

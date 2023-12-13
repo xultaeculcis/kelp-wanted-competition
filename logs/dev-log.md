@@ -67,3 +67,16 @@ Findings:
 * Update augmentations
 * Pad images to 352x352 - required by the model for the image shape to be divisible by 32
 * Messed up something in the dataset - training batch has some `torch.nan` values
+
+## 2023-12-13
+
+* Add GPU utils to power limit RTX 3090 for more comfortable training temperatures
+* Add dataset stats to `consts`
+* Remove `torchgeo` package dependency since its newest version conflicted with pydantic v2 - didn't use its features anyway...
+* Use index min value instead of `torch.nan` to mask corrupted pixels
+* Finally, train a single epoch
+* `MLFlowLogger` is wonky - will use `mlflow` autologging capabilities
+* Make `mlflow` logging work correctly
+* Need to ensure checkpoint logging works as it should
+* Make image logging work fine
+* Image logging should no longer work during validation sanity checks

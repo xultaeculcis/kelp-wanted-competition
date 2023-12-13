@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
+import mlflow
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning import Callback
@@ -98,6 +100,11 @@ class TrainConfig(ConfigBase):
     @property
     def experiment(self) -> str:
         return "kelp-seg-training-exp"
+
+    @property
+    def run_name(self) -> str:
+        now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        return f"kelp-seg-training-exp-{now}"
 
     @property
     def indices(self) -> list[str]:
@@ -295,14 +302,12 @@ def parse_args() -> TrainConfig:
 def make_loggers(
     experiment: str,
     tags: dict[str, Any],
-    output_dir: Path,
 ) -> list[Logger]:
     mlflow_logger = MLFlowLogger(
         experiment_name=experiment,
+        run_id=mlflow.active_run().info.run_id,
+        log_model="all",
         tags=tags,
-        save_dir=output_dir.as_posix(),
-        run_name=experiment,
-        tracking_uri=f"file:{output_dir.as_posix()}/ml-runs",
     )
     return [mlflow_logger]
 
@@ -323,7 +328,7 @@ def make_callbacks(
     device_stats_monitor = DeviceStatsMonitor()
 
     sanitized_monitor_metric = monitor_metric.replace("/", "_")
-    filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.2f}}"
+    filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.3f}}"
     checkpoint = ModelCheckpoint(
         monitor="val/dice",
         mode="max",
@@ -340,50 +345,56 @@ def main() -> None:
     cfg = parse_args()
     set_gpu_power_limit_if_needed()
     pl.seed_everything(cfg.seed, workers=True)
-    datamodule = KelpForestDataModule(
-        root_dir=cfg.data_dir,
-        metadata_fp=cfg.metadata_fp,
-        cv_split=cfg.cv_split,
-        batch_size=cfg.batch_size,
-        image_size=cfg.image_size,
-        num_workers=cfg.num_workers,
-    )
-    segmentation_task = KelpForestSegmentationTask(
-        architecture=cfg.architecture,
-        encoder=cfg.encoder,
-        encoder_weights=cfg.encoder_weights,
-        pretrained=cfg.pretrained,
-        in_channels=datamodule.in_channels,
-        num_classes=cfg.num_classes,
-        loss=cfg.loss,
-        objective=cfg.objective,
-        ignore_index=cfg.ignore_index,
-        optimizer=cfg.optimizer,
-        lr=cfg.lr,
-        weight_decay=cfg.weight_decay,
-    )
-    trainer = pl.Trainer(
-        precision=cfg.precision,
-        logger=make_loggers(
-            experiment=cfg.experiment,
-            tags=cfg.tags,
-            output_dir=cfg.output_dir,
-        ),
-        callbacks=make_callbacks(
-            output_dir=cfg.output_dir / cfg.experiment,
-            early_stopping_patience=cfg.early_stopping_patience,
-            save_top_k=cfg.save_top_k,
-        ),
-        fast_dev_run=cfg.fast_dev_run,
-        max_epochs=cfg.epochs,
-        limit_train_batches=cfg.limit_train_batches,
-        limit_val_batches=cfg.limit_val_batches,
-        limit_test_batches=cfg.limit_test_batches,
-        log_every_n_steps=cfg.log_every_n_steps,
-        accumulate_grad_batches=cfg.accumulate_grad_batches,
-        benchmark=cfg.benchmark,
-    )
-    trainer.fit(model=segmentation_task, datamodule=datamodule)
+
+    mlflow.set_experiment(cfg.experiment)
+    mlflow.pytorch.autolog()
+
+    with mlflow.start_run(run_name=cfg.run_name):
+        mlflow.log_dict(cfg.model_dump(), artifact_file="config.yaml")
+        mlflow.log_params(cfg.model_dump())
+        datamodule = KelpForestDataModule(
+            root_dir=cfg.data_dir,
+            metadata_fp=cfg.metadata_fp,
+            cv_split=cfg.cv_split,
+            batch_size=cfg.batch_size,
+            image_size=cfg.image_size,
+            num_workers=cfg.num_workers,
+        )
+        segmentation_task = KelpForestSegmentationTask(
+            architecture=cfg.architecture,
+            encoder=cfg.encoder,
+            encoder_weights=cfg.encoder_weights,
+            pretrained=cfg.pretrained,
+            in_channels=datamodule.in_channels,
+            num_classes=cfg.num_classes,
+            loss=cfg.loss,
+            objective=cfg.objective,
+            ignore_index=cfg.ignore_index,
+            optimizer=cfg.optimizer,
+            lr=cfg.lr,
+            weight_decay=cfg.weight_decay,
+        )
+        trainer = pl.Trainer(
+            precision=cfg.precision,
+            logger=make_loggers(
+                experiment=cfg.experiment,
+                tags=cfg.tags,
+            ),
+            callbacks=make_callbacks(
+                output_dir=cfg.output_dir / cfg.experiment,
+                early_stopping_patience=cfg.early_stopping_patience,
+                save_top_k=cfg.save_top_k,
+            ),
+            fast_dev_run=cfg.fast_dev_run,
+            max_epochs=cfg.epochs,
+            limit_train_batches=cfg.limit_train_batches,
+            limit_val_batches=cfg.limit_val_batches,
+            limit_test_batches=cfg.limit_test_batches,
+            log_every_n_steps=cfg.log_every_n_steps,
+            accumulate_grad_batches=cfg.accumulate_grad_batches,
+            benchmark=cfg.benchmark,
+        )
+        trainer.fit(model=segmentation_task, datamodule=datamodule)
 
 
 if __name__ == "__main__":
