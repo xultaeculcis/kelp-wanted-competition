@@ -3,30 +3,33 @@
 Checklist:
 
 - [x] EDA
-- [ ] MLFlow logger
-- [ ] Log a few hundred images during validation loop
-- [ ] Log confusion matrix
-- [ ] Log segmentation metrics
-- [ ] Unet baseline with pre-trained ResNet-50 backbone
+- [x] Use metadata csv as lookup for the dataset
+- [x] Log a few hundred images during validation loop
+- [x] Log segmentation metrics
+- [x] MLFlow logger
 - [x] Pre-process data and add extra channels: NDVI, NDWI, EVI, water masks from different sources (NDVI, DEM) etc.
-- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
-- [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
-- [ ] Use metadata csv as lookup for the dataset
-- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
-embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
+- [x] Unet baseline with pre-trained ResNet-50 backbone
+- [ ] Inference script
+- [ ] Submission script
+- [ ] Separate evaluation script
+- [ ] Log confusion matrix
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
 - [ ] SwinV2-B
-- [ ] Cross-Validation
 - [ ] `OneCycleLR` or Cosine schedule
 - [ ] Freeze strategy
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
+- [ ] TTA
+- [ ] Cross-Validation
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
-- [ ] TTA
+- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
+- [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
+- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
+embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
 
 ## 2023-12-02
 
@@ -80,3 +83,12 @@ Findings:
 * Need to ensure checkpoint logging works as it should
 * Make image logging work fine
 * Image logging should no longer work during validation sanity checks
+
+## 2023-12-14
+
+* Remove device stats monitor callback
+* Adjust checkpoint saving path to the same location as `mlflow` artifacts
+* Training cannot converge, the network is not learning. A bug somewhere - most likely data normalization issue
+* Fix data normalization issue when during validation the transforms were not being applied
+* Train first `UNet` model with `ResNet-50` encoder for 10 epochs successfully - final `val/dice` score was 0.782
+* TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions

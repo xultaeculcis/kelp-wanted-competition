@@ -9,8 +9,9 @@ from typing import Any, Literal
 import mlflow
 import pytorch_lightning as pl
 import torch
+from mlflow import ActiveRun
 from pytorch_lightning import Callback
-from pytorch_lightning.callbacks import DeviceStatsMonitor, EarlyStopping, LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import Logger, MLFlowLogger
 
 from kelp.core.configs import ConfigBase
@@ -325,7 +326,6 @@ def make_callbacks(
         mode="max",
     )
     lr_monitor = LearningRateMonitor(logging_interval="step", log_momentum=True, log_weight_decay=True)
-    device_stats_monitor = DeviceStatsMonitor()
 
     sanitized_monitor_metric = monitor_metric.replace("/", "_")
     filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.3f}}"
@@ -338,7 +338,11 @@ def make_callbacks(
         auto_insert_metric_name=False,
         filename=filename_str,
     )
-    return [early_stopping, lr_monitor, device_stats_monitor, checkpoint]
+    return [early_stopping, lr_monitor, checkpoint]
+
+
+def get_mlflow_run_dir(current_run: ActiveRun, output_dir: Path) -> Path:
+    return Path(output_dir / str(current_run.info.experiment_id) / current_run.info.run_id)
 
 
 def main() -> None:
@@ -349,9 +353,10 @@ def main() -> None:
     mlflow.set_experiment(cfg.experiment)
     mlflow.pytorch.autolog()
 
-    with mlflow.start_run(run_name=cfg.run_name):
+    with mlflow.start_run(run_name=cfg.run_name) as run:
         mlflow.log_dict(cfg.model_dump(), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump())
+        mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
         datamodule = KelpForestDataModule(
             root_dir=cfg.data_dir,
             metadata_fp=cfg.metadata_fp,
@@ -381,7 +386,7 @@ def main() -> None:
                 tags=cfg.tags,
             ),
             callbacks=make_callbacks(
-                output_dir=cfg.output_dir / cfg.experiment,
+                output_dir=mlflow_run_dir / "artifacts" / "checkpoints",
                 early_stopping_patience=cfg.early_stopping_patience,
                 save_top_k=cfg.save_top_k,
             ),

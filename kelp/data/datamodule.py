@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import kornia.augmentation as K
 import pytorch_lightning as pl
-import torch
 import torchvision.transforms as T
 from matplotlib import pyplot as plt
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from kelp.consts.data import DATASET_STATS
@@ -48,7 +48,8 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.mean, self.std, self.in_channels = self.resolve_normalization_stats()
-        self.train_augmentations = self.resolve_train_augmentations()
+        self.train_augmentations = self.resolve_augmentations(stage="train")
+        self.val_augmentations = self.resolve_augmentations(stage="val")
         self.pad = T.Pad(
             padding=[
                 (image_size - TILE_SIZE) // 2,
@@ -56,6 +57,20 @@ class KelpForestDataModule(pl.LightningDataModule):
             fill=0,
             padding_mode="constant",
         )
+
+    def apply_transform(
+        self,
+        transforms: Callable[[Tensor, Tensor], tuple[Tensor, Tensor]],
+        batch: dict[str, Tensor],
+    ) -> dict[str, Tensor]:
+        # Kornia expects masks to be floats with a channel dimension
+        x = batch["image"]
+        y = batch["mask"].float().unsqueeze(1)
+        x, y = transforms(x, y)
+        # torchmetrics expects masks to be longs without a channel dimension
+        batch["image"] = x
+        batch["mask"] = y.squeeze(1).long()
+        return batch
 
     def on_after_batch_transfer(self, batch: dict[str, Any], batch_idx: int) -> dict[str, Any]:
         """Apply batch augmentations after batch is transferred to the device.
@@ -73,31 +88,34 @@ class KelpForestDataModule(pl.LightningDataModule):
             and hasattr(self.trainer, "training")
             and self.trainer.training
         ):
-            # Kornia expects masks to be floats with a channel dimension
-            x = batch["image"]
-            y = batch["mask"].float().unsqueeze(1)
-
-            x, y = self.train_augmentations(x, y)
-
-            # torchmetrics expects masks to be longs without a channel dimension
-            batch["image"] = x
-            batch["mask"] = y.squeeze(1).long()
+            batch = self.apply_transform(self.train_augmentations, batch)
+        else:
+            batch = self.apply_transform(self.val_augmentations, batch)
 
         return batch
 
-    def common_transforms(self, sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    def common_transforms(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
         sample["image"] = self.pad(sample["image"])
         sample["mask"] = self.pad(sample["mask"])
         return sample
 
-    def resolve_train_augmentations(self) -> Callable[[torch.Tensor, torch.Tensor], tuple[torch.Tensor, torch.Tensor]]:
-        return K.AugmentationSequential(  # type: ignore[no-any-return]
-            K.Normalize(mean=self.mean, std=self.std),
-            K.RandomRotation(p=0.5, degrees=90),
-            K.RandomHorizontalFlip(p=0.5),
-            K.RandomVerticalFlip(p=0.5),
-            data_keys=["input", "mask"],
-        )
+    def resolve_augmentations(
+        self,
+        stage: Literal["train", "val"],
+    ) -> Callable[[Tensor, Tensor], tuple[Tensor, Tensor]]:
+        if stage == "train":
+            return K.AugmentationSequential(  # type: ignore[no-any-return]
+                K.Normalize(mean=self.mean, std=self.std),
+                K.RandomRotation(p=0.5, degrees=90),
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomVerticalFlip(p=0.5),
+                data_keys=["input", "mask"],
+            )
+        else:
+            return K.AugmentationSequential(  # type: ignore[no-any-return]
+                K.Normalize(mean=self.mean, std=self.std),
+                data_keys=["input", "mask"],
+            )
 
     def setup(self, stage: str | None = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -175,11 +193,11 @@ class KelpForestDataModule(pl.LightningDataModule):
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot`."""
         return self.val_dataset.plot(*args, **kwargs)
 
-    def resolve_normalization_stats(self) -> tuple[torch.Tensor, torch.Tensor, int]:
+    def resolve_normalization_stats(self) -> tuple[Tensor, Tensor, int]:
         band_stats = {band: DATASET_STATS[band] for band in self.base_bands}
         if self.spectral_indices:
             extra_band_stats = {index: DATASET_STATS[index] for index in self.spectral_indices}
             band_stats.update(extra_band_stats)
         mean = [val["mean"] for val in band_stats.values()]
         std = [val["std"] for val in band_stats.values()]
-        return torch.Tensor(mean), torch.Tensor(std), len(band_stats)
+        return Tensor(mean), Tensor(std), len(band_stats)
