@@ -92,3 +92,4 @@ Findings:
 * Fix data normalization issue when during validation the transforms were not being applied
 * Train first `UNet` model with `ResNet-50` encoder for 10 epochs successfully - final `val/dice` score was 0.782
 * TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions
+* WIP. inference script - the datamodule needs refactoring, the user should be able to crate it either from metadata file or from list of file paths

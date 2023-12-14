@@ -4,12 +4,14 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 import kornia.augmentation as K
+import pandas as pd
 import pytorch_lightning as pl
 import torchvision.transforms as T
 from matplotlib import pyplot as plt
 from torch import Tensor
 from torch.utils.data import DataLoader
 
+from kelp import consts
 from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import KelpForestSegmentationDataset
 
@@ -30,7 +32,7 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: Path,
+        data_dir: Path,
         metadata_fp: Path,
         spectral_indices: list[str] | None = None,
         cv_split: int = 0,
@@ -41,8 +43,9 @@ class KelpForestDataModule(pl.LightningDataModule):
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
         assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
-        self.root_dir = root_dir
+        self.data_dir = data_dir
         self.metadata_fp = metadata_fp
+        self.metadata = pd.read_parquet(metadata_fp)
         self.spectral_indices = spectral_indices
         self.cv_split = cv_split
         self.batch_size = batch_size
@@ -57,6 +60,28 @@ class KelpForestDataModule(pl.LightningDataModule):
             fill=0,
             padding_mode="constant",
         )
+
+    def resolve_file_paths(self, split: str) -> tuple[list[Path], list[Path]]:
+        split_data = self.metadata[self.metadata[f"split_{self.cv_split}"] == split]
+        img_folder = consts.data.TRAIN if split in [consts.data.TRAIN, consts.data.VAL] else consts.data.TEST
+        image_paths = split_data.apply(
+            lambda row: self.data_dir / img_folder / "images" / f"{row['tile_id']}_satellite.tif",
+            axis=1,
+        ).tolist()
+        mask_paths = split_data.apply(
+            lambda row: self.data_dir / img_folder / "masks" / f"{row['tile_id']}_kelp.tif",
+            axis=1,
+        ).tolist()
+        return image_paths, mask_paths
+
+    def build_dataset(self, split: str) -> KelpForestSegmentationDataset:
+        images, masks = self.resolve_file_paths(split)
+        ds = KelpForestSegmentationDataset(
+            image_fps=images,
+            mask_fps=masks,
+            transforms=self.common_transforms,
+        )
+        return ds
 
     def apply_transform(
         self,
@@ -125,30 +150,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-
-        self.train_dataset = KelpForestSegmentationDataset(
-            data_dir=self.root_dir,
-            metadata_fp=self.metadata_fp,
-            cv_split=self.cv_split,
-            split="train",
-            transforms=self.common_transforms,
-        )
-
-        self.val_dataset = KelpForestSegmentationDataset(
-            data_dir=self.root_dir,
-            metadata_fp=self.metadata_fp,
-            cv_split=self.cv_split,
-            split="val",
-            transforms=self.common_transforms,
-        )
-
-        self.test_dataset = KelpForestSegmentationDataset(
-            data_dir=self.root_dir,
-            metadata_fp=self.metadata_fp,
-            cv_split=self.cv_split,
-            split="test",
-            transforms=self.common_transforms,
-        )
+        self.train_dataset = self.build_dataset(consts.data.TRAIN)
+        self.val_dataset = self.build_dataset(consts.data.VAL)
+        self.test_dataset = self.build_dataset(consts.data.TEST)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

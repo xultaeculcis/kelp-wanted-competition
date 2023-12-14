@@ -358,7 +358,7 @@ def main() -> None:
         mlflow.log_params(cfg.model_dump())
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
         datamodule = KelpForestDataModule(
-            root_dir=cfg.data_dir,
+            data_dir=cfg.data_dir,
             metadata_fp=cfg.metadata_fp,
             cv_split=cfg.cv_split,
             batch_size=cfg.batch_size,
