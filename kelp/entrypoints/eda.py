@@ -22,7 +22,7 @@ from kelp.data.plotting import plot_sample
 from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(action="ignore", category=NotGeoreferencedWarning, message="Dataset has no geotransform")
-
+HIGH_CORRUPTION_PCT_THRESHOLD = 0.4
 _logger = get_logger(__name__)
 
 
@@ -36,6 +36,7 @@ class SatelliteImageStats(BaseModel):
     non_kelp_pixels: int | None = None
     dem_nan_pixels: int
     qa_corrupted_pixels_pct: float | None = None
+    high_corrupted_pixels_pct: bool | None = None
 
 
 class PreProcessingConfig(ConfigBase):
@@ -131,6 +132,7 @@ def calculate_stats(tile_id_split_tuple: tuple[str, str], data_dir: Path) -> Sat
         qa_ok = nan_vals == 0
         all_pixels = np.prod(qa_band.shape)
         qa_corrupted_pixels_pct = nan_vals.item() / all_pixels.item()
+        high_corrupted_pixels_pct = qa_corrupted_pixels_pct > HIGH_CORRUPTION_PCT_THRESHOLD
 
     if split != "test":
         with rasterio.open(data_dir / split / "masks" / f"{tile_id}_kelp.tif") as src:
@@ -153,6 +155,7 @@ def calculate_stats(tile_id_split_tuple: tuple[str, str], data_dir: Path) -> Sat
         dem_nan_pixels=dem_nan_pixels,
         qa_ok=qa_ok,
         qa_corrupted_pixels_pct=qa_corrupted_pixels_pct,
+        high_corrupted_pixels_pct=high_corrupted_pixels_pct,
     )
 
 
@@ -279,7 +282,6 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
 
 @timed
 def extract_stats(data_dir: Path, records: list[tuple[str, str]]) -> list[SatelliteImageStats]:
-    _logger.info("Calculating image stats")
     return (  # type: ignore[no-any-return]
         dask.bag.from_sequence(records).map(calculate_stats, data_dir=data_dir).compute()
     )

@@ -3,30 +3,33 @@
 Checklist:
 
 - [x] EDA
-- [ ] MLFlow logger
-- [ ] Log a few hundred images during validation loop
-- [ ] Log confusion matrix
-- [ ] Log segmentation metrics
-- [ ] Unet baseline with pre-trained ResNet-50 backbone
+- [x] Use metadata csv as lookup for the dataset
+- [x] Log a few hundred images during validation loop
+- [x] Log segmentation metrics
+- [x] MLFlow logger
 - [x] Pre-process data and add extra channels: NDVI, NDWI, EVI, water masks from different sources (NDVI, DEM) etc.
-- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
-- [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
-- [ ] Use metadata csv as lookup for the dataset
-- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
-embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
+- [x] Unet baseline with pre-trained ResNet-50 backbone
+- [ ] Inference script
+- [ ] Submission script
+- [ ] Separate evaluation script
+- [ ] Log confusion matrix
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
 - [ ] SwinV2-B
-- [ ] Cross-Validation
 - [ ] `OneCycleLR` or Cosine schedule
 - [ ] Freeze strategy
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
+- [ ] TTA
+- [ ] Cross-Validation
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
-- [ ] TTA
+- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
+- [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
+- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
+embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
 
 ## 2023-12-02
 
@@ -35,7 +38,7 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 * No CRS specified in the GeoTiff files - cannot perform split easily... Idea: find the same regions using embeddings
 * `torchgeo.RasterDataset` cannot be used - use `torchgeo.VisionDataset` instead
 
-# 2023-12-03
+## 2023-12-03
 
 * WIP torch dataset implementation
 * Added pre-processing script, need to calculate indices
@@ -45,7 +48,7 @@ Findings:
 * DEM will need to be clipped due to nan values -> use `np.maximum(0, arr)`
 * Cloud mask is actually the QA mask - it also contains faulty pixels
 
-# 2023-12-08
+## 2023-12-08
 
 * -32k pixels are also in the main bands not just the DEM layer -> substitute them with zeroes
 * Spent last few days implementing spectral indices for Landsat scenes
@@ -55,8 +58,37 @@ Findings:
 * Add option to use min-max normalize using quantiles (1-99)
 * WIP. Calculate stats using masked and clamped data
 
-# 2023-12-09
+## 2023-12-09
 
 * Finally, computed stats for whole dataset
 * Added code to find images with a lot of invalid values in the QA mask
 * Added sample plotting logic on `Dataset` class
+
+## 2023-12-12
+
+* Add stratified k-fold split
+* Update augmentations
+* Pad images to 352x352 - required by the model for the image shape to be divisible by 32
+* Messed up something in the dataset - training batch has some `torch.nan` values
+
+## 2023-12-13
+
+* Add GPU utils to power limit RTX 3090 for more comfortable training temperatures
+* Add dataset stats to `consts`
+* Remove `torchgeo` package dependency since its newest version conflicted with pydantic v2 - didn't use its features anyway...
+* Use index min value instead of `torch.nan` to mask corrupted pixels
+* Finally, train a single epoch
+* `MLFlowLogger` is wonky - will use `mlflow` autologging capabilities
+* Make `mlflow` logging work correctly
+* Need to ensure checkpoint logging works as it should
+* Make image logging work fine
+* Image logging should no longer work during validation sanity checks
+
+## 2023-12-14
+
+* Remove device stats monitor callback
+* Adjust checkpoint saving path to the same location as `mlflow` artifacts
+* Training cannot converge, the network is not learning. A bug somewhere - most likely data normalization issue
+* Fix data normalization issue when during validation the transforms were not being applied
+* Train first `UNet` model with `ResNet-50` encoder for 10 epochs successfully - final `val/dice` score was 0.782
+* TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions
