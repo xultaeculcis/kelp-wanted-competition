@@ -33,9 +33,9 @@ class KelpForestSegmentationDataset(Dataset):
         mask_fps: list[Path] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
     ) -> None:
-        self.transforms = transforms
         self.image_fps = image_fps
         self.mask_fps = mask_fps
+        self.transforms = transforms
         self.append_ndvi = INDICES["NDVI"]
 
     def __len__(self) -> int:
@@ -60,11 +60,12 @@ class KelpForestSegmentationDataset(Dataset):
         if self.transforms:
             sample = self.transforms(sample)
 
-        sample = self.ensure_proper_sample_format(sample)
+        sample = self._ensure_proper_sample_format(sample)
 
         return sample
 
-    def ensure_proper_sample_format(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
+    @staticmethod
+    def _ensure_proper_sample_format(sample: dict[str, Tensor]) -> dict[str, Tensor]:
         """Transform a single sample from the Dataset.
 
         Args:
@@ -80,8 +81,8 @@ class KelpForestSegmentationDataset(Dataset):
 
         return sample
 
+    @staticmethod
     def plot(
-        self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: str | None = None,

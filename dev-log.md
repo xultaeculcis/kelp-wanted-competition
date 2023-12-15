@@ -66,7 +66,7 @@ Findings:
 
 ## 2023-12-12
 
-* Add stratified k-fold split
+* Add stratified k-fold split - stratification using following per image flag combination: `qa_ok`, `has_kelp`, `dem_has_nans`, `high_corrupted_pixels_pct`
 * Update augmentations
 * Pad images to 352x352 - required by the model for the image shape to be divisible by 32
 * Messed up something in the dataset - training batch has some `torch.nan` values

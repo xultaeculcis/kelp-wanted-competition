@@ -183,7 +183,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.val_metrics(y_hat_hard, y)
 
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
-        if batch_idx < 3 and self.global_step > 0:
+        if batch_idx < 3 and self.global_step > 0 and False:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
             batch["prediction"] = y_hat_hard
             for key in ["image", "mask", "prediction"]:

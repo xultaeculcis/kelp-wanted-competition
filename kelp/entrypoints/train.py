@@ -326,7 +326,6 @@ def make_callbacks(
         mode="max",
     )
     lr_monitor = LearningRateMonitor(logging_interval="step", log_momentum=True, log_weight_decay=True)
-
     sanitized_monitor_metric = monitor_metric.replace("/", "_")
     filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.3f}}"
     checkpoint = ModelCheckpoint(
@@ -357,9 +356,10 @@ def main() -> None:
         mlflow.log_dict(cfg.model_dump(), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump())
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
-        datamodule = KelpForestDataModule(
+        datamodule = KelpForestDataModule.from_metadata_file(
             data_dir=cfg.data_dir,
             metadata_fp=cfg.metadata_fp,
+            spectral_indices=cfg.indices,
             cv_split=cfg.cv_split,
             batch_size=cfg.batch_size,
             image_size=cfg.image_size,
