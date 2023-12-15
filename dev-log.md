@@ -93,3 +93,13 @@ Findings:
 * Train first `UNet` model with `ResNet-50` encoder for 10 epochs successfully - final `val/dice` score was 0.782
 * TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions
 * WIP. inference script - the datamodule needs refactoring, the user should be able to crate it either from metadata file or from list of file paths
+
+## 2023-12-15
+
+* Add factory methods to `KelpForestDataModule`
+* `TrainConfig` now has dedicated properties for data module, model and trainer kwargs
+* Prediction script works, preds look ok
+* Tried to install lightning-bolts for torch ORT support - PL ends up being downgraded since bolts require it to be less than 2.0
+* Needed to bring the images to original shape because of padding necessary by unet -> hacked ugly solution to remove the padding
+* Training a few more models - looks like seed is not respected and each model ends up having different training curves and final performance
+* PL way of logging metrics results in `epoch` being treated as a step in visualizations of learning curves in MLFlow UI - a bit annoying
