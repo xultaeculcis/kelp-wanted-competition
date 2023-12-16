@@ -66,11 +66,16 @@ class TrainConfig(ConfigBase):
         "soft_bce_with_logits",
         "soft_cross_entropy_with_logits",
         "mcc",
-    ] = "soft_bce_with_logits"
+    ] = "ce"
+    compile: bool = False
+    compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
+    compile_dynamic: bool | None = None
+    ort: bool = False
 
     # callbacks
     save_top_k: int = 1
     monitor_metric: str = "val/dice"
+    monitor_mode: Literal["min", "max"] = "max"
     early_stopping_patience: int = 1
 
     # trainer params
@@ -142,6 +147,15 @@ class TrainConfig(ConfigBase):
         }
 
     @property
+    def callbacks_kwargs(self) -> dict[str, Any]:
+        return {
+            "save_top_k": self.save_top_k,
+            "monitor_metric": self.monitor_metric,
+            "monitor_mode": self.monitor_mode,
+            "early_stopping_patience": self.early_stopping_patience,
+        }
+
+    @property
     def model_kwargs(self) -> dict[str, Any]:
         return {
             "architecture": self.architecture,
@@ -157,6 +171,10 @@ class TrainConfig(ConfigBase):
             "pretrained": self.pretrained,
             "objective": self.objective,
             "loss": self.loss,
+            "compile": self.compile,
+            "compile_mode": self.compile_mode,
+            "compile_dynamic": self.compile_dynamic,
+            "ort": self.ort,
         }
 
     @property
@@ -288,6 +306,19 @@ def parse_args() -> TrainConfig:
         default="val/dice",
     )
     parser.add_argument(
+        "--monitor_mode",
+        type=str,
+        default="max",
+    )
+    parser.add_argument("--ort", action="store_true")
+    parser.add_argument("--compile", action="store_true")
+    parser.add_argument("--compile_dynamic", action="store_true")
+    parser.add_argument(
+        "--compile_mode",
+        type=str,
+        default="reduce-overhead",
+    )
+    parser.add_argument(
         "--save_top_k",
         type=int,
         default=1,
@@ -364,26 +395,28 @@ def make_callbacks(
     early_stopping_patience: int = 3,
     save_top_k: int = 1,
     monitor_metric: str = "val/dice",
+    monitor_mode: str = "max",
 ) -> list[Callback]:
     early_stopping = EarlyStopping(
-        monitor="val/dice",
+        monitor=monitor_metric,
         patience=early_stopping_patience,
         verbose=True,
-        mode="max",
+        mode=monitor_mode,
     )
     lr_monitor = LearningRateMonitor(logging_interval="step", log_momentum=True, log_weight_decay=True)
     sanitized_monitor_metric = monitor_metric.replace("/", "_")
     filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.3f}}"
     checkpoint = ModelCheckpoint(
-        monitor="val/dice",
-        mode="max",
+        monitor=monitor_metric,
+        mode=monitor_mode,
         verbose=True,
         save_top_k=save_top_k,
         dirpath=output_dir,
         auto_insert_metric_name=False,
         filename=filename_str,
     )
-    return [early_stopping, lr_monitor, checkpoint]
+    callbacks = [early_stopping, lr_monitor, checkpoint]
+    return callbacks
 
 
 def get_mlflow_run_dir(current_run: ActiveRun, output_dir: Path) -> Path:
@@ -404,6 +437,7 @@ def main() -> None:
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
         datamodule = KelpForestDataModule.from_metadata_file(**cfg.data_module_kwargs)
         segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)
+
         trainer = pl.Trainer(
             logger=make_loggers(
                 experiment=cfg.experiment,
@@ -411,8 +445,7 @@ def main() -> None:
             ),
             callbacks=make_callbacks(
                 output_dir=mlflow_run_dir / "artifacts" / "checkpoints",
-                early_stopping_patience=cfg.early_stopping_patience,
-                save_top_k=cfg.save_top_k,
+                **cfg.callbacks_kwargs,
             ),
             **cfg.trainer_kwargs,
         )

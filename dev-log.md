@@ -12,7 +12,6 @@ Checklist:
 - [x] Inference script
 - [x] Submission script
 - [ ] 10-fold CV instead of 5-fold
-- [ ] 10-fold CV instead of 5-fold
 - [ ] Change channel order (SWIR, NIR, R) -> (R, G, B)
 - [ ] Training from scratch vs pre-trained weights
 - [ ] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
@@ -115,6 +114,11 @@ Findings:
 
 ## 2023-12-16
 
+* Add submission creation script
 * First submission using unet/resnet50 combination trained for 10 epochs - score 0.3861 - let's train for longer
 * Need to implement a few makefile commands for training and prediction
 * Hmmm, maybe run hyperparameter search on Azure ML?
+* Trying to install torch-ort for training speedups (docs say about 37% speedups)
+* No speedups at all - some new package messed up logging, debug statements all over the place...
+* `torch.compile` is the same - no speedups, takes forever to compile the model using `mode` != `default` (which too is painfully slow)
+* Reverting the env changes

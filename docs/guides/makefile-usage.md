@@ -21,7 +21,7 @@ make help
 * **conda-lock** - Creates conda-lock file
 
     ```shell
-    make conda-lock
+    make lock
     ```
 
 ### Creating environments
@@ -42,6 +42,12 @@ make help
 
     ```shell
     make setup-editable
+    ```
+
+* **configure-torch-ort** - Configures torch-ort
+
+    ```shell
+    make configure-torch-ort
     ```
 
 * **setup-local-env** - Creates local environment and installs pre-commit hooks

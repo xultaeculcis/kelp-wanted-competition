@@ -4,6 +4,8 @@ import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from lightning_fabric.utilities.exceptions import MisconfigurationException
+from lightning_utilities.core.imports import module_available
 from matplotlib import pyplot as plt
 from torch import Tensor
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
@@ -147,6 +149,23 @@ class KelpForestSegmentationTask(pl.LightningModule):
             )
         else:
             raise ValueError(f"{architecture=} is not supported.")
+
+        if self.hyperparams["compile"]:
+            model = torch.compile(
+                model,
+                mode=self.hyperparams["compile_mode"],
+                dynamic=self.hyperparams["compile_dynamic"],
+            )
+
+        if self.hyperparams["ort"]:
+            if module_available("torch_ort"):
+                from torch_ort import ORTModule  # noqa
+
+                model = ORTModule(model)
+            else:
+                raise MisconfigurationException(
+                    "Torch ORT is required to use ORT. See here for installation: https://github.com/pytorch/ort"
+                )
 
         return model
 
