@@ -74,6 +74,9 @@ class TrainConfig(ConfigBase):
     compile_dynamic: bool | None = None
     ort: bool = False
     decoder_attention_type: str | None = None
+    pct_start: float = 0.3
+    div_factor: float = 2
+    final_div_factor: float = 1e2
 
     # callbacks
     save_top_k: int = 1
@@ -193,6 +196,10 @@ class TrainConfig(ConfigBase):
             "compile_dynamic": self.compile_dynamic,
             "ort": self.ort,
             "decoder_attention_type": self.decoder_attention_type,
+            "epochs": self.epochs,
+            "pct_start": self.pct_start,
+            "div_factor": self.div_factor,
+            "final_div_factor": self.final_div_factor,
         }
 
     @property

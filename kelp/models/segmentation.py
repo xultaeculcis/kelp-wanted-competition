@@ -8,6 +8,8 @@ from lightning_fabric.utilities.exceptions import MisconfigurationException
 from lightning_utilities.core.imports import module_available
 from matplotlib import pyplot as plt
 from torch import Tensor
+from torch.optim import Adam, AdamW
+from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
 from kelp.data.utils import unbind_samples
@@ -258,11 +260,33 @@ class KelpForestSegmentationTask(pl.LightningModule):
 
     def configure_optimizers(self) -> Dict[str, Any]:
         if self.hyperparams["optimizer"] == "adam":
-            optimizer = torch.optim.Adam(
+            optimizer = Adam(
+                self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
+            )
+        elif self.hyperparams["optimizer"] == "adamw":
+            optimizer = AdamW(
                 self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
             )
         else:
             raise ValueError(f"Optimizer: {self.hyperparams['optimizer']} is not supported.")
+
+        if self.hyperparams["lr_scheduler"] == "onecycle":
+            scheduler = OneCycleLR(
+                optimizer,
+                max_lr=self.hyperparams["lr"],
+                steps_per_epoch=len(self.trainer.train_dataloader),
+                epochs=self.hyperparams["epochs"],
+                pct_start=self.hyperparams["pct_start"],
+                div_factor=self.hyperparams["div_factor"],
+                final_div_factor=self.hyperparams["final_div_factor"],
+            )
+        else:
+            return {"optimizer": optimizer}
+
         return {
             "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+            },
         }

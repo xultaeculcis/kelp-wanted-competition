@@ -11,9 +11,9 @@ Checklist:
 - [x] Unet baseline with pre-trained ResNet-50 backbone
 - [x] Inference script
 - [x] Submission script
-- [ ] 10-fold CV instead of 5-fold
-- [ ] Change channel order (SWIR, NIR, R) -> (R, G, B)
-- [ ] Training from scratch vs pre-trained weights
+- [x] 10-fold CV instead of 5-fold
+- [x] Change channel order (SWIR, NIR, R) -> (R, G, B)
+- [x] Training from scratch vs pre-trained weights
 - [ ] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [ ] Different loss functions
 - [ ] Add extra spectral indices combinations
@@ -136,3 +136,4 @@ Findings:
 * Removing NDVI -> dice=**0.758**, keep NDVI
 * Adding `decoder_attention_type="scse"` did not improve the performance (dice=**0.755**)
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI -> bump performance to dice=**0.762**
+* WIP. `OneCycleLR`
