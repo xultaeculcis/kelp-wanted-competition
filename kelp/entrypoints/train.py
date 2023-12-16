@@ -38,17 +38,16 @@ class TrainConfig(ConfigBase):
     data_dir: Path
     metadata_fp: Path
     cv_split: int = 0
-    num_classes: int = 2
     spectral_indices: str | None = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
-    seed: int = 42
 
     # model params
     architecture: str
     encoder: str
     encoder_weights: str
+    num_classes: int = 2
     ignore_index: int | None = None
     optimizer: Literal["adam", "adamw"] = "adamw"
     weight_decay: float = 1e-4
@@ -84,7 +83,10 @@ class TrainConfig(ConfigBase):
     log_every_n_steps: int = 50
     accumulate_grad_batches: int = 1
     benchmark: bool = False
+
+    # misc
     output_dir: Path
+    seed: int = 42
 
     @property
     def optimizer_config(self) -> dict[str, Any]:
@@ -126,6 +128,50 @@ class TrainConfig(ConfigBase):
             indices.remove("NDVI")
 
         return indices
+
+    @property
+    def data_module_kwargs(self) -> dict[str, Any]:
+        return {
+            "data_dir": self.data_dir,
+            "metadata_fp": self.metadata_fp,
+            "cv_split": self.cv_split,
+            "spectral_indices": self.indices,
+            "image_size": self.image_size,
+            "batch_size": self.batch_size,
+            "num_workers": self.num_workers,
+        }
+
+    @property
+    def model_kwargs(self) -> dict[str, Any]:
+        return {
+            "architecture": self.architecture,
+            "encoder": self.encoder,
+            "encoder_weights": self.encoder_weights,
+            "ignore_index": self.ignore_index,
+            "num_classes": self.num_classes,
+            "optimizer": self.optimizer,
+            "weight_decay": self.weight_decay,
+            "lr_scheduler": self.lr_scheduler,
+            "strategy": self.strategy,
+            "lr": self.lr,
+            "pretrained": self.pretrained,
+            "objective": self.objective,
+            "loss": self.loss,
+        }
+
+    @property
+    def trainer_kwargs(self) -> dict[str, Any]:
+        return {
+            "precision": self.precision,
+            "fast_dev_run": self.fast_dev_run,
+            "max_epochs": self.epochs,
+            "limit_train_batches": self.limit_train_batches,
+            "limit_val_batches": self.limit_val_batches,
+            "limit_test_batches": self.limit_test_batches,
+            "log_every_n_steps": self.log_every_n_steps,
+            "accumulate_grad_batches": self.accumulate_grad_batches,
+            "benchmark": self.benchmark,
+        }
 
 
 def parse_args() -> TrainConfig:
@@ -326,7 +372,6 @@ def make_callbacks(
         mode="max",
     )
     lr_monitor = LearningRateMonitor(logging_interval="step", log_momentum=True, log_weight_decay=True)
-
     sanitized_monitor_metric = monitor_metric.replace("/", "_")
     filename_str = "kelp-epoch={epoch:02d}-" f"{sanitized_monitor_metric}=" f"{{{monitor_metric}:.3f}}"
     checkpoint = ModelCheckpoint(
@@ -354,33 +399,12 @@ def main() -> None:
     mlflow.pytorch.autolog()
 
     with mlflow.start_run(run_name=cfg.run_name) as run:
-        mlflow.log_dict(cfg.model_dump(), artifact_file="config.yaml")
+        mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump())
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
-        datamodule = KelpForestDataModule(
-            root_dir=cfg.data_dir,
-            metadata_fp=cfg.metadata_fp,
-            cv_split=cfg.cv_split,
-            batch_size=cfg.batch_size,
-            image_size=cfg.image_size,
-            num_workers=cfg.num_workers,
-        )
-        segmentation_task = KelpForestSegmentationTask(
-            architecture=cfg.architecture,
-            encoder=cfg.encoder,
-            encoder_weights=cfg.encoder_weights,
-            pretrained=cfg.pretrained,
-            in_channels=datamodule.in_channels,
-            num_classes=cfg.num_classes,
-            loss=cfg.loss,
-            objective=cfg.objective,
-            ignore_index=cfg.ignore_index,
-            optimizer=cfg.optimizer,
-            lr=cfg.lr,
-            weight_decay=cfg.weight_decay,
-        )
+        datamodule = KelpForestDataModule.from_metadata_file(**cfg.data_module_kwargs)
+        segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)
         trainer = pl.Trainer(
-            precision=cfg.precision,
             logger=make_loggers(
                 experiment=cfg.experiment,
                 tags=cfg.tags,
@@ -390,14 +414,7 @@ def main() -> None:
                 early_stopping_patience=cfg.early_stopping_patience,
                 save_top_k=cfg.save_top_k,
             ),
-            fast_dev_run=cfg.fast_dev_run,
-            max_epochs=cfg.epochs,
-            limit_train_batches=cfg.limit_train_batches,
-            limit_val_batches=cfg.limit_val_batches,
-            limit_test_batches=cfg.limit_test_batches,
-            log_every_n_steps=cfg.log_every_n_steps,
-            accumulate_grad_batches=cfg.accumulate_grad_batches,
-            benchmark=cfg.benchmark,
+            **cfg.trainer_kwargs,
         )
         trainer.fit(model=segmentation_task, datamodule=datamodule)
 

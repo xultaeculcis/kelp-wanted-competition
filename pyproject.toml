@@ -116,6 +116,7 @@ module = [
     "dask.*",
     "distributed.*",
     "rasterio.*",
+    "affine.*",
     "matplotlib.*",
     "seaborn.*",
     "mkdocs_gen_files.*",

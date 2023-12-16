@@ -34,18 +34,20 @@ class KelpForestSegmentationTask(pl.LightningModule):
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
-
-        self.ignore_index = self.hyperparams["ignore_index"]
-
-        self.loss = self.resolve_loss()
-        self.model = self.config_task()
+        self.loss = self._resolve_loss()
+        self.model = self._configure_task()
 
         self.train_metrics = MetricCollection(
             metrics={
+                "dice": Dice(
+                    num_classes=self.hyperparams["num_classes"],
+                    ignore_index=self.hyperparams["ignore_index"],
+                    average="macro",
+                ),
                 "iou": JaccardIndex(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
             },
             prefix="train/",
@@ -54,48 +56,48 @@ class KelpForestSegmentationTask(pl.LightningModule):
             metrics={
                 "dice": Dice(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                     average="macro",
                 ),
                 "iou": JaccardIndex(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "per_class_iou": JaccardIndex(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "accuracy": Accuracy(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "recall": Recall(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "precision": Precision(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "f1": F1Score(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "conf_mtrx": ConfusionMatrix(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "norm_conf_mtrx": ConfusionMatrix(
                     task=self.hparams["objective"],
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_index,
+                    ignore_index=self.hyperparams["ignore_index"],
                     normalize="true",
                 ),
             },
@@ -103,7 +105,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         )
         self.test_metrics = self.val_metrics.clone(prefix="test/")
 
-    def resolve_loss(self) -> nn.Module:
+    def _resolve_loss(self) -> nn.Module:
         loss_fn = self.hyperparams["loss"]
         ignore_index = self.hyperparams["ignore_index"]
         num_classes = self.hyperparams["num_classes"]
@@ -129,7 +131,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             raise ValueError(f"{loss_fn=} is not supported.")
         return loss
 
-    def config_task(self) -> nn.Module:
+    def _configure_task(self) -> nn.Module:
         architecture = self.hyperparams["architecture"]
         encoder = self.hyperparams["encoder"]
         encoder_weights = self.hyperparams["encoder_weights"]
@@ -183,7 +185,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.val_metrics(y_hat_hard, y)
 
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
-        if batch_idx < 3 and self.global_step > 0:
+        if batch_idx < 3 and self.global_step > 0 and False:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
             batch["prediction"] = y_hat_hard
             for key in ["image", "mask", "prediction"]:
@@ -202,7 +204,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         metrics.pop("val/per_class_iou")
         metrics.pop("val/norm_conf_mtrx")
         metrics.pop("val/conf_mtrx")
-        self.log_dict(metrics)
+        self.log_dict(metrics, on_step=False, on_epoch=True)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -219,8 +221,20 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.test_metrics(y_hat_hard, y)
 
     def on_test_epoch_end(self) -> None:
-        self.log_dict(self.test_metrics.compute())
+        metrics = self.test_metrics.compute()
+        metrics.pop("test/per_class_iou")
+        metrics.pop("test/norm_conf_mtrx")
+        metrics.pop("test/conf_mtrx")
+        self.log_dict(metrics, on_step=False, on_epoch=True)
         self.test_metrics.reset()
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        batch = args[0]
+        x = batch.pop("image")
+        y_hat = self.forward(x)
+        y_hat_hard = y_hat.argmax(dim=1)
+        batch["prediction"] = y_hat_hard
+        return batch
 
     def configure_optimizers(self) -> Dict[str, Any]:
         if self.hyperparams["optimizer"] == "adam":
