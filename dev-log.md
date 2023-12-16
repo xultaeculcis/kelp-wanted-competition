@@ -39,6 +39,12 @@ Checklist:
 - [ ] Build a CLI for eda, training, prediction and submission
 embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
 
+## What seams to work
+
+* Pre-trained weights
+* Appending NDVI
+* Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI
+
 ## 2023-12-02
 
 * Initial commit
@@ -126,3 +132,7 @@ Findings:
 * `mlflow` must have saved last checkpoint instead of the best one... Need to fix that
 * `MLFlowLogger` now uses `log_model=True`, instead of `log_model="all"` - final logged model is the same as the best one even if the latest epoch resulted in worse model
 * Figured out that `--benchmark` resulted in difference in non-deterministic model performance, will not use it again for reproducibility
+* Tried training from scratch - very slow convergence, training using pre-trained model is a must in this case. Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weights
+* Removing NDVI -> dice=**0.758**, keep NDVI
+* Adding `decoder_attention_type="scse"` did not improve the performance (dice=**0.755**)
+* Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI -> bump performance to dice=**0.762**

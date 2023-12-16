@@ -143,9 +143,10 @@ class KelpForestSegmentationTask(pl.LightningModule):
         if architecture == "unet":
             model = smp.Unet(
                 encoder_name=encoder,
-                encoder_weights=encoder_weights,
+                encoder_weights=encoder_weights if self.hyperparams["pretrained"] else None,
                 in_channels=in_channels,
                 classes=classes,
+                decoder_attention_type=self.hyperparams["decoder_attention_type"],
             )
         else:
             raise ValueError(f"{architecture=} is not supported.")
