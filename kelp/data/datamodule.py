@@ -40,6 +40,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         test_masks: list[Path] | None = None,
         predict_images: list[Path] | None = None,
         spectral_indices: list[str] | None = None,
+        band_order: list[int] | None = None,
         batch_size: int = 32,
         image_size: int = 352,
         num_workers: int = 0,
@@ -47,6 +48,8 @@ class KelpForestDataModule(pl.LightningDataModule):
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
         assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
+        if band_order is not None and len(band_order) != 7:
+            raise ValueError(f"channel_order should have exactly 7 elements, you passed {len(band_order)}")
         self.train_images = train_images or []
         self.train_masks = train_masks or []
         self.val_images = val_images or []
@@ -55,6 +58,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.test_masks = test_masks or []
         self.predict_images = predict_images or []
         self.spectral_indices = spectral_indices or []
+        self.band_order = band_order or list(range(7))
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.mean, self.std, self.in_channels = self.resolve_normalization_stats()
@@ -86,6 +90,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             image_fps=images,
             mask_fps=masks,
             transforms=self.common_transforms,
+            band_order=self.band_order,
         )
         return ds
 
@@ -222,7 +227,8 @@ class KelpForestDataModule(pl.LightningDataModule):
         return self.val_dataset.plot(*args, **kwargs)
 
     def resolve_normalization_stats(self) -> tuple[Tensor, Tensor, int]:
-        band_stats = {band: DATASET_STATS[band] for band in self.base_bands}
+        reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
+        band_stats = {band: DATASET_STATS[band] for band in reordered_bands}
         for index in self.spectral_indices:
             band_stats[index] = DATASET_STATS[index]
         mean = [val["mean"] for val in band_stats.values()]

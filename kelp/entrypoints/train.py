@@ -10,6 +10,7 @@ import mlflow
 import pytorch_lightning as pl
 import torch
 from mlflow import ActiveRun
+from pydantic import field_validator
 from pytorch_lightning import Callback
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import Logger, MLFlowLogger
@@ -39,6 +40,7 @@ class TrainConfig(ConfigBase):
     metadata_fp: Path
     cv_split: int = 0
     spectral_indices: str | None = None
+    band_order: str | None = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
@@ -46,7 +48,7 @@ class TrainConfig(ConfigBase):
     # model params
     architecture: str
     encoder: str
-    encoder_weights: str
+    encoder_weights: str | None = None
     num_classes: int = 2
     ignore_index: int | None = None
     optimizer: Literal["adam", "adamw"] = "adamw"
@@ -71,6 +73,7 @@ class TrainConfig(ConfigBase):
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
     compile_dynamic: bool | None = None
     ort: bool = False
+    decoder_attention_type: str | None = None
 
     # callbacks
     save_top_k: int = 1
@@ -92,6 +95,12 @@ class TrainConfig(ConfigBase):
     # misc
     output_dir: Path
     seed: int = 42
+
+    @field_validator("band_order")
+    def validate_channel_order(cls, value: str | None = None) -> str | None:
+        if value is None or (split_size := len(value.split(","))) == 7:
+            return value
+        raise ValueError(f"band_order should have exactly 7 values, you provided {split_size}")
 
     @property
     def optimizer_config(self) -> dict[str, Any]:
@@ -135,12 +144,20 @@ class TrainConfig(ConfigBase):
         return indices
 
     @property
+    def parsed_band_order(self) -> list[int] | None:
+        if self.band_order is None:
+            return None
+        order = [int(band_idx.strip()) for band_idx in self.band_order.split(",")]
+        return order
+
+    @property
     def data_module_kwargs(self) -> dict[str, Any]:
         return {
             "data_dir": self.data_dir,
             "metadata_fp": self.metadata_fp,
             "cv_split": self.cv_split,
             "spectral_indices": self.indices,
+            "band_order": self.parsed_band_order,
             "image_size": self.image_size,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
@@ -175,6 +192,7 @@ class TrainConfig(ConfigBase):
             "compile_mode": self.compile_mode,
             "compile_dynamic": self.compile_dynamic,
             "ort": self.ort,
+            "decoder_attention_type": self.decoder_attention_type,
         }
 
     @property
@@ -235,6 +253,12 @@ def parse_args() -> TrainConfig:
         help="A comma separated list of spectral indices to append to the samples during training",
     )
     parser.add_argument(
+        "--band_order",
+        type=str,
+        help="A comma separated list of band indices to reorder. Use it to shift input data channels. "
+        "Must have length of 7 if specified.",
+    )
+    parser.add_argument(
         "--output_dir",
         type=str,
         required=True,
@@ -252,7 +276,10 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--encoder_weights",
         type=str,
-        required=True,
+    )
+    parser.add_argument(
+        "--decoder_attention_type",
+        type=str,
     )
     parser.add_argument(
         "--objective",
