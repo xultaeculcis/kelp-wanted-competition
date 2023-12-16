@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Setup environment to match variables set by repo2docker as much as possible
 # The name of the conda environment into which the requested packages are installed
-ENV CONDA_ENV=kelp-wanted-competition \
+ENV CONDA_ENV=kelp \
     # Tell apt-get to not block installs by asking for interactive human input
     DEBIAN_FRONTEND=noninteractive \
     # Set username, uid and gid (same as uid) of non-root user the container will be run as

@@ -23,19 +23,19 @@ It will also install `pre-commit` hooks and the project in an editable mode.
 Once done you can activate the environment by running:
 
 ```shell
-conda activate kelp-wanted-competition
+conda activate kelp
 ```
 
 ## Manually
 
 1. Run `conda-lock` command:
     ```shell
-    conda-lock install --mamba -n kelp-wanted-competition conda-lock.yml
+    conda-lock install --mamba -n kelp conda-lock.yml
     ```
 
 2. Activate the env:
     ```shell
-    conda activate kelp-wanted-competition
+    conda activate kelp
     ```
 
 3. Install `pre-commit` hooks:
@@ -70,3 +70,14 @@ You can manually disable `pre-commit` hooks by running: `pre-commit uninstall` U
 Ask your colleagues for `.env` files which aren't included in this repository and put them inside the repo's root directory.
 
 To see what variables you need see the `.env-sample` file.
+
+
+## Torch-ORT support
+
+Optionally, you can enable `torch-ort` support by configuring it via `Makefile` command:
+
+```shell
+make configure-torch-ort
+```
+
+Make sure `torch-ort` is in the `conda-lock` file before doing so!

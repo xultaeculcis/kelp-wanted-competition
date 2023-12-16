@@ -26,24 +26,28 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-.PHONY: conda-lock  ## Creates conda-lock file
-conda-lock:
+.PHONY: lock-env  ## Creates conda-lock file
+lock-env:
 	conda-lock --mamba -f ./env.yaml -p linux-64
 
-.PHONY: conda-install  ## Creates env from conda-lock file
-conda-install:
-	conda-lock install --mamba -n kelp-wanted-competition conda-lock.yml
+.PHONY: create-env  ## Creates env from conda-lock file
+create-env:
+	conda-lock install --mamba -n kelp conda-lock.yml
 
 .PHONY: setup-pre-commit  ## Installs pre-commit hooks
 setup-pre-commit:
-	$(CONDA_ACTIVATE) kelp-wanted-competition ; pre-commit install
+	$(CONDA_ACTIVATE) kelp ; pre-commit install
 
 .PHONY: setup-editable  ## Installs the project in an editable mode
 setup-editable:
-	$(CONDA_ACTIVATE) kelp-wanted-competition ; pip install -e .
+	$(CONDA_ACTIVATE) kelp ; pip install -e .
+
+.PHONY: configure-torch-ort  ## Configures torch-ort
+configure-torch-ort:
+	$(CONDA_ACTIVATE) kelp ; python -m torch_ort.configure
 
 .PHONY: setup-local-env  ## Creates local environment and installs pre-commit hooks
-setup-local-env: conda-install setup-pre-commit setup-editable
+setup-local-env: create-env setup-pre-commit setup-editable
 
 .PHONY: format  ## Runs code formatting (isort, black, flake8)
 format:
