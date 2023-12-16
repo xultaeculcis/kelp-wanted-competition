@@ -115,10 +115,14 @@ Findings:
 ## 2023-12-16
 
 * Add submission creation script
-* First submission using unet/resnet50 combination trained for 10 epochs - score 0.3861 - let's train for longer
+* First submission using unet/resnet50 combination trained for 10 epochs - **score 0.3861** - let's train for longer
 * Need to implement a few makefile commands for training and prediction
 * Hmmm, maybe run hyperparameter search on Azure ML?
-* Trying to install torch-ort for training speedups (docs say about 37% speedups)
+* Trying to install `torch-ort` for training speedups (docs say about 37% speedups)
 * No speedups at all - some new package messed up logging, debug statements all over the place...
 * `torch.compile` is the same - no speedups, takes forever to compile the model using `mode` != `default` (which too is painfully slow)
 * Reverting the env changes
+* Run 10-fold CV and re-trained model, new submission score using lightning's best checkpoint = **0.6569**, using `mlflow` model **0.6338** WTF!?
+* `mlflow` must have saved last checkpoint instead of the best one... Need to fix that
+* `MLFlowLogger` now uses `log_model=True`, instead of `log_model="all"` - final logged model is the same as the best one even if the latest epoch resulted in worse model
+* Figured out that `--benchmark` resulted in difference in non-deterministic model performance, will not use it again for reproducibility

@@ -384,7 +384,7 @@ def make_loggers(
     mlflow_logger = MLFlowLogger(
         experiment_name=experiment,
         run_id=mlflow.active_run().info.run_id,
-        log_model="all",
+        log_model=True,
         tags=tags,
     )
     return [mlflow_logger]
@@ -437,7 +437,6 @@ def main() -> None:
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
         datamodule = KelpForestDataModule.from_metadata_file(**cfg.data_module_kwargs)
         segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)
-
         trainer = pl.Trainer(
             logger=make_loggers(
                 experiment=cfg.experiment,

@@ -4,6 +4,7 @@ from pathlib import Path
 import mlflow
 import pytorch_lightning as pl
 import rasterio
+import torch
 import yaml
 from affine import Affine
 from pydantic import ConfigDict
@@ -15,6 +16,7 @@ from kelp.core.configs import ConfigBase
 from kelp.data.datamodule import KelpForestDataModule
 from kelp.data.utils import unbind_samples
 from kelp.entrypoints.train import TrainConfig
+from kelp.models.segmentation import KelpForestSegmentationTask
 from kelp.utils.logging import get_logger
 
 _logger = get_logger(__name__)
@@ -45,6 +47,10 @@ class PredictConfig(ConfigBase):
             cfg = TrainConfig(**yaml.safe_load(f))
         return cfg
 
+    @property
+    def use_mlflow(self) -> bool:
+        return self.model_checkpoint.is_dir()
+
 
 def parse_args() -> PredictConfig:
     parser = argparse.ArgumentParser()
@@ -68,21 +74,28 @@ def main() -> None:
     crop_upper_bound = _IMG_SIZE + padding_to_trim
 
     dm = KelpForestDataModule.from_folders(predict_data_folder=cfg.data_dir, **train_cfg.data_module_kwargs)
-    model = mlflow.pytorch.load_model(cfg.model_checkpoint)
-    trainer = pl.Trainer(**train_cfg.trainer_kwargs, logger=False)
 
-    preds: list[dict[str, Tensor | str]] = trainer.predict(model=model, datamodule=dm)
+    if cfg.use_mlflow:
+        model = mlflow.pytorch.load_model(cfg.model_checkpoint)
+    else:
+        model = KelpForestSegmentationTask.load_from_checkpoint(cfg.model_checkpoint)
+        model.eval()
 
-    for prediction_batch in tqdm(preds, "Saving prediction batches"):
-        individual_samples = unbind_samples(prediction_batch)
-        for sample in individual_samples:
-            tile_id = sample["tile_id"]
-            prediction = sample["prediction"]
-            dest: DatasetWriter
-            with rasterio.open(cfg.output_dir / f"{tile_id}_kelp.tif", "w", **_META) as dest:
-                prediction_arr = prediction.detach().cpu().numpy()
-                prediction_arr = prediction_arr[padding_to_trim:crop_upper_bound, padding_to_trim:crop_upper_bound]
-                dest.write(prediction_arr, 1)
+    with torch.no_grad():
+        trainer = pl.Trainer(**train_cfg.trainer_kwargs, logger=False)
+
+        preds: list[dict[str, Tensor | str]] = trainer.predict(model=model, datamodule=dm)
+
+        for prediction_batch in tqdm(preds, "Saving prediction batches"):
+            individual_samples = unbind_samples(prediction_batch)
+            for sample in individual_samples:
+                tile_id = sample["tile_id"]
+                prediction = sample["prediction"]
+                dest: DatasetWriter
+                with rasterio.open(cfg.output_dir / f"{tile_id}_kelp.tif", "w", **_META) as dest:
+                    prediction_arr = prediction.detach().cpu().numpy()
+                    prediction_arr = prediction_arr[padding_to_trim:crop_upper_bound, padding_to_trim:crop_upper_bound]
+                    dest.write(prediction_arr, 1)
 
 
 if __name__ == "__main__":

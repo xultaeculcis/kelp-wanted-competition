@@ -30,7 +30,7 @@ def parse_args() -> TrainTestSplitConfig:
     parser.add_argument(
         "--splits",
         type=int,
-        default=5,
+        default=10,
     )
     parser.add_argument(
         "--output_dir",
