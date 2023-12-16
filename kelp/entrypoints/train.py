@@ -52,10 +52,13 @@ class TrainConfig(ConfigBase):
     num_classes: int = 2
     ignore_index: int | None = None
     optimizer: Literal["adam", "adamw"] = "adamw"
-    weight_decay: float = 1e-4
-    lr_scheduler: str
-    strategy: Literal["freeze", "no-freeze", "freeze-unfreeze"] = "no-freeze"
+    weight_decay: float | None = None
+    lr_scheduler: Literal["onecycle", "cosine", "reduce_lr_on_plateau"] | None = None
     lr: float = 3e-4
+    pct_start: float = 0.3
+    div_factor: float = 2
+    final_div_factor: float = 1e2
+    strategy: Literal["freeze", "no-freeze", "freeze-unfreeze"] = "no-freeze"
     pretrained: bool = False
     objective: Literal["binary", "multiclass"] = "binary"
     loss: Literal[
@@ -74,9 +77,6 @@ class TrainConfig(ConfigBase):
     compile_dynamic: bool | None = None
     ort: bool = False
     decoder_attention_type: str | None = None
-    pct_start: float = 0.3
-    div_factor: float = 2
-    final_div_factor: float = 1e2
 
     # callbacks
     save_top_k: int = 1
@@ -180,26 +180,26 @@ class TrainConfig(ConfigBase):
         return {
             "architecture": self.architecture,
             "encoder": self.encoder,
+            "pretrained": self.pretrained,
             "encoder_weights": self.encoder_weights,
+            "decoder_attention_type": self.decoder_attention_type,
             "ignore_index": self.ignore_index,
             "num_classes": self.num_classes,
             "optimizer": self.optimizer,
             "weight_decay": self.weight_decay,
             "lr_scheduler": self.lr_scheduler,
-            "strategy": self.strategy,
             "lr": self.lr,
-            "pretrained": self.pretrained,
+            "epochs": self.epochs,
+            "pct_start": self.pct_start,
+            "div_factor": self.div_factor,
+            "final_div_factor": self.final_div_factor,
+            "strategy": self.strategy,
             "objective": self.objective,
             "loss": self.loss,
             "compile": self.compile,
             "compile_mode": self.compile_mode,
             "compile_dynamic": self.compile_dynamic,
             "ort": self.ort,
-            "decoder_attention_type": self.decoder_attention_type,
-            "epochs": self.epochs,
-            "pct_start": self.pct_start,
-            "div_factor": self.div_factor,
-            "final_div_factor": self.final_div_factor,
         }
 
     @property
@@ -281,6 +281,10 @@ def parse_args() -> TrainConfig:
         required=True,
     )
     parser.add_argument(
+        "--pretrained",
+        action="store_true",
+    )
+    parser.add_argument(
         "--encoder_weights",
         type=str,
     )
@@ -301,13 +305,13 @@ def parse_args() -> TrainConfig:
         default="adamw",
     )
     parser.add_argument(
-        "--lr_scheduler", type=str, choices=["onecycle", "cosine", "reduce_lr_on_plateau"], default="onecycle"
+        "--weight_decay",
+        type=float,
     )
     parser.add_argument(
-        "--strategy",
+        "--lr_scheduler",
         type=str,
-        choices=["freeze", "no-freeze", "freeze-unfreeze"],
-        default="no-freeze",
+        choices=["onecycle", "cosine", "reduce_lr_on_plateau"],
     )
     parser.add_argument(
         "--lr",
@@ -315,8 +319,25 @@ def parse_args() -> TrainConfig:
         default=3e-4,
     )
     parser.add_argument(
-        "--pretrained",
-        action="store_true",
+        "--pct_start",
+        type=float,
+        default=0.3,
+    )
+    parser.add_argument(
+        "--div_factor",
+        type=float,
+        default=2,
+    )
+    parser.add_argument(
+        "--final_div_factor",
+        type=float,
+        default=1e2,
+    )
+    parser.add_argument(
+        "--strategy",
+        type=str,
+        choices=["freeze", "no-freeze", "freeze-unfreeze"],
+        default="no-freeze",
     )
     parser.add_argument(
         "--loss",
@@ -379,7 +400,11 @@ def parse_args() -> TrainConfig:
         "--fast_dev_run",
         action="store_true",
     )
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=1,
+    )
     parser.add_argument(
         "--limit_train_batches",
         type=float,

@@ -274,7 +274,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             scheduler = OneCycleLR(
                 optimizer,
                 max_lr=self.hyperparams["lr"],
-                steps_per_epoch=len(self.trainer.train_dataloader),
+                steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
                 epochs=self.hyperparams["epochs"],
                 pct_start=self.hyperparams["pct_start"],
                 div_factor=self.hyperparams["div_factor"],
