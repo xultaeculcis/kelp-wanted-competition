@@ -405,7 +405,6 @@ def main() -> None:
         datamodule = KelpForestDataModule.from_metadata_file(**cfg.data_module_kwargs)
         segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)
         trainer = pl.Trainer(
-            strategy="deepspeed",
             logger=make_loggers(
                 experiment=cfg.experiment,
                 tags=cfg.tags,
