@@ -316,7 +316,8 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--compile_mode",
         type=str,
-        default="reduce-overhead",
+        choices=["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"],
+        default="default",
     )
     parser.add_argument(
         "--save_top_k",
@@ -374,6 +375,7 @@ def parse_args() -> TrainConfig:
     args = parser.parse_args()
     cfg = TrainConfig(**vars(args))
     cfg.log_self()
+    cfg.output_dir.mkdir(exist_ok=True, parents=True)
     return cfg
 
 
