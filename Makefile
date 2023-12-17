@@ -130,8 +130,8 @@ train-single-split:
 
 .PHONY: train-all-splits  ## Trains on all splits
 train-all-splits:
-	#make train-single-split SPLIT=0
-	#make train-single-split SPLIT=1
+	make train-single-split SPLIT=0
+	make train-single-split SPLIT=1
 	make train-single-split SPLIT=2
 	make train-single-split SPLIT=3
 	make train-single-split SPLIT=4
