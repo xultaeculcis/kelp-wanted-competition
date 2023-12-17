@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -21,13 +20,6 @@ from kelp.data.indices import INDICES
 from kelp.models.segmentation import KelpForestSegmentationTask
 from kelp.utils.gpu import set_gpu_power_limit_if_needed
 from kelp.utils.logging import get_logger
-
-# Filter warning from Kornia's `RandomRotation` as we have no control over it
-warnings.filterwarnings(
-    action="ignore",
-    category=UserWarning,
-    message="Default grid_sample and affine_grid behavior has changed to align_corners=False",
-)
 
 # Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
@@ -52,7 +44,7 @@ class TrainConfig(ConfigBase):
     num_classes: int = 2
     ignore_index: int | None = None
     optimizer: Literal["adam", "adamw"] = "adamw"
-    weight_decay: float | None = None
+    weight_decay: float = 1e-4
     lr_scheduler: Literal["onecycle", "cosine", "reduce_lr_on_plateau"] | None = None
     lr: float = 3e-4
     pct_start: float = 0.3
@@ -510,6 +502,8 @@ def main() -> None:
             **cfg.trainer_kwargs,
         )
         trainer.fit(model=segmentation_task, datamodule=datamodule)
+        best_score = trainer.checkpoint_callback.best_model_score.detach().cpu().item()  # type: ignore[attr-defined]
+        trainer.logger.log_metrics(metrics={"hp_metric": best_score})
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Any, Callable
 
@@ -15,6 +16,12 @@ from kelp import consts
 from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import KelpForestSegmentationDataset
 
+# Filter warning from Kornia's `RandomRotation` as we have no control over it
+warnings.filterwarnings(
+    action="ignore",
+    category=UserWarning,
+    message="Default grid_sample and affine_grid behavior has changed to align_corners=False",
+)
 TILE_SIZE = 350
 
 

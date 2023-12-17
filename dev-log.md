@@ -44,6 +44,8 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 * Pre-trained weights
 * Appending NDVI
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI
+* AdamW instead of Adam
+* Weight decay = 1e-4
 
 ## 2023-12-02
 
@@ -137,3 +139,25 @@ Findings:
 * Adding `decoder_attention_type="scse"` did not improve the performance (dice=**0.755**)
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI -> bump performance to dice=**0.762**
 * WIP. `OneCycleLR`
+
+## 2023-12-17
+
+* Trying out different hyperparameter combinations
+* OneCycleLR vs no LR scheduler: 0.76640 vs 0.764593
+* Adam vs AdamW +0.02 for AdamW
+* `weight_decay`:
+  * 1e-2: **0.759**
+  * 1e-3: **0.763**
+  * 1e-4: **0.765**
+  * 1e-5: **0.762**
+* 10-fold CV splits:
+  * split 0: **0.764593** - public score:
+  * split 1: **0.831507** - public score: **0.6491**
+  * split 2: **0.804093** - public score: **0.6608**
+  * split 3: **0.820495** - public score: **0.6637**
+  * split 4: **0.815217** - public score:
+  * split 5: **0.825403** - public score:
+  * split 6: **0.815222** - public score:
+  * split 7: **0.823355** - public score:
+  * split 8: **0.829409** - public score:
+  * split 9: **0.820984** - public score:

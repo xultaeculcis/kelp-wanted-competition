@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
@@ -214,8 +216,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
                 batch[key] = batch[key].cpu()
             for sample in unbind_samples(batch):
                 fig = datamodule.plot(sample, suptitle=f"Tile ID: {sample['tile_id']}")
-                self.logger.experiment.log_figure(
-                    run_id=self.logger.run_id,
+                self.logger.experiment.log_figure(  # type: ignore[attr-defined]
+                    run_id=self.logger.run_id,  # type: ignore[attr-defined]
                     figure=fig,
                     artifact_file=f"image/{sample['tile_id']}_{self.current_epoch:02d}.jpg",
                 )
@@ -259,29 +261,31 @@ class KelpForestSegmentationTask(pl.LightningModule):
         return batch
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        if self.hyperparams["optimizer"] == "adam":
+        if (optimizer := self.hyperparams["optimizer"]) == "adam":
             optimizer = Adam(
                 self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
             )
-        elif self.hyperparams["optimizer"] == "adamw":
+        elif optimizer == "adamw":
             optimizer = AdamW(
                 self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
             )
         else:
-            raise ValueError(f"Optimizer: {self.hyperparams['optimizer']} is not supported.")
+            raise ValueError(f"Optimizer: {optimizer} is not supported.")
 
-        if self.hyperparams["lr_scheduler"] == "onecycle":
+        if (lr_scheduler := self.hyperparams["lr_scheduler"]) == "onecycle":
             scheduler = OneCycleLR(
                 optimizer,
                 max_lr=self.hyperparams["lr"],
-                steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),
+                steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),  # type: ignore[attr-defined]
                 epochs=self.hyperparams["epochs"],
                 pct_start=self.hyperparams["pct_start"],
                 div_factor=self.hyperparams["div_factor"],
                 final_div_factor=self.hyperparams["final_div_factor"],
             )
-        else:
+        elif lr_scheduler is None:
             return {"optimizer": optimizer}
+        else:
+            raise ValueError(f"LR Scheduler: {lr_scheduler} is not supported.")
 
         return {
             "optimizer": optimizer,
