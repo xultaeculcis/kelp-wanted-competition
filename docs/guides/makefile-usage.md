@@ -105,3 +105,15 @@ make help
     ```shell
     make clean
     ```
+
+* **train-single-split** - Trains single CV split
+
+    ```shell
+    make train-single-split SPLIT=<split number>
+    ```
+
+* **train-all-splits** - Trains on all splits
+
+    ```shell
+    make train-all-splits
+    ```

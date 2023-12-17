@@ -100,3 +100,43 @@ clean:
 	rm -rf .benchmark
 	rm -rf .hypothesis
 	rm -rf docs-site
+
+.PHONY: train-single-split  ## Trains single CV split
+train-single-split:
+	python ./kelp/entrypoints/train.py --data_dir=data/raw \
+		--output_dir=mlruns \
+		--metadata_fp=data/processed/train_val_test_dataset.parquet \
+		--cv_split=$(SPLIT) \
+		--batch_size=32 \
+		--num_workers=6 \
+		--architecture=unet \
+		--encoder=resnet50 \
+		--pretrained \
+		--encoder_weights=imagenet \
+		--optimizer=adamw \
+		--weight_decay=1e-4 \
+		--lr_scheduler=onecycle \
+		--pct_start=0.3 \
+		--div_factor=2 \
+		--final_div_factor=1e2 \
+		--strategy=no-freeze \
+		--lr=3e-4 \
+		--monitor_metric=val/dice \
+		--save_top_k=1 \
+		--early_stopping_patience=7 \
+		--precision=16-mixed \
+		--epochs=10 \
+		--band_order=2,3,4,0,1,5,6
+
+.PHONY: train-all-splits  ## Trains on all splits
+train-all-splits:
+	make train-single-split SPLIT=0
+	make train-single-split SPLIT=1
+	make train-single-split SPLIT=2
+	make train-single-split SPLIT=3
+	make train-single-split SPLIT=4
+	make train-single-split SPLIT=5
+	make train-single-split SPLIT=6
+	make train-single-split SPLIT=7
+	make train-single-split SPLIT=8
+	make train-single-split SPLIT=9
