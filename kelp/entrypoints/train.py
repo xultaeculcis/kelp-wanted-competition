@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -111,12 +110,7 @@ class TrainConfig(ConfigBase):
 
     @property
     def experiment(self) -> str:
-        return "kelp-seg-training-exp"
-
-    @property
-    def run_name(self) -> str:
-        now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-        return f"kelp-seg-training-exp-{now}"
+        return "kelp-debug-exp" if self.fast_dev_run else "kelp-seg-training-exp"
 
     @property
     def indices(self) -> list[str]:
@@ -479,12 +473,12 @@ def get_mlflow_run_dir(current_run: ActiveRun, output_dir: Path) -> Path:
 def main() -> None:
     cfg = parse_args()
     set_gpu_power_limit_if_needed()
-    pl.seed_everything(cfg.seed, workers=True)
 
     mlflow.set_experiment(cfg.experiment)
     mlflow.pytorch.autolog()
 
-    with mlflow.start_run(run_name=cfg.run_name) as run:
+    with mlflow.start_run() as run:
+        pl.seed_everything(cfg.seed, workers=True)
         mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump())
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
@@ -502,6 +496,11 @@ def main() -> None:
             **cfg.trainer_kwargs,
         )
         trainer.fit(model=segmentation_task, datamodule=datamodule)
+
+        # Don't log hp_metric if debugging
+        if cfg.fast_dev_run:
+            return
+
         best_score = trainer.checkpoint_callback.best_model_score.detach().cpu().item()  # type: ignore[attr-defined]
         trainer.logger.log_metrics(metrics={"hp_metric": best_score})
 
