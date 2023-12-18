@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
-from kelp.data.dataset import KelpForestSegmentationDataset
+from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
 warnings.filterwarnings(
@@ -229,9 +229,13 @@ class KelpForestDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot`."""
-        return self.val_dataset.plot(*args, **kwargs)
+    def plot_sample(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_sample`."""
+        return self.val_dataset.plot_sample(*args, **kwargs)
+
+    def plot_batch(self, *args: Any, **kwargs: Any) -> FigureGrids:
+        """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
+        return self.val_dataset.plot_batch(*args, **kwargs)
 
     def resolve_normalization_stats(self) -> tuple[Tensor, Tensor, int]:
         reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
