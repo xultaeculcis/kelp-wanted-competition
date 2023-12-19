@@ -157,9 +157,9 @@ Findings:
   * split 2: **0.804093** - public score: **0.6608**
   * split 3: **0.820495** - public score: **0.6637**
   * split 4: **0.815217** - public score: **0.6529**
-  * split 5: **0.825403** - public score: ****
-  * split 6: **0.815222** - public score: ****
-  * split 7: **0.823355** - public score: ****
+  * split 5: **0.825403** - public score: **0.6653**
+  * split 6: **0.815222** - public score: **0.6507**
+  * split 7: **0.823355** - public score: **0.6626**
   * split 8: **0.829409** - public score: **0.6411**
   * split 9: **0.820984** - public score: ****
 * Add confusion matrix logging
@@ -170,3 +170,13 @@ Findings:
 * Implementing image grid logging during eval loop
 * Plot new submission scores
 * Allow experiment name to be passed from command line
+
+## 2023-12-19
+
+* Submit more CV split models
+* Finish up plotting image batch
+* Add NDVI grid
+* Fix reordered bands plotting issue
+* Remove IoU from training metrics
+* Used `digiKam` to find if duplicates are indeed present in the data using DEM layer - yup, and a lot of them
+* Need to group duplicates and redesign CV splits

@@ -66,6 +66,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.predict_images = predict_images or []
         self.spectral_indices = spectral_indices or []
         self.band_order = band_order or list(range(7))
+        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.mean, self.std, self.in_channels = self.resolve_normalization_stats()
@@ -238,8 +239,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         return self.val_dataset.plot_batch(*args, **kwargs)
 
     def resolve_normalization_stats(self) -> tuple[Tensor, Tensor, int]:
-        reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
-        band_stats = {band: DATASET_STATS[band] for band in reordered_bands}
+        band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
         for index in self.spectral_indices:
             band_stats[index] = DATASET_STATS[index]
         mean = [val["mean"] for val in band_stats.values()]

@@ -38,6 +38,7 @@ class FigureGrids:
     prediction: plt.Figure | None = None
     qa: plt.Figure | None = None
     dem: plt.Figure | None = None
+    ndvi: plt.Figure | None = None
 
 
 class KelpForestSegmentationDataset(Dataset):
@@ -145,19 +146,27 @@ class KelpForestSegmentationDataset(Dataset):
         img = F.to_pil_image(img)
         axes.imshow(np.asarray(img), interpolation=interpolation, cmap=cmap)
         axes.set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        plt.tight_layout(pad=0)
         return fig
 
     @staticmethod
     def plot_batch(
         batch: dict[str, Tensor],
+        band_index_lookup: dict[str, int],
         samples_per_row: int = 8,
         plot_true_color: bool = False,
         plot_color_infrared_grid: bool = False,
         plot_short_wave_infrared_grid: bool = False,
         plot_qa_grid: bool = False,
         plot_dem_grid: bool = False,
+        plot_ndvi_grid: bool = False,
         plot_mask_grid: bool = False,
         plot_prediction_grid: bool = False,
+        ndvi_cmap: str = "RdYlGn",
+        dem_cmap: str = "viridis",
+        qa_mask_cmap: str = "gray",
+        mask_cmap: str = consts.data.CMAP,
     ) -> FigureGrids:
         if plot_mask_grid and "mask" not in batch:
             raise ValueError(
@@ -175,16 +184,23 @@ class KelpForestSegmentationDataset(Dataset):
         vmax = torch.amax(image, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         normalized = (image - vmin) / (vmax - vmin + _EPS)
 
-        image_grid = make_grid(normalized, nrow=samples_per_row)
-        true_color_grid = image_grid[2:5, :, :] if plot_true_color else None
-        color_infrared_grid = image_grid[1:4, :, :] if plot_color_infrared_grid else None
-        short_wave_infrared_grid = image_grid[:3, :, :] if plot_short_wave_infrared_grid else None
-        qa_grid = image_grid[6, :, :] if plot_qa_grid else None
-        dem_grid = image_grid[7, :, :] if plot_dem_grid else None
+        indices_true_color = (band_index_lookup["R"], band_index_lookup["G"], band_index_lookup["B"])
+        indices_color_infrared = (band_index_lookup["NIR"], band_index_lookup["R"], band_index_lookup["G"])
+        indices_short_wave_infrared = (band_index_lookup["SWIR"], band_index_lookup["NIR"], band_index_lookup["R"])
 
-        mask_grid = make_grid(batch["mask"].unsqueeze(1), nrow=samples_per_row) if plot_mask_grid else None
+        image_grid = make_grid(normalized, nrow=samples_per_row)
+        true_color_grid = image_grid[indices_true_color, :, :] if plot_true_color else None
+        color_infrared_grid = image_grid[indices_color_infrared, :, :] if plot_color_infrared_grid else None
+        short_wave_infrared_grid = (
+            image_grid[indices_short_wave_infrared, :, :] if plot_short_wave_infrared_grid else None
+        )
+        qa_grid = image_grid[band_index_lookup["QA"], :, :] if plot_qa_grid else None
+        dem_grid = image_grid[band_index_lookup["DEM"], :, :] if plot_dem_grid else None
+        ndvi_grid = image_grid[band_index_lookup["NDVI"], :, :] if plot_ndvi_grid else None
+
+        mask_grid = make_grid(batch["mask"].unsqueeze(1), nrow=samples_per_row)[0, :, :] if plot_mask_grid else None
         prediction_grid = (
-            make_grid(batch["prediction"].unsqueeze(1), nrow=samples_per_row) if plot_prediction_grid else None
+            make_grid(batch["prediction"].unsqueeze(1), nrow=samples_per_row)[0, :, :] if plot_prediction_grid else None
         )
 
         return FigureGrids(
@@ -206,28 +222,34 @@ class KelpForestSegmentationDataset(Dataset):
             mask=KelpForestSegmentationDataset._plot_tensor(
                 tensor=mask_grid,
                 interpolation="none",
-                cmap=consts.data.CMAP,
+                cmap=mask_cmap,
             )
             if plot_mask_grid
             else None,
             prediction=KelpForestSegmentationDataset._plot_tensor(
                 tensor=prediction_grid,
                 interpolation="none",
-                cmap=consts.data.CMAP,
+                cmap=mask_cmap,
             )
             if plot_prediction_grid
             else None,
             qa=KelpForestSegmentationDataset._plot_tensor(
                 tensor=qa_grid,
                 interpolation="none",
-                cmap="gray",
+                cmap=qa_mask_cmap,
             )
             if plot_qa_grid
             else None,
             dem=KelpForestSegmentationDataset._plot_tensor(
                 tensor=dem_grid,
-                cmap="viridis",
+                cmap=dem_cmap,
             )
             if plot_dem_grid
+            else None,
+            ndvi=KelpForestSegmentationDataset._plot_tensor(
+                tensor=ndvi_grid,
+                cmap=ndvi_cmap,
+            )
+            if plot_ndvi_grid
             else None,
         )
