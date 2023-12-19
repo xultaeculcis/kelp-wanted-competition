@@ -182,3 +182,4 @@ Findings:
 * Remove IoU from training metrics
 * Used `digiKam` to find if duplicates are indeed present in the data using DEM layer - yup, and a lot of them
 * Need to group duplicates and redesign CV splits
+* WIP. AOI grouping
