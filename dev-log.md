@@ -14,8 +14,12 @@ Checklist:
 - [x] 10-fold CV instead of 5-fold
 - [x] Change channel order (SWIR, NIR, R) -> (R, G, B)
 - [x] Training from scratch vs pre-trained weights
+- [x] `OneCycleLR` or Cosine schedule
 - [x] Log confusion matrix
-- [ ] Log prediction grid during eval loop
+- [x] Log prediction grid during eval loop
+- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
+embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
+- [ ] More robust CV split with deduplication of images from val set
 - [ ] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [ ] Different loss functions
 - [ ] Add extra spectral indices combinations
@@ -24,7 +28,6 @@ Checklist:
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
 - [ ] SwinV2-B
-- [ ] `OneCycleLR` or Cosine schedule
 - [ ] Freeze strategy
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
@@ -35,10 +38,9 @@ Checklist:
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
 - [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
-- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
-embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
+
 
 ## What seams to work
 
