@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
-from kelp.data.dataset import KelpForestSegmentationDataset
+from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
 warnings.filterwarnings(
@@ -66,6 +66,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.predict_images = predict_images or []
         self.spectral_indices = spectral_indices or []
         self.band_order = band_order or list(range(7))
+        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.mean, self.std, self.in_channels = self.resolve_normalization_stats()
@@ -229,13 +230,16 @@ class KelpForestDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot`."""
-        return self.val_dataset.plot(*args, **kwargs)
+    def plot_sample(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_sample`."""
+        return self.val_dataset.plot_sample(*args, **kwargs)
+
+    def plot_batch(self, *args: Any, **kwargs: Any) -> FigureGrids:
+        """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
+        return self.val_dataset.plot_batch(*args, **kwargs)
 
     def resolve_normalization_stats(self) -> tuple[Tensor, Tensor, int]:
-        reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
-        band_stats = {band: DATASET_STATS[band] for band in reordered_bands}
+        band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
         for index in self.spectral_indices:
             band_stats[index] = DATASET_STATS[index]
         mean = [val["mean"] for val in band_stats.values()]

@@ -40,6 +40,7 @@ class TrainConfig(ConfigBase):
     architecture: str
     encoder: str
     encoder_weights: str | None = None
+    decoder_attention_type: str | None = None
     num_classes: int = 2
     ignore_index: int | None = None
     optimizer: Literal["adam", "adamw"] = "adamw"
@@ -67,7 +68,7 @@ class TrainConfig(ConfigBase):
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
     compile_dynamic: bool | None = None
     ort: bool = False
-    decoder_attention_type: str | None = None
+    plot_n_batches: int = 3
 
     # callbacks
     save_top_k: int = 1
@@ -87,6 +88,7 @@ class TrainConfig(ConfigBase):
     benchmark: bool = False
 
     # misc
+    experiment: str = "kelp-seg-training-exp"
     output_dir: Path
     seed: int = 42
 
@@ -107,10 +109,6 @@ class TrainConfig(ConfigBase):
     @property
     def tags(self) -> dict[str, Any]:
         return {}
-
-    @property
-    def experiment(self) -> str:
-        return "kelp-debug-exp" if self.fast_dev_run else "kelp-seg-training-exp"
 
     @property
     def indices(self) -> list[str]:
@@ -186,6 +184,7 @@ class TrainConfig(ConfigBase):
             "compile_mode": self.compile_mode,
             "compile_dynamic": self.compile_dynamic,
             "ort": self.ort,
+            "plot_n_batches": self.plot_n_batches,
         }
 
     @property
@@ -214,6 +213,11 @@ def parse_args() -> TrainConfig:
         "--metadata_fp",
         type=str,
         required=True,
+    )
+    parser.add_argument(
+        "--experiment",
+        type=str,
+        default="kelp-seg-training-exp",
     )
     parser.add_argument(
         "--cv_split",
@@ -277,6 +281,11 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--decoder_attention_type",
         type=str,
+    )
+    parser.add_argument(
+        "--plot_n_batches",
+        type=str,
+        default=3,
     )
     parser.add_argument(
         "--objective",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
@@ -16,7 +17,6 @@ from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
 from kelp import consts
-from kelp.data.utils import unbind_samples
 
 
 class KelpForestSegmentationTask(pl.LightningModule):
@@ -52,11 +52,6 @@ class KelpForestSegmentationTask(pl.LightningModule):
                     ignore_index=self.hyperparams["ignore_index"],
                     average="macro",
                 ),
-                "iou": JaccardIndex(
-                    task=self.hparams["objective"],
-                    num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.hyperparams["ignore_index"],
-                ),
             },
             prefix="train/",
         )
@@ -73,7 +68,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
                     ignore_index=self.hyperparams["ignore_index"],
                 ),
                 "per_class_iou": JaccardIndex(
-                    task=self.hparams["objective"],
+                    task="multiclass",  # must be 'multiclass' for per-class IoU
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.hyperparams["ignore_index"],
                     average="none",
@@ -179,20 +174,33 @@ class KelpForestSegmentationTask(pl.LightningModule):
 
     def _log_predictions_batch(self, batch: dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
-        if batch_idx < 3 and self.global_step > 0 and False:
+        epoch = self.current_epoch
+        if batch_idx < self.hyperparams["plot_n_batches"] and self.global_step:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+            band_index_lookup = {band: idx for idx, band in enumerate(datamodule.reordered_bands)}
             batch["prediction"] = y_hat_hard
             for key in ["image", "mask", "prediction"]:
                 batch[key] = batch[key].cpu()
-            for sample in unbind_samples(batch):
-                fig = datamodule.plot(sample, suptitle=f"Tile ID: {sample['tile_id']}")
+            fig_grids = datamodule.plot_batch(
+                batch=batch,
+                band_index_lookup=band_index_lookup,
+                plot_true_color=epoch == 0,
+                plot_color_infrared_grid=epoch == 0,
+                plot_short_wave_infrared_grid=epoch == 0,
+                plot_qa_grid=epoch == 0,
+                plot_dem_grid=epoch == 0,
+                plot_mask_grid=epoch == 0,
+                plot_prediction_grid=True,
+            )
+            for key, fig in dataclasses.asdict(fig_grids).items():
+                if fig is None:
+                    continue
                 self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                     run_id=self.logger.run_id,  # type: ignore[attr-defined]
                     figure=fig,
-                    artifact_file=f"image/{sample['tile_id']}_{self.current_epoch:02d}.jpg",
+                    artifact_file=f"images/{key}/{key}_{epoch=:02d}_{batch_idx=}.jpg",
                 )
-                plt.tight_layout()
-                plt.close(fig)
+            plt.close()
 
     def _log_confusion_matrices(self, metrics: dict[str, Tensor], cmap: str = "Blues") -> None:
         for metric_key, title, matrix_kind in zip(
@@ -214,7 +222,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                 run_id=self.logger.run_id,  # type: ignore[attr-defined]
                 figure=fig,
-                artifact_file=f"image/{matrix_kind}/{matrix_kind}_{self.current_epoch:02d}.jpg",
+                artifact_file=f"images/{matrix_kind}/{matrix_kind}_{self.current_epoch:02d}.jpg",
             )
             plt.close(fig)
 

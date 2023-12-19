@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 import warnings
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Literal
 
 import matplotlib.pyplot as plt
+import numpy as np
 import rasterio
 import torch
+import torchvision.transforms.functional as F
+from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap
 from rasterio import DatasetReader
 from rasterio.errors import NotGeoreferencedWarning
 from torch import Tensor
 from torch.utils.data import Dataset
+from torchvision.utils import make_grid
 
 from kelp import consts
 from kelp.data.indices import INDICES
@@ -21,6 +26,19 @@ warnings.filterwarnings(
     action="ignore",
     category=NotGeoreferencedWarning,
 )
+_EPS = 1e-8
+
+
+@dataclass
+class FigureGrids:
+    true_color: plt.Figure | None = None
+    color_infrared: plt.Figure | None = None
+    short_wave_infrared: plt.Figure | None = None
+    mask: plt.Figure | None = None
+    prediction: plt.Figure | None = None
+    qa: plt.Figure | None = None
+    dem: plt.Figure | None = None
+    ndvi: plt.Figure | None = None
 
 
 class KelpForestSegmentationDataset(Dataset):
@@ -84,7 +102,7 @@ class KelpForestSegmentationDataset(Dataset):
         return sample
 
     @staticmethod
-    def plot(
+    def plot_sample(
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: str | None = None,
@@ -112,3 +130,126 @@ class KelpForestSegmentationDataset(Dataset):
             suptitle=suptitle or f"Tile ID: {sample['tile_id']}",
         )
         return fig
+
+    @staticmethod
+    def _plot_tensor(
+        tensor: Tensor,
+        interpolation: Literal["antialiased", "none"] = "antialiased",
+        cmap: str | None = None,
+    ) -> plt.Figure:
+        tensor = tensor.float()
+        h, w = tensor.shape[-2], tensor.shape[-1]
+        fig: plt.Figure
+        axes: Axes
+        fig, axes = plt.subplots(ncols=1, nrows=1, squeeze=True, figsize=(w / 100, h / 100))
+        img = tensor.detach()
+        img = F.to_pil_image(img)
+        axes.imshow(np.asarray(img), interpolation=interpolation, cmap=cmap)
+        axes.set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        plt.tight_layout(pad=0)
+        return fig
+
+    @staticmethod
+    def plot_batch(
+        batch: dict[str, Tensor],
+        band_index_lookup: dict[str, int],
+        samples_per_row: int = 8,
+        plot_true_color: bool = False,
+        plot_color_infrared_grid: bool = False,
+        plot_short_wave_infrared_grid: bool = False,
+        plot_qa_grid: bool = False,
+        plot_dem_grid: bool = False,
+        plot_ndvi_grid: bool = False,
+        plot_mask_grid: bool = False,
+        plot_prediction_grid: bool = False,
+        ndvi_cmap: str = "RdYlGn",
+        dem_cmap: str = "viridis",
+        qa_mask_cmap: str = "gray",
+        mask_cmap: str = consts.data.CMAP,
+    ) -> FigureGrids:
+        if plot_mask_grid and "mask" not in batch:
+            raise ValueError(
+                "Mask grid cannot be plotted. No 'mask' key is present in the batch. "
+                f"Found following keys: {list(batch.keys())}"
+            )
+        if plot_prediction_grid and "prediction" not in batch:
+            raise ValueError(
+                "Prediction grid cannot be plotted. No 'prediction' key is present in the batch. "
+                f"Found following keys: {list(batch.keys())}"
+            )
+
+        image = batch["image"]
+        vmin = torch.amin(image, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
+        vmax = torch.amax(image, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
+        normalized = (image - vmin) / (vmax - vmin + _EPS)
+
+        indices_true_color = (band_index_lookup["R"], band_index_lookup["G"], band_index_lookup["B"])
+        indices_color_infrared = (band_index_lookup["NIR"], band_index_lookup["R"], band_index_lookup["G"])
+        indices_short_wave_infrared = (band_index_lookup["SWIR"], band_index_lookup["NIR"], band_index_lookup["R"])
+
+        image_grid = make_grid(normalized, nrow=samples_per_row)
+        true_color_grid = image_grid[indices_true_color, :, :] if plot_true_color else None
+        color_infrared_grid = image_grid[indices_color_infrared, :, :] if plot_color_infrared_grid else None
+        short_wave_infrared_grid = (
+            image_grid[indices_short_wave_infrared, :, :] if plot_short_wave_infrared_grid else None
+        )
+        qa_grid = image_grid[band_index_lookup["QA"], :, :] if plot_qa_grid else None
+        dem_grid = image_grid[band_index_lookup["DEM"], :, :] if plot_dem_grid else None
+        ndvi_grid = image_grid[band_index_lookup["NDVI"], :, :] if plot_ndvi_grid else None
+
+        mask_grid = make_grid(batch["mask"].unsqueeze(1), nrow=samples_per_row)[0, :, :] if plot_mask_grid else None
+        prediction_grid = (
+            make_grid(batch["prediction"].unsqueeze(1), nrow=samples_per_row)[0, :, :] if plot_prediction_grid else None
+        )
+
+        return FigureGrids(
+            true_color=KelpForestSegmentationDataset._plot_tensor(
+                tensor=true_color_grid,
+            )
+            if plot_true_color
+            else None,
+            color_infrared=KelpForestSegmentationDataset._plot_tensor(
+                tensor=color_infrared_grid,
+            )
+            if plot_color_infrared_grid
+            else None,
+            short_wave_infrared=KelpForestSegmentationDataset._plot_tensor(
+                tensor=short_wave_infrared_grid,
+            )
+            if plot_short_wave_infrared_grid
+            else None,
+            mask=KelpForestSegmentationDataset._plot_tensor(
+                tensor=mask_grid,
+                interpolation="none",
+                cmap=mask_cmap,
+            )
+            if plot_mask_grid
+            else None,
+            prediction=KelpForestSegmentationDataset._plot_tensor(
+                tensor=prediction_grid,
+                interpolation="none",
+                cmap=mask_cmap,
+            )
+            if plot_prediction_grid
+            else None,
+            qa=KelpForestSegmentationDataset._plot_tensor(
+                tensor=qa_grid,
+                interpolation="none",
+                cmap=qa_mask_cmap,
+            )
+            if plot_qa_grid
+            else None,
+            dem=KelpForestSegmentationDataset._plot_tensor(
+                tensor=dem_grid,
+                cmap=dem_cmap,
+            )
+            if plot_dem_grid
+            else None,
+            ndvi=KelpForestSegmentationDataset._plot_tensor(
+                tensor=ndvi_grid,
+                cmap=ndvi_cmap,
+            )
+            if plot_ndvi_grid
+            else None,
+        )
