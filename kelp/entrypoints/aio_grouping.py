@@ -21,6 +21,7 @@ class AOIGroupingConfig(ConfigBase):
     metadata_fp: Path
     output_dir: Path
     batch_size: int = 32
+    num_workers: int = 6
     similarity_threshold: float = 0.95
 
 
@@ -61,6 +62,11 @@ def parse_args() -> AOIGroupingConfig:
         "--batch_size",
         type=int,
         default=32,
+    )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=6,
     )
     parser.add_argument(
         "--similarity_threshold",
@@ -118,7 +124,7 @@ def find_similar_images(
     threshold: float = 0.95,
     batch_size: int = 32,
     num_workers: int = 6,
-) -> dict[str, list[str]]:
+) -> dict[str, list[list[str]]]:
     # Generate embeddings
     features, dataset = generate_embeddings(data_folder=data_folder, batch_size=batch_size, num_workers=num_workers)
 
@@ -126,16 +132,22 @@ def find_similar_images(
     similarity_matrix = cosine_similarity(features)
 
     # Group similar images
-    groups = {}
+    groups = []
     for i in tqdm(range(len(similarity_matrix)), desc="Grouping similar images", total=len(similarity_matrix)):
         similar_images = []
         for j in range(len(similarity_matrix[i])):
             if i != j and similarity_matrix[i][j] >= threshold:
-                similar_images.append(dataset.fps[j].as_posix())  # Add image path
+                similar_images.append(dataset.fps[j].stem.split("_")[0])  # Add image path
         if similar_images:
-            groups[dataset.fps[i].as_posix()] = similar_images  # Key image path
+            similar_images.append(dataset.fps[i].stem.split("_")[0])
+            similar_images = sorted(similar_images)
+            if similar_images in groups:
+                continue
+            groups.append(similar_images)  # Key image path
+        else:
+            groups.append([dataset.fps[i].stem.split("_")[0]])
 
-    return groups
+    return {"groups": groups}
 
 
 def group_aoi(
