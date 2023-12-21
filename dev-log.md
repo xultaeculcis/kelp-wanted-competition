@@ -187,3 +187,11 @@ Findings:
 ## 2023-12-20
 
 * There is a single mask in the mask grid that's 90% kelp - cloudy image, open water - this can skew the results, need to verify the rest of the masks
+* Did some more work on AOI resolution
+
+## 2023-12-21
+
+* Implemented AOI grouping logic after grouping we have 3k of AOIs
+* Added some more commands to Makefile
+* WIP. More plotting logic to EDA - need to incorporate AOI ID column into EDA
+* Maybe split EDA into 2 parts - composite plotting, stats plotting

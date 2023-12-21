@@ -23,6 +23,7 @@ from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(action="ignore", category=NotGeoreferencedWarning, message="Dataset has no geotransform")
 HIGH_CORRUPTION_PCT_THRESHOLD = 0.4
+HIGH_KELP_PCT_THRESHOLD = 0.4
 _logger = get_logger(__name__)
 
 
@@ -37,6 +38,7 @@ class SatelliteImageStats(BaseModel):
     dem_nan_pixels: int
     qa_corrupted_pixels_pct: float | None = None
     high_corrupted_pixels_pct: bool | None = None
+    high_kelp_pixels_pct: bool | None = None
 
 
 class PreProcessingConfig(ConfigBase):
@@ -140,6 +142,8 @@ def calculate_stats(tile_id_split_tuple: tuple[str, str], data_dir: Path) -> Sat
             kelp_pixels = target_arr.sum()
             non_kelp_pixels = np.prod(target_arr.shape) - kelp_pixels
             has_kelp = kelp_pixels > 0
+            high_kelp_pixels_pct = kelp_pixels > HIGH_KELP_PCT_THRESHOLD
+
     else:
         kelp_pixels = None
         has_kelp = None
@@ -156,6 +160,7 @@ def calculate_stats(tile_id_split_tuple: tuple[str, str], data_dir: Path) -> Sat
         qa_ok=qa_ok,
         qa_corrupted_pixels_pct=qa_corrupted_pixels_pct,
         high_corrupted_pixels_pct=high_corrupted_pixels_pct,
+        high_kelp_pixels_pct=high_kelp_pixels_pct,
     )
 
 
@@ -228,8 +233,8 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     # Distribution of kelp pixels
     plt.figure(figsize=(10, 6))
     sns.histplot(df["kelp_pixels"], bins=50, kde=True)
-    plt.title("Distribution of Kelp Pixels")
-    plt.xlabel("Number of Kelp Pixels")
+    plt.title("Distribution of Kelp pixels")
+    plt.xlabel("Number of Kelp pixels")
     plt.ylabel("Frequency")
     plt.savefig(out_dir / "kelp_pixels_distribution.png")
     plt.close()
@@ -237,8 +242,8 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     # Distribution of dem_nan_pixels
     plt.figure(figsize=(10, 6))
     sns.histplot(df["dem_nan_pixels"], bins=50, kde=True, color="green")
-    plt.title("Distribution of DEM NaN Pixels")
-    plt.xlabel("Number of DEM NaN Pixels")
+    plt.title("Distribution of DEM NaN pixels")
+    plt.xlabel("Number of DEM NaN pixels")
     plt.ylabel("Frequency")
     plt.savefig(out_dir / "dem_nan_pixels_distribution.png")
     plt.close()
@@ -246,7 +251,7 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     # Image count per split (train/test)
     plt.figure(figsize=(8, 6))
     sns.countplot(x="split", data=df)
-    plt.title("Image Count per Split")
+    plt.title("Image count per split")
     plt.xlabel("Split")
     plt.ylabel("Count")
     plt.savefig(out_dir / "splits.png")
@@ -255,7 +260,7 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     # Image count with and without kelp forest class
     plt.figure(figsize=(8, 6))
     sns.countplot(x="has_kelp", data=df)
-    plt.title("Image Count with and Without Kelp Forest")
+    plt.title("Image count with and without Kelp Forest")
     plt.xlabel("Has Kelp")
     plt.ylabel("Count")
     plt.savefig(out_dir / "has_kelp.png")
@@ -264,10 +269,19 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     # Image count with and without QA issues
     plt.figure(figsize=(8, 6))
     sns.countplot(x="qa_ok", data=df)
-    plt.title("Image Count with and Without QA Issues")
+    plt.title("Image count with and without QA issues")
     plt.xlabel("QA OK")
     plt.ylabel("Count")
     plt.savefig(out_dir / "qa_ok.png")
+    plt.close()
+
+    # Image count with and without NaN values in DEM band
+    plt.figure(figsize=(8, 6))
+    sns.countplot(x="high_dem_nan_pixels_pct", data=df)
+    plt.title("Image count with and without high NaN values in DEM Band")
+    plt.xlabel("DEM high NaN percentage")
+    plt.ylabel("Count")
+    plt.savefig(out_dir / "dem_has_nans_high_pct.png")
     plt.close()
 
     # Image count with and without NaN values in DEM band
@@ -277,6 +291,25 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     plt.xlabel("DEM Has NaNs")
     plt.ylabel("Count")
     plt.savefig(out_dir / "dem_has_nans.png")
+    plt.close()
+
+    # Image count with and without NaN values in DEM band
+    plt.figure(figsize=(8, 6))
+    sns.countplot(x="high_kelp_pixels_pct", data=df)
+    plt.title("Image count with and without high percent of Kelp pixels")
+    plt.xlabel("Mask high kelp pixel percentage")
+    plt.ylabel("Count")
+    plt.savefig(out_dir / "kelp_high_pct.png")
+    plt.close()
+
+    # Image count with and without NaN values in DEM band
+    df.groupby("aoi_id").size()
+    plt.figure(figsize=(8, 6))
+    sns.countplot(x="aoi_id", data=df)
+    plt.title("Image count with and without high percent of Kelp pixels")
+    plt.xlabel("Mask high kelp pixel percentage")
+    plt.ylabel("Count")
+    plt.savefig(out_dir / "kelp_high_pct.png")
     plt.close()
 
 

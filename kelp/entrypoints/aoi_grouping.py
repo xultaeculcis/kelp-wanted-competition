@@ -244,7 +244,8 @@ def group_aoi(
     num_workers: int = 6,
     similarity_threshold: float = 0.95,
 ) -> None:
-    metadata = pd.read_parquet(metadata_fp)
+    metadata = pd.read_csv(metadata_fp)
+    metadata["split"] = metadata["in_train"].apply(lambda x: "train" if x else "test")
     training_tiles = metadata[metadata["split"] == consts.data.TRAIN]["tile_id"].tolist()
     groups = find_similar_images(
         data_folder=dem_dir,
@@ -256,7 +257,7 @@ def group_aoi(
     save_json(output_dir / "intermediate_image_groups.json", groups)
     merged_groups = group_duplicate_images(groups=groups)
     save_json(output_dir / "merged_image_groups.json", merged_groups)
-    final_groups = explode_groups_if_needed(groups=groups)
+    final_groups = explode_groups_if_needed(groups=merged_groups)
     save_json(output_dir / "final_image_groups.json", final_groups)
     groups_df = groups_to_dataframe(final_groups)
     (
