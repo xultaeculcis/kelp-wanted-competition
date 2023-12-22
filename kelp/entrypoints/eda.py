@@ -19,6 +19,7 @@ from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(action="ignore", category=NotGeoreferencedWarning, message="Dataset has no geotransform")
 HIGH_CORRUPTION_PCT_THRESHOLD = 0.4
+HIGH_DEM_ZERO_OR_NAN_PCT_THRESHOLD = 0.98
 HIGH_KELP_PCT_THRESHOLD = 0.4
 _logger = get_logger(__name__)
 
@@ -27,13 +28,24 @@ class SatelliteImageStats(BaseModel):
     tile_id: str
     aoi_id: int | None = None
     split: str
+
     has_kelp: bool | None = None
     non_kelp_pixels: int | None = None
     kelp_pixels: int | None = None
     kelp_pixels_pct: float | None = None
     high_kelp_pixels_pct: bool | None = None
+
     dem_nan_pixels: int
     dem_has_nans: bool
+    dem_nan_pixels_pct: float | None = None
+
+    dem_zero_pixels: int
+    dem_zero_pixels_pct: float | None = None
+
+    water_pixels: int | None = None
+    water_pixels_pct: float | None = None
+    almost_all_water: bool
+
     qa_corrupted_pixels: int | None = None
     qa_ok: bool
     qa_corrupted_pixels_pct: float | None = None
@@ -47,11 +59,17 @@ def calculate_stats(tile_id_aoi_id_split_tuple: tuple[str, int, str], data_dir: 
         input_arr = src.read()
         dem_band = input_arr[6]
         qa_band = input_arr[5]
+        all_pixels = np.prod(qa_band.shape)
         dem_nan_pixels = np.where(dem_band < 0, 1, 0).sum()
+        dem_zero_pixels = np.where(dem_band == 0, 1, 0).sum()
+        dem_zero_pixels_pct = dem_zero_pixels / all_pixels.item()
+        dem_nan_pixels_pct = dem_nan_pixels / all_pixels.item()
+        water_pixels = np.where(dem_band <= 0, 1, 0).sum()
+        water_pixels_pct = water_pixels / all_pixels.item()
+        almost_all_water = water_pixels_pct > HIGH_DEM_ZERO_OR_NAN_PCT_THRESHOLD
         dem_has_nans = dem_nan_pixels > 0
         nan_vals = qa_band.sum()
         qa_ok = nan_vals == 0
-        all_pixels = np.prod(qa_band.shape)
         qa_corrupted_pixels = nan_vals.item()
         qa_corrupted_pixels_pct = nan_vals.item() / all_pixels.item()
         high_corrupted_pixels_pct = qa_corrupted_pixels_pct > HIGH_CORRUPTION_PCT_THRESHOLD
@@ -82,6 +100,12 @@ def calculate_stats(tile_id_aoi_id_split_tuple: tuple[str, int, str], data_dir: 
         non_kelp_pixels=non_kelp_pixels,
         dem_has_nans=dem_has_nans,
         dem_nan_pixels=dem_nan_pixels,
+        dem_nan_pixels_pct=dem_nan_pixels_pct,
+        dem_zero_pixels=dem_zero_pixels,
+        dem_zero_pixels_pct=dem_zero_pixels_pct,
+        water_pixels=water_pixels,
+        water_pixels_pct=water_pixels_pct,
+        almost_all_water=almost_all_water,
         qa_ok=qa_ok,
         qa_corrupted_pixels=qa_corrupted_pixels,
         qa_corrupted_pixels_pct=qa_corrupted_pixels_pct,
@@ -216,6 +240,26 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
     plt.xlabel("Mask high kelp pixel percentage")
     plt.ylabel("Count")
     plt.savefig(out_dir / "kelp_high_pct.png")
+    plt.close()
+
+    # Image count per AOI
+    counts = df.groupby("aoi_id").size().reset_index().rename(columns={0: "count"})
+    plt.figure(figsize=(10, 6))
+    sns.histplot(counts["count"], bins=35, kde=True)
+    plt.title("Distribution of images per AOI")
+    plt.xlabel("Number of images per AOI")
+    plt.ylabel("Frequency")
+    plt.savefig(out_dir / "aoi_images_distribution.png")
+    plt.close()
+
+    # Images per AOI without AOIs that have single image
+    counts = counts[counts["count"] > 1]
+    plt.figure(figsize=(10, 6))
+    sns.histplot(counts["count"], bins=35, kde=True)
+    plt.title("Distribution of images per AOI (without singles)")
+    plt.xlabel("Number of images per AOI")
+    plt.ylabel("Frequency")
+    plt.savefig(out_dir / "aoi_images_distribution_filtered.png")
     plt.close()
 
 
