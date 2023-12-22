@@ -191,7 +191,14 @@ Findings:
 
 ## 2023-12-21
 
-* Implemented AOI grouping logic after grouping we have 3k of AOIs
+* Implemented AOI grouping logic after grouping we have 3K of AOIs
 * Added some more commands to Makefile
 * WIP. More plotting logic to EDA - need to incorporate AOI ID column into EDA
 * Maybe split EDA into 2 parts - composite plotting, stats plotting
+
+## 2023-12-22
+
+* Split EDA into tile plotting and stats plotting
+* AOI resolution should be done after tile plotting and before EDA
+* Updated makefile commands
+* Renamed `preprocessing.py` to `calculate_band_stats.py`

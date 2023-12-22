@@ -103,17 +103,11 @@ clean:
 	rm -rf .hypothesis
 	rm -rf docs-site
 
-.PHONY: eda  ## Runs EDA script
-eda:
-	python ./kelp/entrypoints/eda.py \
+.PHONY: sample-plotting  ## Runs tile plotting
+sample-plotting:
+	python ./kelp/entrypoints/sample_plotting.py \
  		--data_dir data/raw \
 		--metadata_fp data/raw/metadata_fTq0l2T.csv \
-		--output_dir data/processed
-
-.PHONY: preprocess  ## Runs pre-processing
-preprocess:
-	python ./kelp/entrypoints/preprocess.py \
- 		--data_dir data/raw \
 		--output_dir data/processed
 
 .PHONY: aoi-grouping  ## Runs AOI grouping
@@ -121,11 +115,24 @@ aoi-grouping:
 	python ./kelp/entrypoints/aoi_grouping.py \
 		--dem_dir data/processed/dem \
  		--output_dir data/processed/grouped_aoi_results \
- 		--metadata_fp data/processed/stats/dataset_stats.parquet \
+ 		--metadata_fp data/processed/stats/metadata_fTq0l2T.csv \
  		--batch_size 128 \
  		--similarity_threshold 0.97
 
-.PHONY: train-val-test-split  ## Runs Train-Val-Test split
+.PHONY: eda  ## Runs EDA
+eda:
+	python ./kelp/entrypoints/eda.py \
+ 		--data_dir data/raw \
+		--metadata_fp data/processed/grouped_aoi_results/metadata.parquet \
+		--output_dir data/processed
+
+.PHONY: calculate-band-stats  ## Runs band statistics calculation
+calculate-band-stats:
+	python ./kelp/entrypoints/calculate_band_stats.py \
+ 		--data_dir data/raw \
+		--output_dir data/processed
+
+.PHONY: train-val-test-split  ## Runs train-val-test split
 train-val-test-split:
 	python ./kelp/entrypoints/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
