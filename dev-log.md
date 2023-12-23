@@ -207,15 +207,24 @@ Findings:
 * Trained new models using new dataset:
   * split 0: **0.820488** - public score: **0.6648**
   * split 1: **0.818475** - public score: **0.6583**
-  * split 2: **** - public score: ****
+  * split 2: **0.819387** - public score: ****
   * split 3: **0.837715** - public score: **0.6566**
-  * split 4: **** - public score: ****
-  * split 5: **** - public score: ****
+  * split 4: **0.828322** - public score: ****
+  * split 5: **0.829196** - public score: ****
   * split 6: **0.832407** - public score: **0.6678**
   * split 7: **0.848665** - public score: **0.6663**
-  * split 8: **** - public score: ****
-  * split 9: **** - public score: ****
+  * split 8: **0.823535** - public score: ****
+  * split 9: **0.832882** - public score: ****
 
 ## 2023-12-23
 
 * Checking out different normalization strategies
+* Move stats computation to GPU if available - 45x speedup
+* Commented out some indices, as they result in nan/inf values
+* Trained new models on split=6 with different normalization strategies:
+  * `z-score`: **0.834168**
+  * `quantile`: **0.834134**
+  * `min-max`: **0.831865**
+  * `per-sample-quantile`: **0.806227**
+  * `per-sample-min-max`: **0.801893**
+* Will use `quantile` since it produces the most appealing visual samples and is more robust for outliers, the learning curve also seems to converge faster

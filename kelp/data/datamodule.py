@@ -8,7 +8,9 @@ from typing import Any, Callable, Literal
 import kornia.augmentation as K
 import pandas as pd
 import pytorch_lightning as pl
+import torch
 import torchvision.transforms as T
+from kornia.augmentation.base import _AugmentationBase
 from matplotlib import pyplot as plt
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -16,7 +18,7 @@ from torch.utils.data import DataLoader
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
-from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileMinMaxNormalize
+from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
 warnings.filterwarnings(
@@ -270,16 +272,16 @@ class KelpForestDataModule(pl.LightningDataModule):
         q01 = [val["q01"] for val in band_stats.values()]
         q99 = [val["q99"] for val in band_stats.values()]
         stats = BandStats(
-            mean=Tensor(mean),
-            std=Tensor(std),
-            min=Tensor(vmin),
-            max=Tensor(vmax),
-            q01=Tensor(q01),
-            q99=Tensor(q99),
+            mean=torch.tensor(mean),
+            std=torch.tensor(std),
+            min=torch.tensor(vmin),
+            max=torch.tensor(vmax),
+            q01=torch.tensor(q01),
+            q99=torch.tensor(q99),
         )
         return stats, len(band_stats)
 
-    def resolve_normalization_transform(self) -> Callable[[Tensor], Tensor]:
+    def resolve_normalization_transform(self) -> _AugmentationBase:
         if self.normalization_strategy == "z-score":
             return K.Normalize(self.band_stats.mean, self.band_stats.std)  # type: ignore[no-any-return]
         elif self.normalization_strategy == "min-max":
@@ -287,7 +289,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         elif self.normalization_strategy == "quantile":
             return MinMaxNormalize(min_vals=self.band_stats.q01, max_vals=self.band_stats.q99)
         elif self.normalization_strategy == "per-sample-quantile":
-            return PerSampleQuantileMinMaxNormalize(q_low=0.01, q_high=0.99)
+            return PerSampleQuantileNormalize(q_low=0.01, q_high=0.99)
         elif self.normalization_strategy == "per-sample-min-max":
             return PerSampleMinMaxNormalize()
         else:
