@@ -202,3 +202,16 @@ Findings:
 * AOI resolution should be done after tile plotting and before EDA
 * Updated makefile commands
 * Renamed `preprocessing.py` to `calculate_band_stats.py`
+* Added few new stats calculation
+* Updated train-val-test split logic using deduplicated AOIs
+* Trained new models using new dataset:
+  * split 0: **0.820488** - public score: **0.6648**
+  * split 1: **0.818475** - public score: **0.6583**
+  * split 2: **** - public score: ****
+  * split 3: **0.837715** - public score: **0.6566**
+  * split 4: **** - public score: ****
+  * split 5: **** - public score: ****
+  * split 6: **0.832407** - public score: **0.6678**
+  * split 7: **0.848665** - public score: **0.6663**
+  * split 8: **** - public score: ****
+  * split 9: **** - public score: ****
