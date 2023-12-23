@@ -150,7 +150,7 @@ train-single-split:
 		--batch_size 32 \
 		--num_workers 6 \
 		--image_size 352 \
-		--normalization_strategy z-score \
+		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder resnet50 \
 		--pretrained \

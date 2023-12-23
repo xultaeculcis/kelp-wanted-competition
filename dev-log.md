@@ -20,7 +20,7 @@ Checklist:
 - [x] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
 embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
 - [x] More robust CV split with deduplication of images from val set
-- [ ] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
+- [x] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [ ] Different loss functions
 - [ ] Weighted sampler
 - [ ] Add extra spectral indices combinations
@@ -49,6 +49,9 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI
 * AdamW instead of Adam
 * Weight decay = 1e-4
+* Learning rate 3e-4
+* AOI grouping (removing leakage)
+* Quantile normalization
 
 ## 2023-12-02
 
