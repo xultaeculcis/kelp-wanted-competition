@@ -13,6 +13,7 @@ class AppendIndex(nn.Module, abc.ABC):
         self,
         index_qa: int = 5,
         normalize: bool = False,
+        mask_using_qa: bool = False,
         normalize_percentile_low: float = 0.01,
         normalize_percentile_high: float = 0.99,
         **band_kwargs: Any,
@@ -25,6 +26,7 @@ class AppendIndex(nn.Module, abc.ABC):
         self.index_qa = index_qa
         self.dim = -3
         self.normalize = normalize
+        self.mask_using_qa = mask_using_qa
         self.normalize_percentile_low = normalize_percentile_low
         self.normalize_percentile_high = normalize_percentile_high
         self.band_kwargs = band_kwargs
@@ -35,17 +37,19 @@ class AppendIndex(nn.Module, abc.ABC):
         return sample
 
     def _mask_using_qa_band(self, index: Tensor, sample: dict[str, Tensor]) -> Tensor:
+        if not self.mask_using_qa:
+            return index
         min_val = index.min()
         qa_band = sample["image"][..., self.index_qa, :, :]
         index = torch.where(qa_band == 0, index, min_val)
         return index
 
     def _maybe_normalize(self, index: Tensor) -> Tensor:
+        if not self.normalize:
+            return index
         min_val = torch.nanquantile(index, self.normalize_percentile_low)
         max_val = torch.nanquantile(index, self.normalize_percentile_high)
         index = torch.clamp(index, min_val, max_val)
-        if not self.normalize:
-            return index
         return (index - min_val) / (max_val - min_val)
 
     @abc.abstractmethod
@@ -220,7 +224,7 @@ class AppendMSAVI(AppendIndex):
 
 class AppendMSRNirRed(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return ((nir / red) - 1) / torch.sqrt((nir / (red + consts.data.EPS)) + 1)
+        return ((nir / red + consts.data.EPS) - 1) / torch.sqrt((nir / (red + consts.data.EPS)) + 1)
 
 
 class AppendMCARI(AppendIndex):
@@ -318,10 +322,10 @@ class AppendCI(AppendIndex):
 
 
 INDICES = {
-    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),  #
-    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),  #
-    "AVI": AppendAVI(index_nir=1, index_red=2),  #
-    "ARVI": AppendARVI(index_nir=1, index_red=2),  #
+    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),
+    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),
+    "AVI": AppendAVI(index_nir=1, index_red=2),
+    "ARVI": AppendARVI(index_nir=1, index_red=2),
     "BWDRVI": AppendBWDRV(index_nir=1, index_blue=4),
     "ClGreen": AppendClGreen(index_nir=1, index_green=3),
     "CVI": AppendCVI(index_nir=1, index_red=2, index_green=3),
@@ -336,14 +340,14 @@ INDICES = {
     "GRNDVI": AppendGRNDVI(index_nir=1, index_red=2, index_green=3),
     "GBNDVI": AppendGBNDVI(index_nir=1, index_green=3, index_blue=4),
     "GVMI": AppendGVMI(index_swir=0, index_nir=1),
-    "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),
+    # "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),  # Do not use - produces nan and/or inf vals
     "I": AppendI(index_red=2, index_green=3, index_blue=4),
     "H": AppendH(index_red=2, index_green=3, index_blue=4),
     "LogR": AppendLogR(index_nir=1, index_red=2),
-    "mCRIG": AppendMCRIG(index_nir=1, index_green=3, index_blue=4),
+    # "mCRIG": AppendMCRIG(index_nir=1, index_green=3, index_blue=4),  # Do not use - produces nan and/or inf vals
     "MVI": AppendMVI(index_swir=0, index_nir=1),
-    "MCARI": AppendMCARI(index_nir=1, index_red=2, index_green=3),
-    "MSRNirRed": AppendMSRNirRed(index_nir=1, index_red=2),
+    # "MCARI": AppendMCARI(index_nir=1, index_red=2, index_green=3),  # Do not use - produces nan and/or inf vals
+    # "MSRNirRed": AppendMSRNirRed(index_nir=1, index_red=2),  # Do not use - produces nan and/or inf vals
     "MSAVI": AppendMSAVI(index_nir=1, index_red=2),
     "NLI": AppendNLI(index_nir=1, index_red=2),
     "NDVI": AppendNDVI(index_nir=1, index_red=2),
