@@ -6,7 +6,7 @@ TEST = "test"
 
 SPLITS = [TRAIN, VAL, TEST]
 
-
+EPS = 1e-10
 BACKGROUND = "background"
 KELP = "kelp"
 

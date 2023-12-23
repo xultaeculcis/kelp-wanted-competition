@@ -17,13 +17,13 @@ Checklist:
 - [x] `OneCycleLR` or Cosine schedule
 - [x] Log confusion matrix
 - [x] Log prediction grid during eval loop
-- [ ] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
+- [x] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
 embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
-- [ ] More robust CV split with deduplication of images from val set
+- [x] More robust CV split with deduplication of images from val set
 - [ ] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [ ] Different loss functions
-- [ ] Add extra spectral indices combinations
 - [ ] Weighted sampler
+- [ ] Add extra spectral indices combinations
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -215,3 +215,7 @@ Findings:
   * split 7: **0.848665** - public score: **0.6663**
   * split 8: **** - public score: ****
   * split 9: **** - public score: ****
+
+## 2023-12-23
+
+* Checking out different normalization strategies

@@ -26,7 +26,6 @@ warnings.filterwarnings(
     action="ignore",
     category=NotGeoreferencedWarning,
 )
-_EPS = 1e-8
 
 
 @dataclass
@@ -182,7 +181,7 @@ class KelpForestSegmentationDataset(Dataset):
         image = batch["image"]
         vmin = torch.amin(image, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         vmax = torch.amax(image, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
-        normalized = (image - vmin) / (vmax - vmin + _EPS)
+        normalized = (image - vmin) / (vmax - vmin + consts.data.EPS)
 
         indices_true_color = (band_index_lookup["R"], band_index_lookup["G"], band_index_lookup["B"])
         indices_color_infrared = (band_index_lookup["NIR"], band_index_lookup["R"], band_index_lookup["G"])

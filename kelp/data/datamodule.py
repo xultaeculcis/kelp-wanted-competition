@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import warnings
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import kornia.augmentation as K
 import pandas as pd
@@ -15,6 +16,7 @@ from torch.utils.data import DataLoader
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
+from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileMinMaxNormalize
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
 warnings.filterwarnings(
@@ -23,6 +25,16 @@ warnings.filterwarnings(
     message="Default grid_sample and affine_grid behavior has changed to align_corners=False",
 )
 TILE_SIZE = 350
+
+
+@dataclass
+class BandStats:
+    mean: Tensor
+    std: Tensor
+    min: Tensor
+    max: Tensor
+    q01: Tensor
+    q99: Tensor
 
 
 class KelpForestDataModule(pl.LightningDataModule):
@@ -49,8 +61,15 @@ class KelpForestDataModule(pl.LightningDataModule):
         spectral_indices: list[str] | None = None,
         band_order: list[int] | None = None,
         batch_size: int = 32,
-        image_size: int = 352,
         num_workers: int = 0,
+        image_size: int = 352,
+        normalization_strategy: Literal[
+            "min-max",
+            "quantile",
+            "per-sample-min-max",
+            "per-sample-quantile",
+            "z-score",
+        ] = "z-score",
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
@@ -69,20 +88,22 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.mean, self.std, self.in_channels = self.resolve_normalization_stats()
+        self.normalization_strategy = normalization_strategy
+        self.band_stats, self.in_channels = self.resolve_normalization_stats()
+        self.normalization_transform = self.resolve_normalization_transform()
         self.train_augmentations = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
+            self.normalization_transform,
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=["input", "mask"],
         )
         self.val_augmentations = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
+            self.normalization_transform,
             data_keys=["input", "mask"],
         )
         self.predict_augmentations = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
+            self.normalization_transform,
             data_keys=["input"],
         )
         self.pad = T.Pad(
@@ -238,13 +259,39 @@ class KelpForestDataModule(pl.LightningDataModule):
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
 
-    def resolve_normalization_stats(self) -> tuple[Tensor, Tensor, int]:
+    def resolve_normalization_stats(self) -> tuple[BandStats, int]:
         band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
         for index in self.spectral_indices:
             band_stats[index] = DATASET_STATS[index]
         mean = [val["mean"] for val in band_stats.values()]
         std = [val["std"] for val in band_stats.values()]
-        return Tensor(mean), Tensor(std), len(band_stats)
+        vmin = [val["min"] for val in band_stats.values()]
+        vmax = [val["max"] for val in band_stats.values()]
+        q01 = [val["q01"] for val in band_stats.values()]
+        q99 = [val["q99"] for val in band_stats.values()]
+        stats = BandStats(
+            mean=Tensor(mean),
+            std=Tensor(std),
+            min=Tensor(vmin),
+            max=Tensor(vmax),
+            q01=Tensor(q01),
+            q99=Tensor(q99),
+        )
+        return stats, len(band_stats)
+
+    def resolve_normalization_transform(self) -> Callable[[Tensor], Tensor]:
+        if self.normalization_strategy == "z-score":
+            return K.Normalize(self.band_stats.mean, self.band_stats.std)  # type: ignore[no-any-return]
+        elif self.normalization_strategy == "min-max":
+            return MinMaxNormalize(min_vals=self.band_stats.min, max_vals=self.band_stats.max)
+        elif self.normalization_strategy == "quantile":
+            return MinMaxNormalize(min_vals=self.band_stats.q01, max_vals=self.band_stats.q99)
+        elif self.normalization_strategy == "per-sample-quantile":
+            return PerSampleQuantileMinMaxNormalize(q_low=0.01, q_high=0.99)
+        elif self.normalization_strategy == "per-sample-min-max":
+            return PerSampleMinMaxNormalize()
+        else:
+            raise ValueError(f"{self.normalization_strategy} is not supported!")
 
     @classmethod
     def resolve_file_paths(

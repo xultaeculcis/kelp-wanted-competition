@@ -149,6 +149,8 @@ train-single-split:
 		--cv_split $(SPLIT) \
 		--batch_size 32 \
 		--num_workers 6 \
+		--image_size 352 \
+		--normalization_strategy z-score \
 		--architecture unet \
 		--encoder resnet50 \
 		--pretrained \

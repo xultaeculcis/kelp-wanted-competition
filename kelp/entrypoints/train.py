@@ -35,6 +35,13 @@ class TrainConfig(ConfigBase):
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
+    normalization_strategy: Literal[
+        "min-max",
+        "z-score",
+        "quantile",
+        "per-sample-quantile",
+        "per-sample-min-max",
+    ] = "z-score"
 
     # model params
     architecture: str
@@ -148,6 +155,7 @@ class TrainConfig(ConfigBase):
             "image_size": self.image_size,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
+            "normalization_strategy": self.normalization_strategy,
         }
 
     @property
@@ -238,6 +246,18 @@ def parse_args() -> TrainConfig:
         "--num_workers",
         type=int,
         default=4,
+    )
+    parser.add_argument(
+        "--normalization_strategy",
+        type=str,
+        choices=[
+            "min-max",
+            "quantile",
+            "per-sample-min-max",
+            "per-sample-quantile",
+            "z-score",
+        ],
+        default="z-score",
     )
     parser.add_argument(
         "--seed",

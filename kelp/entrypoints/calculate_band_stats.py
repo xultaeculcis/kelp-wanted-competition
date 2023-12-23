@@ -63,6 +63,8 @@ def calculate_band_statistics(
     max_per_band = np.full(num_bands, -np.inf)
     sum_per_band = np.zeros(num_bands)
     sum_sq_per_band = np.zeros(num_bands)
+    q01_items = []
+    q99_items = []
     total_pixels = 0
 
     for image_path in tqdm(image_paths, desc="Calculating band statistics"):
@@ -97,26 +99,39 @@ def calculate_band_statistics(
         # Update total pixel count
         total_pixels += image.shape[1] * image.shape[2]
 
+        # Append quantile values
+        q01_per_band = np.nanquantile(image, q=0.01, axis=(1, 2))
+        q99_per_band = np.nanquantile(image, q=0.99, axis=(1, 2))
+        q01_items.append(q01_per_band)
+        q99_items.append(q99_per_band)
+
     # Calculate mean and standard deviation
     mean_per_band = sum_per_band / total_pixels
     std_per_band = np.sqrt(sum_sq_per_band / total_pixels - np.square(mean_per_band))
+    mean_q01_per_band = np.nanmean(q01_items)
+    mean_q99_per_band = np.nanmean(q99_items)
 
     stats = {
         band_name: {
-            "min": min_per_band[idx],
-            "max": max_per_band[idx],
             "mean": mean_per_band[idx],
             "std": std_per_band[idx],
+            "min": min_per_band[idx],
+            "max": max_per_band[idx],
+            "q01": mean_q01_per_band,
+            "q99": mean_q99_per_band,
         }
         for idx, band_name in enumerate(band_names)
     }
 
+    # Adjust stats for binary band
     for band, band_stats in stats.items():
         if band.endswith("WM") or band == "QA":
             band_stats["min"] = 0.0
             band_stats["max"] = 1.0
             band_stats["mean"] = 0.0
             band_stats["std"] = 1.0
+            band_stats["q01"] = 0.0
+            band_stats["q99"] = 1.0
 
     stats_str = json.dumps(stats, indent=4)
     _logger.info("Per band statistics calculated. Review and adjust!")
