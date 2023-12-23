@@ -5,7 +5,7 @@ from typing import Any
 import torch
 from torch import Tensor, nn
 
-_EPSILON = 1e-10
+from kelp import consts
 
 
 class AppendIndex(nn.Module, abc.ABC):
@@ -13,6 +13,7 @@ class AppendIndex(nn.Module, abc.ABC):
         self,
         index_qa: int = 5,
         normalize: bool = False,
+        mask_using_qa: bool = False,
         normalize_percentile_low: float = 0.01,
         normalize_percentile_high: float = 0.99,
         **band_kwargs: Any,
@@ -25,6 +26,7 @@ class AppendIndex(nn.Module, abc.ABC):
         self.index_qa = index_qa
         self.dim = -3
         self.normalize = normalize
+        self.mask_using_qa = mask_using_qa
         self.normalize_percentile_low = normalize_percentile_low
         self.normalize_percentile_high = normalize_percentile_high
         self.band_kwargs = band_kwargs
@@ -35,17 +37,19 @@ class AppendIndex(nn.Module, abc.ABC):
         return sample
 
     def _mask_using_qa_band(self, index: Tensor, sample: dict[str, Tensor]) -> Tensor:
+        if not self.mask_using_qa:
+            return index
         min_val = index.min()
         qa_band = sample["image"][..., self.index_qa, :, :]
         index = torch.where(qa_band == 0, index, min_val)
         return index
 
     def _maybe_normalize(self, index: Tensor) -> Tensor:
+        if not self.normalize:
+            return index
         min_val = torch.nanquantile(index, self.normalize_percentile_low)
         max_val = torch.nanquantile(index, self.normalize_percentile_high)
         index = torch.clamp(index, min_val, max_val)
-        if not self.normalize:
-            return index
         return (index - min_val) / (max_val - min_val)
 
     @abc.abstractmethod
@@ -66,22 +70,26 @@ class AppendIndex(nn.Module, abc.ABC):
 
 class AppendNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return (nir - red) / (nir + red + _EPSILON)
+        return (nir - red) / (nir + red + consts.data.EPS)
 
 
 class AppendNDWI(AppendIndex):
     def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
-        return (nir - green) / (nir + green + _EPSILON)
+        return (nir - green) / (nir + green + consts.data.EPS)
 
 
 class AppendATSAVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return 1.22 * (nir - 1.22 * red - 0.03) / (1.22 * nir + red - 1.22 * 0.03 + 0.08 * (1 + 1.22**2) + _EPSILON)
+        return (
+            1.22
+            * (nir - 1.22 * red - 0.03)
+            / (1.22 * nir + red - 1.22 * 0.03 + 0.08 * (1 + 1.22**2) + consts.data.EPS)
+        )
 
 
 class AppendAFRI1600(AppendIndex):
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return nir - 0.66 * (swir / (nir + 0.66 * swir + _EPSILON))
+        return nir - 0.66 * (swir / (nir + 0.66 * swir + consts.data.EPS))
 
 
 class AppendAVI(AppendIndex):
@@ -91,27 +99,27 @@ class AppendAVI(AppendIndex):
 
 class AppendARVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return -0.18 + 1.17 * ((nir - red) / (nir + red + _EPSILON))
+        return -0.18 + 1.17 * ((nir - red) / (nir + red + consts.data.EPS))
 
 
 class AppendBWDRVI(AppendIndex):
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return nir - 0.66 * (swir / (nir + 0.66 * swir + _EPSILON))
+        return nir - 0.66 * (swir / (nir + 0.66 * swir + consts.data.EPS))
 
 
 class AppendBWDRV(AppendIndex):
     def _compute_index(self, nir: Tensor, blue: Tensor) -> Tensor:
-        return (0.1 * nir - blue) / (0.1 * nir + blue + _EPSILON)
+        return (0.1 * nir - blue) / (0.1 * nir + blue + consts.data.EPS)
 
 
 class AppendClGreen(AppendIndex):
     def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
-        return nir / (green + _EPSILON) - 1
+        return nir / (green + consts.data.EPS) - 1
 
 
 class AppendCVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return nir * (red / (green**2 + _EPSILON))
+        return nir * (red / (green**2 + consts.data.EPS))
 
 
 class AppendDEMWM(AppendIndex):
@@ -121,92 +129,92 @@ class AppendDEMWM(AppendIndex):
 
 class AppendWDRVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return (0.1 * nir - red) / (0.1 * nir + red + _EPSILON)
+        return (0.1 * nir - red) / (0.1 * nir + red + consts.data.EPS)
 
 
 class AppendVARIGreen(AppendIndex):
     def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
-        return (green - red) / (green + red - blue + _EPSILON)
+        return (green - red) / (green + red - blue + consts.data.EPS)
 
 
 class AppendTVI(AppendIndex):
     def _compute_index(self, red: Tensor, green: Tensor) -> Tensor:
-        return torch.sqrt(((red - green) / (red + green + _EPSILON)) + 0.5)
+        return torch.sqrt(((red - green) / (red + green + consts.data.EPS)) + 0.5)
 
 
 class AppendTNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return torch.sqrt((nir - red) / (nir + red + _EPSILON) + 0.5)
+        return torch.sqrt((nir - red) / (nir + red + consts.data.EPS) + 0.5)
 
 
 class AppendSQRTNIRR(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return torch.sqrt(nir / (red + _EPSILON))
+        return torch.sqrt(nir / (red + consts.data.EPS))
 
 
 class AppendRBNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, blue: Tensor) -> Tensor:
-        return (nir - (red + blue)) / (nir + red + blue + _EPSILON)
+        return (nir - (red + blue)) / (nir + red + blue + consts.data.EPS)
 
 
 class AppendSRSWIRNIR(AppendIndex):
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return swir / (nir + _EPSILON)
+        return swir / (nir + consts.data.EPS)
 
 
 class AppendSRNIRSWIR(AppendIndex):
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return nir / (swir + _EPSILON)
+        return nir / (swir + consts.data.EPS)
 
 
 class AppendSRNIRR(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return nir / (red + _EPSILON)
+        return nir / (red + consts.data.EPS)
 
 
 class AppendSRNIRG(AppendIndex):
     def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
-        return nir / (green + _EPSILON)
+        return nir / (green + consts.data.EPS)
 
 
 class AppendSRGR(AppendIndex):
     def _compute_index(self, red: Tensor, green: Tensor) -> Tensor:
-        return green / (red + _EPSILON)
+        return green / (red + consts.data.EPS)
 
 
 class AppendPNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
-        return (nir - (red + green + blue)) / (nir + red + green + blue + _EPSILON)
+        return (nir - (red + green + blue)) / (nir + red + green + blue + consts.data.EPS)
 
 
 class AppendNormR(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return red / (nir + red + green + _EPSILON)
+        return red / (nir + red + green + consts.data.EPS)
 
 
 class AppendNormNIR(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return nir / (nir + red + green + _EPSILON)
+        return nir / (nir + red + green + consts.data.EPS)
 
 
 class AppendNormG(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return green / (nir + red + green + _EPSILON)
+        return green / (nir + red + green + consts.data.EPS)
 
 
 class AppendNDWIWM(AppendIndex):
     def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
-        return torch.maximum((nir - green) / (nir + green + _EPSILON), torch.zeros_like(nir))
+        return torch.maximum((nir - green) / (nir + green + consts.data.EPS), torch.zeros_like(nir))
 
 
 class AppendNDVIWM(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return torch.maximum((nir - red) / (nir + red + _EPSILON), torch.zeros_like(nir))
+        return torch.maximum((nir - red) / (nir + red + consts.data.EPS), torch.zeros_like(nir))
 
 
 class AppendNLI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return (nir**2 - red) / (nir**2 + red + _EPSILON)
+        return (nir**2 - red) / (nir**2 + red + consts.data.EPS)
 
 
 class AppendMSAVI(AppendIndex):
@@ -216,17 +224,17 @@ class AppendMSAVI(AppendIndex):
 
 class AppendMSRNirRed(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return ((nir / red) - 1) / torch.sqrt((nir / (red + _EPSILON)) + 1)
+        return ((nir / red + consts.data.EPS) - 1) / torch.sqrt((nir / (red + consts.data.EPS)) + 1)
 
 
 class AppendMCARI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return ((nir - red) - 0.2 * (nir - green)) * (nir / (red + _EPSILON))
+        return ((nir - red) - 0.2 * (nir - green)) * (nir / (red + consts.data.EPS))
 
 
 class AppendMVI(AppendIndex):
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return nir / (swir + _EPSILON)
+        return nir / (swir + consts.data.EPS)
 
 
 class AppendMCRIG(AppendIndex):
@@ -236,7 +244,7 @@ class AppendMCRIG(AppendIndex):
 
 class AppendLogR(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return torch.log(nir / (red + _EPSILON) + _EPSILON)
+        return torch.log(nir / (red + consts.data.EPS) + consts.data.EPS)
 
 
 class AppendH(AppendIndex):
@@ -246,53 +254,53 @@ class AppendH(AppendIndex):
 
 class AppendI(AppendIndex):
     def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
-        return (1 / 30.5) * (red + green + blue + _EPSILON)
+        return (1 / 30.5) * (red + green + blue + consts.data.EPS)
 
 
 class AppendIPVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return (nir / (nir + red + _EPSILON) / 2) * (((red - green) / red + green) + 1 + _EPSILON)
+        return (nir / (nir + red + consts.data.EPS) / 2) * (((red - green) / red + green) + 1 + consts.data.EPS)
 
 
 class AppendGVMI(AppendIndex):
     def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return ((nir + 0.1) - (swir + 0.02)) / ((nir + 0.1) + (swir + 0.02) + _EPSILON)
+        return ((nir + 0.1) - (swir + 0.02)) / ((nir + 0.1) + (swir + 0.02) + consts.data.EPS)
 
 
 class AppendGBNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, green: Tensor, blue: Tensor) -> Tensor:
-        return (nir - (green + blue)) / (nir + green + blue + _EPSILON)
+        return (nir - (green + blue)) / (nir + green + blue + consts.data.EPS)
 
 
 class AppendGRNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return (nir - (red + green)) / (nir + red + green + _EPSILON)
+        return (nir - (red + green)) / (nir + red + green + consts.data.EPS)
 
 
 class AppendGNDVI(AppendIndex):
     def _compute_index(self, nir: Tensor, green: Tensor) -> Tensor:
-        return (nir - green) / (nir + green + _EPSILON)
+        return (nir - green) / (nir + green + consts.data.EPS)
 
 
 class AppendGARI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
-        return (nir - (green - (blue - red))) / (nir - (green + (blue - red)) + _EPSILON)
+        return (nir - (green - (blue - red))) / (nir - (green + (blue - red)) + consts.data.EPS)
 
 
 class AppendEVI22(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return 2.5 * (nir - red) / (nir + 2.4 * red + 1 + _EPSILON)
+        return 2.5 * (nir - red) / (nir + 2.4 * red + 1 + consts.data.EPS)
 
 
 class AppendEVI2(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor) -> Tensor:
-        return 2.4 * (nir - red) / (nir + red + 1 + _EPSILON)
+        return 2.4 * (nir - red) / (nir + red + 1 + consts.data.EPS)
 
 
 class AppendEVI(AppendIndex):
     def _compute_index(self, nir: Tensor, red: Tensor, blue: Tensor) -> Tensor:
         return torch.clamp(
-            2.5 * ((nir - red) / (nir + 6 * red - 7.5 * blue + 1 + _EPSILON)),
+            2.5 * ((nir - red) / (nir + 6 * red - 7.5 * blue + 1 + consts.data.EPS)),
             min=-20_000,
             max=20_000,
         )
@@ -310,14 +318,14 @@ class AppendGDVI(AppendIndex):
 
 class AppendCI(AppendIndex):
     def _compute_index(self, red: Tensor, blue: Tensor) -> Tensor:
-        return (red - blue) / (red + _EPSILON)
+        return (red - blue) / (red + consts.data.EPS)
 
 
 INDICES = {
-    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),  #
-    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),  #
-    "AVI": AppendAVI(index_nir=1, index_red=2),  #
-    "ARVI": AppendARVI(index_nir=1, index_red=2),  #
+    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),
+    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),
+    "AVI": AppendAVI(index_nir=1, index_red=2),
+    "ARVI": AppendARVI(index_nir=1, index_red=2),
     "BWDRVI": AppendBWDRV(index_nir=1, index_blue=4),
     "ClGreen": AppendClGreen(index_nir=1, index_green=3),
     "CVI": AppendCVI(index_nir=1, index_red=2, index_green=3),
@@ -332,14 +340,14 @@ INDICES = {
     "GRNDVI": AppendGRNDVI(index_nir=1, index_red=2, index_green=3),
     "GBNDVI": AppendGBNDVI(index_nir=1, index_green=3, index_blue=4),
     "GVMI": AppendGVMI(index_swir=0, index_nir=1),
-    "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),
+    # "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),  # Do not use - produces nan and/or inf vals
     "I": AppendI(index_red=2, index_green=3, index_blue=4),
     "H": AppendH(index_red=2, index_green=3, index_blue=4),
     "LogR": AppendLogR(index_nir=1, index_red=2),
-    "mCRIG": AppendMCRIG(index_nir=1, index_green=3, index_blue=4),
+    # "mCRIG": AppendMCRIG(index_nir=1, index_green=3, index_blue=4),  # Do not use - produces nan and/or inf vals
     "MVI": AppendMVI(index_swir=0, index_nir=1),
-    "MCARI": AppendMCARI(index_nir=1, index_red=2, index_green=3),
-    "MSRNirRed": AppendMSRNirRed(index_nir=1, index_red=2),
+    # "MCARI": AppendMCARI(index_nir=1, index_red=2, index_green=3),  # Do not use - produces nan and/or inf vals
+    # "MSRNirRed": AppendMSRNirRed(index_nir=1, index_red=2),  # Do not use - produces nan and/or inf vals
     "MSAVI": AppendMSAVI(index_nir=1, index_red=2),
     "NLI": AppendNLI(index_nir=1, index_red=2),
     "NDVI": AppendNDVI(index_nir=1, index_red=2),

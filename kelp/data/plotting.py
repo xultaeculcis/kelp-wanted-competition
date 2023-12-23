@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from kelp import consts
-from kelp.data.normalization import min_max_normalize
+from kelp.data.transforms import min_max_normalize
 
 
 def plot_sample(

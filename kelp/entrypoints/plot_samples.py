@@ -13,8 +13,8 @@ from PIL import Image
 from tqdm import tqdm
 
 from kelp.core.configs import ConfigBase
-from kelp.data.normalization import min_max_normalize
 from kelp.data.plotting import plot_sample
+from kelp.data.transforms import min_max_normalize
 from kelp.utils.logging import get_logger, timed
 
 _logger = get_logger(__name__)
