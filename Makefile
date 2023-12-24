@@ -149,26 +149,27 @@ train-single-split:
 		--cv_split $(SPLIT) \
 		--batch_size 32 \
 		--num_workers 6 \
+		--band_order 2,3,4,0,1,5,6 \
 		--image_size 352 \
 		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder resnet50 \
 		--pretrained \
 		--encoder_weights imagenet \
+		--lr 3e-4 \
 		--optimizer adamw \
 		--weight_decay 1e-4 \
 		--lr_scheduler onecycle \
 		--pct_start 0.3 \
 		--div_factor 2 \
 		--final_div_factor 1e2 \
+		--loss dice \
 		--strategy no-freeze \
-		--lr 3e-4 \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
 		--early_stopping_patience 7 \
 		--precision 16-mixed \
-		--epochs 10 \
-		--band_order 2,3,4,0,1,5,6
+		--epochs 10
 
 .PHONY: train-all-splits  ## Trains on all splits
 train-all-splits:

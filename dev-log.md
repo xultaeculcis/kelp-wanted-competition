@@ -21,7 +21,7 @@ Checklist:
 embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
 - [x] More robust CV split with deduplication of images from val set
 - [x] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
-- [ ] Different loss functions
+- [x] Different loss functions
 - [ ] Weighted sampler
 - [ ] Add extra spectral indices combinations
 - [ ] ConvNeXt v1/v2
@@ -36,7 +36,8 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 - [ ] Cross-Validation
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
-- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them, and random sample of 1000 `non-kelp` pixels per image
+- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
+and random sample of 1000 `non-kelp` pixels per image
 - [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
@@ -52,6 +53,7 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 * Learning rate 3e-4
 * AOI grouping (removing leakage)
 * Quantile normalization
+* Dice Loss
 
 ## 2023-12-02
 
@@ -88,7 +90,8 @@ Findings:
 
 ## 2023-12-12
 
-* Add stratified k-fold split - stratification using following per image flag combination: `qa_ok`, `has_kelp`, `dem_has_nans`, `high_corrupted_pixels_pct`
+* Add stratified k-fold split - stratification using following per image flag combination: `qa_ok`, `has_kelp`,
+`dem_has_nans`, `high_corrupted_pixels_pct`
 * Update augmentations
 * Pad images to 352x352 - required by the model for the image shape to be divisible by 32
 * Messed up something in the dataset - training batch has some `torch.nan` values
@@ -97,7 +100,8 @@ Findings:
 
 * Add GPU utils to power limit RTX 3090 for more comfortable training temperatures
 * Add dataset stats to `consts`
-* Remove `torchgeo` package dependency since its newest version conflicted with pydantic v2 - didn't use its features anyway...
+* Remove `torchgeo` package dependency since its newest version conflicted with pydantic v2 - didn't use its
+features anyway...
 * Use index min value instead of `torch.nan` to mask corrupted pixels
 * Finally, train a single epoch
 * `MLFlowLogger` is wonky - will use `mlflow` autologging capabilities
@@ -114,17 +118,22 @@ Findings:
 * Fix data normalization issue when during validation the transforms were not being applied
 * Train first `UNet` model with `ResNet-50` encoder for 10 epochs successfully - final `val/dice` score was **0.782**
 * TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions
-* WIP. inference script - the datamodule needs refactoring, the user should be able to crate it either from metadata file or from list of file paths
+* WIP. inference script - the datamodule needs refactoring, the user should be able to crate it either from metadata
+file or from list of file paths
 
 ## 2023-12-15
 
 * Add factory methods to `KelpForestDataModule`
 * `TrainConfig` now has dedicated properties for data module, model and trainer kwargs
 * Prediction script works, preds look ok
-* Tried to install lightning-bolts for torch ORT support - PL ends up being downgraded since bolts require it to be less than 2.0
-* Needed to bring the images to original shape because of padding necessary by unet -> hacked ugly solution to remove the padding
-* Training a few more models - looks like seed is not respected and each model ends up having different training curves and final performance
-* PL way of logging metrics results in `epoch` being treated as a step in visualizations of learning curves in MLFlow UI - a bit annoying
+* Tried to install lightning-bolts for torch ORT support - PL ends up being downgraded since bolts require it to be
+less than 2.0
+* Needed to bring the images to original shape because of padding necessary by unet -> hacked ugly solution to remove
+the padding
+* Training a few more models - looks like seed is not respected and each model ends up having different training curves
+and final performance
+* PL way of logging metrics results in `epoch` being treated as a step in visualizations of learning curves in MLFlow
+UI - a bit annoying
 
 ## 2023-12-16
 
@@ -134,13 +143,18 @@ Findings:
 * Hmmm, maybe run hyperparameter search on Azure ML?
 * Trying to install `torch-ort` for training speedups (docs say about 37% speedups)
 * No speedups at all - some new package messed up logging, debug statements all over the place...
-* `torch.compile` is the same - no speedups, takes forever to compile the model using `mode` != `default` (which too is painfully slow)
+* `torch.compile` is the same - no speedups, takes forever to compile the model using `mode` != `default`
+(which too is painfully slow)
 * Reverting the env changes
-* Run 10-fold CV and re-trained model, new submission score using lightning's best checkpoint = **0.6569**, using `mlflow` model **0.6338** WTF!?
+* Run 10-fold CV and re-trained model, new submission score using lightning's best checkpoint = **0.6569**, using
+`mlflow` model **0.6338** WTF!?
 * `mlflow` must have saved last checkpoint instead of the best one... Need to fix that
-* `MLFlowLogger` now uses `log_model=True`, instead of `log_model="all"` - final logged model is the same as the best one even if the latest epoch resulted in worse model
-* Figured out that `--benchmark` resulted in difference in non-deterministic model performance, will not use it again for reproducibility
-* Tried training from scratch - very slow convergence, training using pre-trained model is a must in this case. Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weights
+* `MLFlowLogger` now uses `log_model=True`, instead of `log_model="all"` - final logged model is the same as the
+best one even if the latest epoch resulted in worse model
+* Figured out that `--benchmark` resulted in difference in non-deterministic model performance, will not use it again
+for reproducibility
+* Tried training from scratch - very slow convergence, training using pre-trained model is a must in this case.
+Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weights
 * Removing NDVI -> dice=**0.758**, keep NDVI
 * Adding `decoder_attention_type="scse"` did not improve the performance (dice=**0.755**)
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI -> bump performance to dice=**0.762**
@@ -189,7 +203,8 @@ Findings:
 
 ## 2023-12-20
 
-* There is a single mask in the mask grid that's 90% kelp - cloudy image, open water - this can skew the results, need to verify the rest of the masks
+* There is a single mask in the mask grid that's 90% kelp - cloudy image, open water - this can skew the results,
+need to verify the rest of the masks
 * Did some more work on AOI resolution
 
 ## 2023-12-21
@@ -218,6 +233,7 @@ Findings:
   * split 7: **0.848665** - public score: **0.6663**
   * split 8: **0.823535** - public score: ****
   * split 9: **0.832882** - public score: ****
+* There is too much splits to check each time... Will use split #6 to train from now on
 
 ## 2023-12-23
 
@@ -230,4 +246,29 @@ Findings:
   * `min-max`: **0.831865**
   * `per-sample-quantile`: **0.806227**
   * `per-sample-min-max`: **0.801893**
-* Will use `quantile` since it produces the most appealing visual samples and is more robust for outliers, the learning curve also seems to converge faster
+* Will use `quantile` since it produces the most appealing visual samples and is more robust for outliers,
+the learning curve also seems to converge faster
+
+## 2023-12-24
+
+* Fixed smp losses - `mode` param must be "multiclass" since our predictions have shape `NxCxHxW`
+* Some results from best to worst:
+
+| Loss class specs                                         | val/dice     |
+|----------------------------------------------------------|--------------|
+| `torch.nn.CrossEntropyLoss` (`weight=[0.4,0.6]`)         | **0.840475** |
+| `smp.losses.DiceLoss`                                    | **0.840451** |
+| `smp.losses.JaccardLoss`                                 | **0.839553** |
+| `smp.losses.TverskyLoss`                                 | **0.839455** |
+| `torch.nn.CrossEntropyLoss` (`weight=[0.3,0.7]`)         | **0.83682**  |
+| `torch.nn.CrossEntropyLoss` (`weight=None`)              | **0.834134** |
+| `smp.losses.SoftCrossEntropyLoss` (`smooth_factor=0.1`)) | **0.833259** |
+| `smp.losses.FocalLoss`                                   | **0.832160** |
+| `smp.losses.LovaszLoss`                                  | **0.82262**  |
+| `smp.losses.SoftCrossEntropyLoss` (`smooth_factor=0.2`)  | **0.83195**  |
+| `smp.losses.SoftCrossEntropyLoss` (`smooth_factor=0.3`)  | **0.83040**  |
+| `torch.nn.CrossEntropyLoss` (`weight=[0.1,0.9]`)         | **0.80692**  |
+
+* Removed `smp.losses.MCCLoss` and `smp.losses.SoftBCEWithLogitsLoss` since they require different input shapes -
+have no time for resolving this behaviour - error with `requires_grad` not being enabled or something...
+* Will use Dice since it performed better on public leaderboard **0.6824** vs **0.6802** (CE with weights)

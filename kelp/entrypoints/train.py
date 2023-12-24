@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -13,6 +14,7 @@ from pytorch_lightning import Callback
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import Logger, MLFlowLogger
 
+from kelp import consts
 from kelp.core.configs import ConfigBase
 from kelp.data.datamodule import KelpForestDataModule
 from kelp.data.indices import INDICES
@@ -30,8 +32,8 @@ class TrainConfig(ConfigBase):
     data_dir: Path
     metadata_fp: Path
     cv_split: int = 0
-    spectral_indices: str | None = None
-    band_order: str | None = None
+    spectral_indices: list[str]
+    band_order: list[int] | None = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
@@ -67,10 +69,10 @@ class TrainConfig(ConfigBase):
         "tversky",
         "focal",
         "lovasz",
-        "soft_bce_with_logits",
-        "soft_cross_entropy_with_logits",
-        "mcc",
-    ] = "ce"
+        "soft_ce",
+    ] = "dice"
+    ce_smooth_factor: float = 0.0
+    ce_class_weights: tuple[float, float] | None = None
     compile: bool = False
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
     compile_dynamic: bool | None = None
@@ -99,50 +101,59 @@ class TrainConfig(ConfigBase):
     output_dir: Path
     seed: int = 42
 
-    @field_validator("band_order")
-    def validate_channel_order(cls, value: str | None = None) -> str | None:
-        if value is None or (split_size := len(value.split(","))) == 7:
-            return value
-        raise ValueError(f"band_order should have exactly 7 values, you provided {split_size}")
+    @field_validator("band_order", mode="before")
+    def validate_channel_order(cls, value: str | list[int] | None = None) -> list[int] | None:
+        if value is None:
+            return None
 
-    @property
-    def optimizer_config(self) -> dict[str, Any]:
-        return {}
+        order = value if isinstance(value, list) else [int(band_idx.strip()) for band_idx in value.split(",")]
 
-    @property
-    def lr_scheduler_config(self) -> dict[str, Any]:
-        return {}
+        if (split_size := len(order)) != 7:
+            raise ValueError(f"band_order should have exactly 7 values, you provided {split_size}")
 
-    @property
-    def tags(self) -> dict[str, Any]:
-        return {}
+        return order
 
-    @property
-    def indices(self) -> list[str]:
-        if not self.spectral_indices:
+    @field_validator("spectral_indices", mode="before")
+    def validate_spectral_indices(cls, value: str | list[str] | None = None) -> list[str]:
+        if not value:
             return []
 
-        indices = [index.strip() for index in self.spectral_indices.split(",")]
-        assert len(indices) <= 5, f"Please provide at most 5 spectral indices. You provided: {len(indices)}"
-
-        unknown_indices = set(indices).difference(list(INDICES.keys()))
-        assert not unknown_indices, (
-            f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
-            f"Please provide at most 5 comma separated indices: {', '.join(INDICES.keys())}."
-        )
+        indices = value if isinstance(value, list) else [index.strip() for index in value.split(",")]
 
         if "NDVI" in indices:
             _logger.warning("NDVI is automatically added during training. No need to add it twice.")
             indices.remove("NDVI")
 
+        unknown_indices = set(indices).difference(list(INDICES.keys()))
+        if unknown_indices:
+            raise ValueError(
+                f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
+                f"Please provide at most 5 comma separated indices: {', '.join(INDICES.keys())}."
+            )
+
+        if len(indices) > 5:
+            raise ValueError(f"Please provide at most 5 spectral indices. You provided: {len(indices)}")
+
         return indices
 
-    @property
-    def parsed_band_order(self) -> list[int] | None:
-        if self.band_order is None:
+    @field_validator("ce_class_weights", mode="before")
+    def validate_ce_class_weights(cls, value: str | list[float] | None = None) -> list[float] | None:
+        if not value:
             return None
-        order = [int(band_idx.strip()) for band_idx in self.band_order.split(",")]
-        return order
+
+        weights = value if isinstance(value, list) else [float(index.strip()) for index in value.split(",")]
+
+        if len(weights) != consts.data.NUM_CLASSES:
+            raise ValueError(
+                f"Please provide provide per-class weights! There should be {consts.data.NUM_CLASSES} "
+                f"floating point numbers. You provided {len(weights)}"
+            )
+
+        return weights
+
+    @property
+    def tags(self) -> dict[str, Any]:
+        return {"trained_at": datetime.utcnow().isoformat()}
 
     @property
     def data_module_kwargs(self) -> dict[str, Any]:
@@ -150,8 +161,8 @@ class TrainConfig(ConfigBase):
             "data_dir": self.data_dir,
             "metadata_fp": self.metadata_fp,
             "cv_split": self.cv_split,
-            "spectral_indices": self.indices,
-            "band_order": self.parsed_band_order,
+            "spectral_indices": self.spectral_indices,
+            "band_order": self.band_order,
             "image_size": self.image_size,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
@@ -188,6 +199,8 @@ class TrainConfig(ConfigBase):
             "strategy": self.strategy,
             "objective": self.objective,
             "loss": self.loss,
+            "ce_class_weights": self.ce_class_weights,
+            "ce_smooth_factor": self.ce_smooth_factor,
             "compile": self.compile,
             "compile_mode": self.compile_mode,
             "compile_dynamic": self.compile_dynamic,
@@ -257,7 +270,7 @@ def parse_args() -> TrainConfig:
             "per-sample-quantile",
             "z-score",
         ],
-        default="z-score",
+        default="quantile",
     )
     parser.add_argument(
         "--seed",
@@ -364,16 +377,23 @@ def parse_args() -> TrainConfig:
             "tversky",
             "focal",
             "lovasz",
-            "soft_bce_with_logits",
-            "soft_cross_entropy_with_logits",
-            "mcc",
+            "soft_ce",
         ],
-        default="ce",
+        default="dice",
     )
     parser.add_argument(
         "--monitor_metric",
         type=str,
         default="val/dice",
+    )
+    parser.add_argument(
+        "--ce_smooth_factor",
+        type=float,
+        default=0.1,
+    )
+    parser.add_argument(
+        "--ce_class_weights",
+        type=str,
     )
     parser.add_argument(
         "--monitor_mode",

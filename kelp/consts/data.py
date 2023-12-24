@@ -11,6 +11,7 @@ BACKGROUND = "background"
 KELP = "kelp"
 
 CLASSES = [BACKGROUND, KELP]
+NUM_CLASSES = len(CLASSES)
 
 ORIGINAL_BANDS = ["SWIR", "NIR", "R", "G", "B", "QA", "DEM"]
 
