@@ -4,11 +4,6 @@ import dataclasses
 from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
-import segmentation_models_pytorch as smp
-import torch
-import torch.nn as nn
-from lightning_fabric.utilities.exceptions import MisconfigurationException
-from lightning_utilities.core.imports import module_available
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch import Tensor
@@ -17,34 +12,36 @@ from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
 from kelp import consts
+from kelp.models.factories import resolve_loss, resolve_model
 
 
 class KelpForestSegmentationTask(pl.LightningModule):
     def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
-
-        Keyword Args:
-            architecture: Name of the segmentation model type to use
-            encoder: Name of the encoder model backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
-            in_channels: Number of channels in input image
-            num_classes: Number of semantic classes to predict
-            loss: Name of the loss function
-            objective: Name of the mode for the loss function
-            ignore_index: Whether to ignore the "0" class value in the loss and metrics
-
-        Raises:
-            ValueError: if kwargs arguments are invalid
-        """
         super().__init__()
-
-        # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
-        self.loss = self._resolve_loss()
-        self.model = self._configure_task()
-
+        self.loss = resolve_loss(
+            loss_fn=self.hyperparams["loss"],
+            device=self.device,
+            ignore_index=self.hyperparams["ignore_index"],
+            num_classes=self.hyperparams["num_classes"],
+            objective=self.hyperparams["objective"],
+            ce_smooth_factor=self.hyperparams["ce_smooth_factor"],
+            ce_class_weights=self.hyperparams["ce_class_weights"],
+        )
+        self.model = resolve_model(
+            architecture=self.hyperparams["architecture"],
+            encoder=self.hyperparams["encoder"],
+            encoder_weights=self.hyperparams["encoder_weights"],
+            decoder_attention_type=self.hyperparams["decoder_attention_type"],
+            pretrained=self.hyperparams["pretrained"],
+            in_channels=self.hyperparams["in_channels"],
+            classes=self.hyperparams["num_classes"],
+            compile=self.hyperparams["compile"],
+            compile_mode=self.hyperparams["compile_mode"],
+            compile_dynamic=self.hyperparams["compile_dynamic"],
+            ort=self.hyperparams["ort"],
+        )
         self.train_metrics = MetricCollection(
             metrics={
                 "dice": Dice(
@@ -109,69 +106,6 @@ class KelpForestSegmentationTask(pl.LightningModule):
         )
         self.test_metrics = self.val_metrics.clone(prefix="test/")
 
-    def _resolve_loss(self) -> nn.Module:
-        loss_fn = self.hyperparams["loss"]
-        ignore_index = self.hyperparams["ignore_index"]
-        num_classes = self.hyperparams["num_classes"]
-        objective = self.hyperparams["objective"]
-
-        if loss_fn == "ce":
-            loss = nn.CrossEntropyLoss(ignore_index=ignore_index or -100)
-        elif loss_fn == "jaccard":
-            loss = smp.losses.JaccardLoss(mode=objective, classes=num_classes)
-        elif loss_fn == "dice":
-            loss = smp.losses.DiceLoss(mode=objective, classes=num_classes, ignore_index=ignore_index)
-        elif loss_fn == "focal":
-            loss = smp.losses.FocalLoss(mode=objective, ignore_index=ignore_index)
-        elif loss_fn == "lovasz":
-            loss = smp.losses.LovaszLoss(mode=objective, ignore_index=ignore_index)
-        elif loss_fn == "tversky":
-            loss = smp.losses.TverskyLoss(mode=objective, ignore_index=ignore_index)
-        elif loss_fn == "soft_ce":
-            loss = smp.losses.SoftCrossEntropyLoss(ignore_index=ignore_index)
-        elif loss_fn == "soft_bce_with_logits":
-            loss = smp.losses.SoftBCEWithLogitsLoss(ignore_index=ignore_index)
-        else:
-            raise ValueError(f"{loss_fn=} is not supported.")
-        return loss
-
-    def _configure_task(self) -> nn.Module:
-        architecture = self.hyperparams["architecture"]
-        encoder = self.hyperparams["encoder"]
-        encoder_weights = self.hyperparams["encoder_weights"]
-        in_channels = self.hyperparams["in_channels"]
-        classes = self.hyperparams["num_classes"]
-
-        if architecture == "unet":
-            model = smp.Unet(
-                encoder_name=encoder,
-                encoder_weights=encoder_weights if self.hyperparams["pretrained"] else None,
-                in_channels=in_channels,
-                classes=classes,
-                decoder_attention_type=self.hyperparams["decoder_attention_type"],
-            )
-        else:
-            raise ValueError(f"{architecture=} is not supported.")
-
-        if self.hyperparams["compile"]:
-            model = torch.compile(
-                model,
-                mode=self.hyperparams["compile_mode"],
-                dynamic=self.hyperparams["compile_dynamic"],
-            )
-
-        if self.hyperparams["ort"]:
-            if module_available("torch_ort"):
-                from torch_ort import ORTModule  # noqa
-
-                model = ORTModule(model)
-            else:
-                raise MisconfigurationException(
-                    "Torch ORT is required to use ORT. See here for installation: https://github.com/pytorch/ort"
-                )
-
-        return model
-
     def _log_predictions_batch(self, batch: dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
         epoch = self.current_epoch
@@ -235,12 +169,9 @@ class KelpForestSegmentationTask(pl.LightningModule):
         y = batch["mask"]
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
         loss = self.loss(y_hat, y)
-
         self.log("train/loss", loss, on_step=True, on_epoch=False)
         self.train_metrics(y_hat_hard, y)
-
         return cast(Tensor, loss)
 
     def on_train_epoch_end(self) -> None:
