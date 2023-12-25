@@ -47,11 +47,12 @@ class TrainConfig(ConfigBase):
     use_weighted_sampler: bool = False
     samples_per_epoch: int = 9600
     has_kelp_importance_factor: float = 1.0
+    kelp_pixels_pct_importance_factor: float = 1.0
     qa_ok_importance_factor: float = 1.0
     qa_corrupted_pixels_pct_importance_factor: float = 1.0
-    almost_all_water_importance_factor: float = 1.0
-    dem_nan_pixels_pct_importance_factor: float = 1.0
-    dem_zero_pixels_pct_importance_factor: float = 1.0
+    almost_all_water_importance_factor: float = -1.0
+    dem_nan_pixels_pct_importance_factor: float = -1.0
+    dem_zero_pixels_pct_importance_factor: float = -1.0
 
     # model params
     architecture: str
@@ -178,6 +179,7 @@ class TrainConfig(ConfigBase):
             "use_weighted_sampler": self.use_weighted_sampler,
             "samples_per_epoch": self.samples_per_epoch,
             "has_kelp_importance_factor": self.has_kelp_importance_factor,
+            "kelp_pixels_pct_importance_factor": self.kelp_pixels_pct_importance_factor,
             "qa_ok_importance_factor": self.qa_ok_importance_factor,
             "qa_corrupted_pixels_pct_importance_factor": self.qa_corrupted_pixels_pct_importance_factor,
             "almost_all_water_importance_factor": self.almost_all_water_importance_factor,
@@ -305,6 +307,11 @@ def parse_args() -> TrainConfig:
         default=1.0,
     )
     parser.add_argument(
+        "--kelp_pixels_pct_importance_factor",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
         "--qa_ok_importance_factor",
         type=float,
         default=1.0,
@@ -317,17 +324,17 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--almost_all_water_importance_factor",
         type=float,
-        default=1.0,
+        default=-1.0,
     )
     parser.add_argument(
         "--dem_nan_pixels_pct_importance_factor",
         type=float,
-        default=1.0,
+        default=-1.0,
     )
     parser.add_argument(
         "--dem_zero_pixels_pct_importance_factor",
         type=float,
-        default=1.0,
+        default=-1.0,
     )
     parser.add_argument(
         "--spectral_indices",

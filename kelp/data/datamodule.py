@@ -336,17 +336,19 @@ class KelpForestDataModule(pl.LightningDataModule):
         cls,
         df: pd.DataFrame,
         has_kelp_importance_factor: float = 1.0,
+        kelp_pixels_pct_importance_factor: float = 1.0,
         qa_ok_importance_factor: float = 1.0,
-        almost_all_water_importance_factor: float = 1.0,
         qa_corrupted_pixels_pct_importance_factor: float = 1.0,
-        dem_nan_pixels_pct_importance_factor: float = 1.0,
-        dem_zero_pixels_pct_importance_factor: float = 1.0,
+        almost_all_water_importance_factor: float = -1.0,
+        dem_nan_pixels_pct_importance_factor: float = -1.0,
+        dem_zero_pixels_pct_importance_factor: float = -1.0,
     ) -> pd.DataFrame:
         def resolve_weight(row: pd.Series) -> float:
             if row["original_split"] == "test":
                 return 0.0
 
             has_kelp = int(row["has_kelp"])
+            kelp_pixels_pct = row["kelp_pixels_pct"]
             qa_ok = int(row["qa_ok"])
             water_pixels_pct = row["water_pixels_pct"]
             qa_corrupted_pixels_pct = row["qa_corrupted_pixels_pct"]
@@ -355,11 +357,12 @@ class KelpForestDataModule(pl.LightningDataModule):
 
             weight = (
                 has_kelp_importance_factor * has_kelp
-                + qa_corrupted_pixels_pct_importance_factor * (1 - qa_corrupted_pixels_pct)
+                + kelp_pixels_pct_importance_factor * (1 - kelp_pixels_pct)
                 + qa_ok_importance_factor * qa_ok
+                + qa_corrupted_pixels_pct_importance_factor * (1 - qa_corrupted_pixels_pct)
                 + almost_all_water_importance_factor * (1 - water_pixels_pct)
-                - dem_nan_pixels_pct_importance_factor * (1 - dem_nan_pixels_pct)
-                - dem_zero_pixels_pct_importance_factor * (1 - dem_zero_pixels_pct)
+                + dem_nan_pixels_pct_importance_factor * (1 - dem_nan_pixels_pct)
+                + dem_zero_pixels_pct_importance_factor * (1 - dem_zero_pixels_pct)
             )
             return weight  # type: ignore[no-any-return]
 
@@ -382,19 +385,21 @@ class KelpForestDataModule(pl.LightningDataModule):
         metadata_fp: Path,
         cv_split: int,
         has_kelp_importance_factor: float = 1.0,
+        kelp_pixels_pct_importance_factor: float = 1.0,
         qa_ok_importance_factor: float = 1.0,
         almost_all_water_importance_factor: float = 1.0,
-        qa_corrupted_pixels_pct_importance_factor: float = 1.0,
-        dem_nan_pixels_pct_importance_factor: float = 1.0,
-        dem_zero_pixels_pct_importance_factor: float = 1.0,
+        qa_corrupted_pixels_pct_importance_factor: float = -1.0,
+        dem_nan_pixels_pct_importance_factor: float = -1.0,
+        dem_zero_pixels_pct_importance_factor: float = -1.0,
         **kwargs: Any,
     ) -> KelpForestDataModule:
         metadata = cls.calculate_image_weights(
             df=pd.read_parquet(metadata_fp),
             has_kelp_importance_factor=has_kelp_importance_factor,
+            kelp_pixels_pct_importance_factor=kelp_pixels_pct_importance_factor,
             qa_ok_importance_factor=qa_ok_importance_factor,
-            almost_all_water_importance_factor=almost_all_water_importance_factor,
             qa_corrupted_pixels_pct_importance_factor=qa_corrupted_pixels_pct_importance_factor,
+            almost_all_water_importance_factor=almost_all_water_importance_factor,
             dem_nan_pixels_pct_importance_factor=dem_nan_pixels_pct_importance_factor,
             dem_zero_pixels_pct_importance_factor=dem_zero_pixels_pct_importance_factor,
         )
