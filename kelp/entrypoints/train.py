@@ -43,7 +43,15 @@ class TrainConfig(ConfigBase):
         "quantile",
         "per-sample-quantile",
         "per-sample-min-max",
-    ] = "z-score"
+    ] = "quantile"
+    use_weighted_sampler: bool = False
+    samples_per_epoch: int = 9600
+    has_kelp_importance_factor: float = 1.0
+    qa_ok_importance_factor: float = 1.0
+    qa_corrupted_pixels_pct_importance_factor: float = 1.0
+    almost_all_water_importance_factor: float = 1.0
+    dem_nan_pixels_pct_importance_factor: float = 1.0
+    dem_zero_pixels_pct_importance_factor: float = 1.0
 
     # model params
     architecture: str
@@ -167,6 +175,14 @@ class TrainConfig(ConfigBase):
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
             "normalization_strategy": self.normalization_strategy,
+            "use_weighted_sampler": self.use_weighted_sampler,
+            "samples_per_epoch": self.samples_per_epoch,
+            "has_kelp_importance_factor": self.has_kelp_importance_factor,
+            "qa_ok_importance_factor": self.qa_ok_importance_factor,
+            "qa_corrupted_pixels_pct_importance_factor": self.qa_corrupted_pixels_pct_importance_factor,
+            "almost_all_water_importance_factor": self.almost_all_water_importance_factor,
+            "dem_nan_pixels_pct_importance_factor": self.dem_nan_pixels_pct_importance_factor,
+            "dem_zero_pixels_pct_importance_factor": self.dem_zero_pixels_pct_importance_factor,
         }
 
     @property
@@ -276,6 +292,42 @@ def parse_args() -> TrainConfig:
         "--seed",
         type=int,
         default=42,
+    )
+    parser.add_argument("--use_weighted_sampler", action="store_true")
+    parser.add_argument(
+        "--samples_per_epoch",
+        type=int,
+        default=9600,
+    )
+    parser.add_argument(
+        "--has_kelp_importance_factor",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--qa_ok_importance_factor",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--qa_corrupted_pixels_pct_importance_factor",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--almost_all_water_importance_factor",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--dem_nan_pixels_pct_importance_factor",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--dem_zero_pixels_pct_importance_factor",
+        type=float,
+        default=1.0,
     )
     parser.add_argument(
         "--spectral_indices",
