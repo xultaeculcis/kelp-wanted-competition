@@ -13,9 +13,9 @@ parameters:
     displayName: Default Compute
     type: string
     values:
-      - gpu-4c-28g-t4-nc4ast4v3-spot
-      - gpu-6c-112g-v100-nc6sv3-spot
-    default: gpu-4c-28g-t4-nc4ast4v3-spot
+      - azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+      - azureml:gpu-6c-112g-v100-nc6sv3-spot
+    default: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
   - name: pipeline_spec_file
     displayName: Pipeline spec file
     type: string
@@ -68,7 +68,6 @@ stages:
                   az ml job create -f ${{parameters.pipeline_spec_file}} \
                   --set experiment_name=$(ENV)_${{parameters.experiment_name}} \
                   display_name=$(ENV)_${{parameters.experiment_name}}_$(Build.BuildID) \
-                  settings.default_datastore=azureml:workspaceblobstore \
                   settings.default_compute=${{parameters.default_compute}} \
                   jobs.sweep_step.limits.max_total_trials=${{parameters.trials}}
                   --query name -o tsv \

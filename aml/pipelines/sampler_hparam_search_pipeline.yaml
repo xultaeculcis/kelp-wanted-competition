@@ -5,6 +5,7 @@ experiment_name: sampler-weights-hparam-search
 
 settings:
   default_compute: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+  default_datastore: azureml:workspaceblobstore
 
 jobs:
   sweep_step:
