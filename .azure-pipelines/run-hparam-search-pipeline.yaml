@@ -81,11 +81,11 @@ stages:
                   --set experiment_name=$(ENVIRONMENT)_${{parameters.experiment_name}} \
                   display_name=$(ENVIRONMENT)_${{parameters.experiment_name}}_$(Build.BuildID) \
                   settings.default_compute=${{parameters.default_compute}} \
-                  jobs.sweep_step.limits.max_total_trials=${{parameters.trials}}
-                  jobs.sweep_step.limits.max_concurrent_trials=${{parameters.max_concurrent_trials}}
-                  jobs.sweep_step.limits.trial_timeout=${{parameters.trial_timeout}}
-                  jobs.sweep_step.limits.timeout=${{parameters.job_timeout}}
-                  -o tsv \
+                  jobs.sweep_step.limits.max_total_trials=${{parameters.trials}} \
+                  jobs.sweep_step.limits.max_concurrent_trials=${{parameters.max_concurrent_trials}} \
+                  jobs.sweep_step.limits.trial_timeout=${{parameters.trial_timeout}} \
+                  jobs.sweep_step.limits.timeout=${{parameters.job_timeout}} \
+                  --query name -o tsv \
                 )
 
                 if [[ -z "$run_id" ]]
