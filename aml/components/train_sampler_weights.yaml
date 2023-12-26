@@ -61,7 +61,7 @@ command: >-
   --metadata_fp ${{inputs.metadata_file}}
   --cv_split 6
   --batch_size 32
-  --num_workers 6
+  --num_workers 4
   --band_order 2,3,4,0,1,5,6
   --image_size 352
   --use_weighted_sampler
