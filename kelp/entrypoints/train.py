@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from datetime import datetime
 from pathlib import Path
@@ -590,6 +591,8 @@ def get_mlflow_run_dir(current_run: ActiveRun, output_dir: Path) -> Path:
 def main() -> None:
     cfg = parse_args()
     set_gpu_power_limit_if_needed()
+
+    _logger.info(f"{json.dumps(dict(os.environ), indent=4)}")
 
     mlflow.set_experiment(cfg.resolved_experiment_name)
     mlflow.pytorch.autolog()
