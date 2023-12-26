@@ -9,8 +9,8 @@ ENV CONDA_ENV=kelp \
     # Tell apt-get to not block installs by asking for interactive human input
     DEBIAN_FRONTEND=noninteractive \
     # Set username, uid and gid (same as uid) of non-root user the container will be run as
-    PS_USER=jovyan \
-    PS_UID=1000 \
+    ENV_USER=jovyan \
+    ENV_UID=1000 \
     # Use /bin/bash as shell, not the default /bin/sh (arrow keys, etc don't work then)
     SHELL=/bin/bash \
     # Setup locale to be UTF-8, avoiding gnarly hard to debug encoding errors
@@ -21,27 +21,27 @@ ENV CONDA_ENV=kelp \
 
 # All env vars that reference other env vars need to be in their own ENV block
 # Path to the python environment where the packages are installed
-ENV PS_PYTHON_PREFIX=${CONDA_DIR}/envs/${CONDA_ENV} \
+ENV ENV_PYTHON_PREFIX=${CONDA_DIR}/envs/${CONDA_ENV} \
     # Home directory of our non-root user
-    HOME=/home/${PS_USER}
+    HOME=/home/${ENV_USER}
 
 # Add both our Kelp env as well as default conda installation to $PATH
 # Thus, when we start a `python` process, it loads the python in the ps conda environment,
 # as that comes first here.
-ENV PATH=${PS_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${PATH}
+ENV PATH=${ENV_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${PATH}
 
-RUN echo "Creating ${PS_USER} user..." \
+RUN echo "Creating ${ENV_USER} user..." \
     # Create a group for the user to be part of, with gid same as uid
-    && groupadd --gid ${PS_UID} ${PS_USER}  \
+    && groupadd --gid ${ENV_UID} ${ENV_USER}  \
     # Create non-root user, with given gid, uid and create $HOME
-    && useradd --create-home --gid ${PS_UID} --no-log-init --uid ${PS_UID} ${PS_USER} \
+    && useradd --create-home --gid ${ENV_UID} --no-log-init --uid ${ENV_UID} ${ENV_USER} \
     # Make sure that /srv is owned by non-root user, so we can install things there
-    && chown -R ${PS_USER}:${PS_USER} /srv
+    && chown -R ${ENV_USER}:${ENV_USER} /srv
 
 # Run conda activate each time a bash shell starts, so users don't have to manually type conda activate
 # Note this is only read by shell, but not by the jupyter notebook - that relies
 # on us starting the correct `python` process, which we do by adding the notebook conda environment's
-# bin to PATH earlier ($PS_PYTHON_PREFIX/bin)
+# bin to PATH earlier ($ENV_PYTHON_PREFIX/bin)
 RUN echo ". ${CONDA_DIR}/etc/profile.d/conda.sh ; conda activate ${CONDA_ENV}" > /etc/profile.d/init_conda.sh
 
 # Install basic apt packages
@@ -55,7 +55,7 @@ RUN echo "Installing Apt-get packages..." \
 ENV TZ UTC
 # ========================
 
-USER ${PS_USER}
+USER ${ENV_USER}
 WORKDIR ${HOME}
 
 # Install latest mambaforge in ${CONDA_DIR}
@@ -86,8 +86,8 @@ RUN conda-lock install --name ${CONDA_ENV} conda-lock.yml && \
     mamba clean -yaf && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    if [ -d ${PS_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static ]; then \
-    find ${PS_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete \
+    if [ -d ${ENV_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static ]; then \
+    find ${ENV_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete \
     ; fi
 
 CMD ["bash"]
