@@ -1,0 +1,64 @@
+trigger: none
+
+pr: none
+
+parameters:
+  - name: runtime_env
+    displayName: Runtime Environment
+    type: string
+    default: dev
+    values:
+      - dev
+  - name: default_datastore
+    displayName: Default Datastore
+    type: string
+    default: azureml:workspaceblobstore
+
+variables:
+  - group: ${{parameters.runtime_env}}-vg
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage:
+    displayName: Execute hparam search pipeline @${{parameters.runtime_env}}
+
+    jobs:
+      - job: hparam_search
+        displayName: Execute hparam search pipeline
+
+        steps:
+          - checkout: self
+            path: s/
+
+          - template: mlops/templates/install-az-cli.yaml
+
+          - template: mlops/templates/install-aml-cli.yaml
+
+          - template: mlops/templates/connect-to-aml-workspace.yaml
+
+          - task: AzureCLI@2
+            displayName: Run HParam Search Pipeline
+            continueOnError: true
+            inputs:
+              azureSubscription: $(ADO__SERVICE_CONNECTION_RG) # needs to have access at the RG level
+              scriptType: bash
+              workingDirectory: $(System.DefaultWorkingDirectory)
+              scriptLocation: inlineScript
+              inlineScript: |
+                run_id=$( \
+                  az ml job create -f aml/pipelines/sampler_weight_hparam_search_pipeline.yaml \
+                  --set experiment_name=$(ENV)_sampler_hparam_search_exp \
+                  display_name=$(ENV)_sampler_hparam_search_exp_$(Build.BuildID) \
+                  settings.default_datastore=${{parameters.default_datastore}} \
+                  --query name -o tsv \
+                )
+
+                if [[ -z "$run_id" ]]
+                then
+                  echo "Job creation failed"
+                  exit 3
+                fi
+
+                az ml job show -n $run_id --web

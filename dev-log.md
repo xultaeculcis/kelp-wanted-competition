@@ -22,7 +22,8 @@ Checklist:
 - [x] More robust CV split with deduplication of images from val set
 - [x] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [x] Different loss functions
-- [ ] Weighted sampler
+- [x] Weighted sampler
+- [ ] Azure ML Hparam Search
 - [ ] Add extra spectral indices combinations
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2

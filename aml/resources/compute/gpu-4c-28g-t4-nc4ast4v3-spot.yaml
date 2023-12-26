@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/amlCompute.schema.json
+name: gpu-4c-28g-t4-nc4ast4v3-spot
+type: amlcompute
+size: STANDARD_NC4AS_T4_V3
+min_instances: 0
+max_instances: 50
+idle_time_before_scale_down: 600
+tier: low_priority

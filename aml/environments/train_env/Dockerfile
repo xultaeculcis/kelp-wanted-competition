@@ -9,8 +9,8 @@ ENV CONDA_ENV=kelp \
     # Tell apt-get to not block installs by asking for interactive human input
     DEBIAN_FRONTEND=noninteractive \
     # Set username, uid and gid (same as uid) of non-root user the container will be run as
-    APP_USER=jovyan \
-    APP_UID=1000 \
+    PS_USER=jovyan \
+    PS_UID=1000 \
     # Use /bin/bash as shell, not the default /bin/sh (arrow keys, etc don't work then)
     SHELL=/bin/bash \
     # Setup locale to be UTF-8, avoiding gnarly hard to debug encoding errors
@@ -23,20 +23,20 @@ ENV CONDA_ENV=kelp \
 # Path to the python environment where the packages are installed
 ENV PS_PYTHON_PREFIX=${CONDA_DIR}/envs/${CONDA_ENV} \
     # Home directory of our non-root user
-    HOME=/home/${APP_USER}
+    HOME=/home/${PS_USER}
 
 # Add both our Kelp env as well as default conda installation to $PATH
 # Thus, when we start a `python` process, it loads the python in the ps conda environment,
 # as that comes first here.
 ENV PATH=${PS_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${PATH}
 
-RUN echo "Creating ${APP_USER} user..." \
+RUN echo "Creating ${PS_USER} user..." \
     # Create a group for the user to be part of, with gid same as uid
-    && groupadd --gid ${APP_UID} ${APP_USER}  \
+    && groupadd --gid ${PS_UID} ${PS_USER}  \
     # Create non-root user, with given gid, uid and create $HOME
-    && useradd --create-home --gid ${APP_UID} --no-log-init --uid ${APP_UID} ${APP_USER} \
+    && useradd --create-home --gid ${PS_UID} --no-log-init --uid ${PS_UID} ${PS_USER} \
     # Make sure that /srv is owned by non-root user, so we can install things there
-    && chown -R ${APP_USER}:${APP_USER} /srv
+    && chown -R ${PS_USER}:${PS_USER} /srv
 
 # Run conda activate each time a bash shell starts, so users don't have to manually type conda activate
 # Note this is only read by shell, but not by the jupyter notebook - that relies
@@ -55,7 +55,7 @@ RUN echo "Installing Apt-get packages..." \
 ENV TZ UTC
 # ========================
 
-USER ${APP_USER}
+USER ${PS_USER}
 WORKDIR ${HOME}
 
 # Install latest mambaforge in ${CONDA_DIR}
