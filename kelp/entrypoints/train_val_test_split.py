@@ -69,7 +69,7 @@ def filter_data(df: pd.DataFrame) -> pd.DataFrame:
 @timed
 def make_stratification_column(df: pd.DataFrame, stratification_columns: list[str]) -> pd.DataFrame:
     def make_stratification_key(series: pd.Series) -> str:
-        vals = [str(series[col]) for col in stratification_columns]
+        vals = [f"{col}={str(series[col])}" for col in stratification_columns]
         return "-".join(vals)
 
     df["stratification"] = df.apply(lambda row: make_stratification_key(row), axis=1).astype("category")

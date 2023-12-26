@@ -18,7 +18,7 @@ Checklist:
 - [x] Log confusion matrix
 - [x] Log prediction grid during eval loop
 - [x] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
-embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
+  embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)
 - [x] More robust CV split with deduplication of images from val set
 - [x] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [x] Different loss functions
@@ -37,11 +37,10 @@ embeddings to find similar images (DEM layer can be good candidate to find image
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
-and random sample of 1000 `non-kelp` pixels per image
+  and random sample of 1000 `non-kelp` pixels per image
 - [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
-
 
 ## What seams to work
 
@@ -69,6 +68,7 @@ and random sample of 1000 `non-kelp` pixels per image
 * Plotted the data for quick visual inspection
 
 Findings:
+
 * DEM will need to be clipped due to nan values -> use `np.maximum(0, arr)`
 * Cloud mask is actually the QA mask - it also contains faulty pixels
 
@@ -91,7 +91,7 @@ Findings:
 ## 2023-12-12
 
 * Add stratified k-fold split - stratification using following per image flag combination: `qa_ok`, `has_kelp`,
-`dem_has_nans`, `high_corrupted_pixels_pct`
+  `dem_has_nans`, `high_corrupted_pixels_pct`
 * Update augmentations
 * Pad images to 352x352 - required by the model for the image shape to be divisible by 32
 * Messed up something in the dataset - training batch has some `torch.nan` values
@@ -101,7 +101,7 @@ Findings:
 * Add GPU utils to power limit RTX 3090 for more comfortable training temperatures
 * Add dataset stats to `consts`
 * Remove `torchgeo` package dependency since its newest version conflicted with pydantic v2 - didn't use its
-features anyway...
+  features anyway...
 * Use index min value instead of `torch.nan` to mask corrupted pixels
 * Finally, train a single epoch
 * `MLFlowLogger` is wonky - will use `mlflow` autologging capabilities
@@ -119,7 +119,7 @@ features anyway...
 * Train first `UNet` model with `ResNet-50` encoder for 10 epochs successfully - final `val/dice` score was **0.782**
 * TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions
 * WIP. inference script - the datamodule needs refactoring, the user should be able to crate it either from metadata
-file or from list of file paths
+  file or from list of file paths
 
 ## 2023-12-15
 
@@ -127,13 +127,13 @@ file or from list of file paths
 * `TrainConfig` now has dedicated properties for data module, model and trainer kwargs
 * Prediction script works, preds look ok
 * Tried to install lightning-bolts for torch ORT support - PL ends up being downgraded since bolts require it to be
-less than 2.0
+  less than 2.0
 * Needed to bring the images to original shape because of padding necessary by unet -> hacked ugly solution to remove
-the padding
+  the padding
 * Training a few more models - looks like seed is not respected and each model ends up having different training curves
-and final performance
+  and final performance
 * PL way of logging metrics results in `epoch` being treated as a step in visualizations of learning curves in MLFlow
-UI - a bit annoying
+  UI - a bit annoying
 
 ## 2023-12-16
 
@@ -144,17 +144,17 @@ UI - a bit annoying
 * Trying to install `torch-ort` for training speedups (docs say about 37% speedups)
 * No speedups at all - some new package messed up logging, debug statements all over the place...
 * `torch.compile` is the same - no speedups, takes forever to compile the model using `mode` != `default`
-(which too is painfully slow)
+  (which too is painfully slow)
 * Reverting the env changes
 * Run 10-fold CV and re-trained model, new submission score using lightning's best checkpoint = **0.6569**, using
-`mlflow` model **0.6338** WTF!?
+  `mlflow` model **0.6338** WTF!?
 * `mlflow` must have saved last checkpoint instead of the best one... Need to fix that
 * `MLFlowLogger` now uses `log_model=True`, instead of `log_model="all"` - final logged model is the same as the
-best one even if the latest epoch resulted in worse model
+  best one even if the latest epoch resulted in worse model
 * Figured out that `--benchmark` resulted in difference in non-deterministic model performance, will not use it again
-for reproducibility
+  for reproducibility
 * Tried training from scratch - very slow convergence, training using pre-trained model is a must in this case.
-Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weights
+  Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weights
 * Removing NDVI -> dice=**0.758**, keep NDVI
 * Adding `decoder_attention_type="scse"` did not improve the performance (dice=**0.755**)
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI -> bump performance to dice=**0.762**
@@ -166,21 +166,21 @@ Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weig
 * OneCycleLR vs no LR scheduler: **0.76640** vs **0.764593** but overall stability is better with 1Cycle
 * Adam vs AdamW +0.02 for AdamW
 * `weight_decay`:
-  * 1e-2: **0.759**
-  * 1e-3: **0.763**
-  * 1e-4: **0.765**
-  * 1e-5: **0.762**
+    * 1e-2: **0.759**
+    * 1e-3: **0.763**
+    * 1e-4: **0.765**
+    * 1e-5: **0.762**
 * 10-fold CV splits:
-  * split 0: **0.764593** - public score: **0.6551**
-  * split 1: **0.831507** - public score: **0.6491**
-  * split 2: **0.804093** - public score: **0.6608**
-  * split 3: **0.820495** - public score: **0.6637**
-  * split 4: **0.815217** - public score: **0.6529**
-  * split 5: **0.825403** - public score: **0.6653**
-  * split 6: **0.815222** - public score: **0.6507**
-  * split 7: **0.823355** - public score: **0.6626**
-  * split 8: **0.829409** - public score: **0.6411**
-  * split 9: **0.820984** - public score: **0.6506**
+    * split 0: **0.764593** - public score: **0.6551**
+    * split 1: **0.831507** - public score: **0.6491**
+    * split 2: **0.804093** - public score: **0.6608**
+    * split 3: **0.820495** - public score: **0.6637**
+    * split 4: **0.815217** - public score: **0.6529**
+    * split 5: **0.825403** - public score: **0.6653**
+    * split 6: **0.815222** - public score: **0.6507**
+    * split 7: **0.823355** - public score: **0.6626**
+    * split 8: **0.829409** - public score: **0.6411**
+    * split 9: **0.820984** - public score: **0.6506**
 * Add confusion matrix logging
 * Use `mlflow` autogenerated run names
 
@@ -204,7 +204,7 @@ Final DICE after 10 epochs=**0.736**, compared to **0.760** with `imagenet` weig
 ## 2023-12-20
 
 * There is a single mask in the mask grid that's 90% kelp - cloudy image, open water - this can skew the results,
-need to verify the rest of the masks
+  need to verify the rest of the masks
 * Did some more work on AOI resolution
 
 ## 2023-12-21
@@ -223,16 +223,16 @@ need to verify the rest of the masks
 * Added few new stats calculation
 * Updated train-val-test split logic using deduplicated AOIs
 * Trained new models using new dataset:
-  * split 0: **0.820488** - public score: **0.6648**
-  * split 1: **0.818475** - public score: **0.6583**
-  * split 2: **0.819387** - public score: ****
-  * split 3: **0.837715** - public score: **0.6566**
-  * split 4: **0.828322** - public score: ****
-  * split 5: **0.829196** - public score: ****
-  * split 6: **0.832407** - public score: **0.6678**
-  * split 7: **0.848665** - public score: **0.6663**
-  * split 8: **0.823535** - public score: ****
-  * split 9: **0.832882** - public score: ****
+    * split 0: **0.820488** - public score: **0.6648**
+    * split 1: **0.818475** - public score: **0.6583**
+    * split 2: **0.819387** - public score: ****
+    * split 3: **0.837715** - public score: **0.6566**
+    * split 4: **0.828322** - public score: ****
+    * split 5: **0.829196** - public score: ****
+    * split 6: **0.832407** - public score: **0.6678**
+    * split 7: **0.848665** - public score: **0.6663**
+    * split 8: **0.823535** - public score: ****
+    * split 9: **0.832882** - public score: ****
 * There is too much splits to check each time... Will use split #6 to train from now on
 
 ## 2023-12-23
@@ -241,13 +241,13 @@ need to verify the rest of the masks
 * Move stats computation to GPU if available - 45x speedup
 * Commented out some indices, as they result in nan/inf values
 * Trained new models on split=6 with different normalization strategies:
-  * `z-score`: **0.834168**
-  * `quantile`: **0.834134**
-  * `min-max`: **0.831865**
-  * `per-sample-quantile`: **0.806227**
-  * `per-sample-min-max`: **0.801893**
+    * `z-score`: **0.834168**
+    * `quantile`: **0.834134**
+    * `min-max`: **0.831865**
+    * `per-sample-quantile`: **0.806227**
+    * `per-sample-min-max`: **0.801893**
 * Will use `quantile` since it produces the most appealing visual samples and is more robust for outliers,
-the learning curve also seems to converge faster
+  the learning curve also seems to converge faster
 
 ## 2023-12-24
 
@@ -270,5 +270,35 @@ the learning curve also seems to converge faster
 | `torch.nn.CrossEntropyLoss` (`weight=[0.1,0.9]`)         | **0.80692**  |
 
 * Removed `smp.losses.MCCLoss` and `smp.losses.SoftBCEWithLogitsLoss` since they require different input shapes -
-have no time for resolving this behaviour - error with `requires_grad` not being enabled or something...
+  have no time for resolving this behaviour - error with `requires_grad` not being enabled or something...
 * Will use Dice since it performed better on public leaderboard **0.6824** vs **0.6802** (CE with weights)
+
+## 2023-12-25
+
+* Comparing weighted sampler results with different weights:
+    * 9600 samples per epoch (300 batches - 2x as many as without the sampler)
+    * 5120 (160 batches - as many as without the sampler)
+    * Ran 84 experiments with 5120 samples/epoch for 10 epochs, but not with all combinations of weights that I
+      wanted...
+    * Did not run 9600 samples / epoch at all
+    * Need to scale the experiments to the cloud
+    * 1 experiment takes ~10 min, running full hparam search for weights would take ~8 days
+* Top 5 local runs:
+
+| samples_per_epoch | has_kelp | kelp_pixels_pct | qa_ok | qa_corrupted_pixels_pct | almost_all_water | dem_nan_pixels_pct | dem_zero_pixels_pct | val/dice |
+|-------------------|----------|-----------------|-------|-------------------------|------------------|--------------------|---------------------|----------|
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 0.0              | -1.0               | -1.0                | 0.840818 |
+| 5120              | 2.0      | 1.0             | 0.5   | 1.0                     | -1.0             | -1.0               | -1.0                | 0.840141 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 0.0              | -1.0               | -1.0                | 0.832289 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 1.0              | 1.0                | -1.0                | 0.832120 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 1.0              | 0.0                | 0.0                 | 0.831936 |
+| 5120              | 1.0      | 1.0             | 1.0   | 0.0                     | 1.0              | -1.0               | -1.0                | 0.831921 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 0.0              | 0.0                | 0.0                 | 0.831608 |
+
+* Just realised, that I was running the experiments on wrong CV split
+* First 2 runs are on CV Split #6, the rest are on #0
+* So dumb...
+
+## 2023-12-26
+
+* WIP. Azure ML integration

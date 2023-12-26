@@ -13,7 +13,7 @@ import torchvision.transforms as T
 from kornia.augmentation.base import _AugmentationBase
 from matplotlib import pyplot as plt
 from torch import Tensor
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
@@ -71,7 +71,10 @@ class KelpForestDataModule(pl.LightningDataModule):
             "per-sample-min-max",
             "per-sample-quantile",
             "z-score",
-        ] = "z-score",
+        ] = "quantile",
+        use_weighted_sampler: bool = False,
+        samples_per_epoch: int = 230,
+        image_weights: list[float] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
@@ -91,6 +94,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.normalization_strategy = normalization_strategy
+        self.use_weighted_sampler = use_weighted_sampler
+        self.samples_per_epoch = samples_per_epoch
+        self.image_weights = image_weights or [1.0 for _ in self.train_images]
         self.band_stats, self.in_channels = self.resolve_normalization_stats()
         self.normalization_transform = self.resolve_normalization_transform()
         self.train_augmentations = K.AugmentationSequential(
@@ -211,7 +217,13 @@ class KelpForestDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=True,
+            sampler=WeightedRandomSampler(
+                weights=self.image_weights,
+                num_samples=self.samples_per_epoch,
+            )
+            if self.use_weighted_sampler
+            else None,
+            shuffle=True if not self.use_weighted_sampler else False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -320,18 +332,77 @@ class KelpForestDataModule(pl.LightningDataModule):
         return image_paths, mask_paths
 
     @classmethod
+    def calculate_image_weights(
+        cls,
+        df: pd.DataFrame,
+        has_kelp_importance_factor: float = 1.0,
+        kelp_pixels_pct_importance_factor: float = 1.0,
+        qa_ok_importance_factor: float = 1.0,
+        qa_corrupted_pixels_pct_importance_factor: float = 1.0,
+        almost_all_water_importance_factor: float = -1.0,
+        dem_nan_pixels_pct_importance_factor: float = -1.0,
+        dem_zero_pixels_pct_importance_factor: float = -1.0,
+    ) -> pd.DataFrame:
+        def resolve_weight(row: pd.Series) -> float:
+            if row["original_split"] == "test":
+                return 0.0
+
+            has_kelp = int(row["has_kelp"])
+            kelp_pixels_pct = row["kelp_pixels_pct"]
+            qa_ok = int(row["qa_ok"])
+            water_pixels_pct = row["water_pixels_pct"]
+            qa_corrupted_pixels_pct = row["qa_corrupted_pixels_pct"]
+            dem_nan_pixels_pct = row["dem_nan_pixels_pct"]
+            dem_zero_pixels_pct = row["dem_zero_pixels_pct"]
+
+            weight = (
+                has_kelp_importance_factor * has_kelp
+                + kelp_pixels_pct_importance_factor * (1 - kelp_pixels_pct)
+                + qa_ok_importance_factor * qa_ok
+                + qa_corrupted_pixels_pct_importance_factor * (1 - qa_corrupted_pixels_pct)
+                + almost_all_water_importance_factor * (1 - water_pixels_pct)
+                + dem_nan_pixels_pct_importance_factor * (1 - dem_nan_pixels_pct)
+                + dem_zero_pixels_pct_importance_factor * (1 - dem_zero_pixels_pct)
+            )
+            return weight  # type: ignore[no-any-return]
+
+        df["weight"] = df.apply(resolve_weight, axis=1)
+        min_val = df["weight"].min()
+        max_val = df["weight"].max()
+        df["weight"] = (df["weight"] - min_val) / (max_val - min_val + consts.data.EPS)
+        return df
+
+    @classmethod
+    def resolve_image_weights(cls, df: pd.DataFrame, image_paths: list[Path]) -> list[float]:
+        tile_ids = [fp.stem.split("_")[0] for fp in image_paths]
+        weights = df[df["tile_id"].isin(tile_ids)].sort_values("tile_id")["weight"].tolist()
+        return weights  # type: ignore[no-any-return]
+
+    @classmethod
     def from_metadata_file(
         cls,
         data_dir: Path,
         metadata_fp: Path,
         cv_split: int,
-        spectral_indices: list[str] | None = None,
-        batch_size: int = 32,
-        image_size: int = 352,
-        num_workers: int = 0,
+        has_kelp_importance_factor: float = 1.0,
+        kelp_pixels_pct_importance_factor: float = 1.0,
+        qa_ok_importance_factor: float = 1.0,
+        almost_all_water_importance_factor: float = 1.0,
+        qa_corrupted_pixels_pct_importance_factor: float = -1.0,
+        dem_nan_pixels_pct_importance_factor: float = -1.0,
+        dem_zero_pixels_pct_importance_factor: float = -1.0,
         **kwargs: Any,
     ) -> KelpForestDataModule:
-        metadata = pd.read_parquet(metadata_fp)
+        metadata = cls.calculate_image_weights(
+            df=pd.read_parquet(metadata_fp),
+            has_kelp_importance_factor=has_kelp_importance_factor,
+            kelp_pixels_pct_importance_factor=kelp_pixels_pct_importance_factor,
+            qa_ok_importance_factor=qa_ok_importance_factor,
+            qa_corrupted_pixels_pct_importance_factor=qa_corrupted_pixels_pct_importance_factor,
+            almost_all_water_importance_factor=almost_all_water_importance_factor,
+            dem_nan_pixels_pct_importance_factor=dem_nan_pixels_pct_importance_factor,
+            dem_zero_pixels_pct_importance_factor=dem_zero_pixels_pct_importance_factor,
+        )
         train_images, train_masks = cls.resolve_file_paths(
             data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.TRAIN
         )
@@ -341,6 +412,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         test_images, test_masks = cls.resolve_file_paths(
             data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.TEST
         )
+        image_weights = cls.resolve_image_weights(df=metadata, image_paths=train_images)
         return cls(
             train_images=train_images,
             train_masks=train_masks,
@@ -349,10 +421,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             test_images=test_images,
             test_masks=test_masks,
             predict_images=None,
-            spectral_indices=spectral_indices,
-            batch_size=batch_size,
-            image_size=image_size,
-            num_workers=num_workers,
+            image_weights=image_weights,
             **kwargs,
         )
 
@@ -363,10 +432,6 @@ class KelpForestDataModule(pl.LightningDataModule):
         val_data_folder: Path | None = None,
         test_data_folder: Path | None = None,
         predict_data_folder: Path | None = None,
-        spectral_indices: list[str] | None = None,
-        batch_size: int = 32,
-        image_size: int = 352,
-        num_workers: int = 0,
         **kwargs: Any,
     ) -> KelpForestDataModule:
         return cls(
@@ -391,10 +456,6 @@ class KelpForestDataModule(pl.LightningDataModule):
             predict_images=sorted(list(predict_data_folder.rglob("*.tif")))
             if predict_data_folder and predict_data_folder.exists()
             else None,
-            spectral_indices=spectral_indices,
-            batch_size=batch_size,
-            image_size=image_size,
-            num_workers=num_workers,
             **kwargs,
         )
 
