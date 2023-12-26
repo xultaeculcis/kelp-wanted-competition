@@ -17,7 +17,7 @@ jobs:
     inputs:
       data_dir:
         type: uri_folder
-        mode: download
+        mode: ro_mount
         path: azureml:train_dataset@latest
       metadata_file:
         type: uri_file
