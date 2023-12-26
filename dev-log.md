@@ -278,7 +278,27 @@ Findings:
 * Comparing weighted sampler results with different weights:
     * 9600 samples per epoch (300 batches - 2x as many as without the sampler)
     * 5120 (160 batches - as many as without the sampler)
+    * Ran 84 experiments with 5120 samples/epoch for 10 epochs, but not with all combinations of weights that I
+      wanted...
+    * Did not run 9600 samples / epoch at all
+    * Need to scale the experiments to the cloud
+    * 1 experiment takes ~10 min, running full hparam search for weights would take ~8 days
+* Top 5 local runs:
 
 | samples_per_epoch | has_kelp | kelp_pixels_pct | qa_ok | qa_corrupted_pixels_pct | almost_all_water | dem_nan_pixels_pct | dem_zero_pixels_pct | val/dice |
 |-------------------|----------|-----------------|-------|-------------------------|------------------|--------------------|---------------------|----------|
-| 5120              | 1.0      | 1.0             | 1.0   | 1.0                     | 1.0              | 1.0                | 1.0                 |          |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 0.0              | -1.0               | -1.0                | 0.840818 |
+| 5120              | 2.0      | 1.0             | 0.5   | 1.0                     | -1.0             | -1.0               | -1.0                | 0.840141 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 0.0              | -1.0               | -1.0                | 0.832289 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 1.0              | 1.0                | -1.0                | 0.832120 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 1.0              | 0.0                | 0.0                 | 0.831936 |
+| 5120              | 1.0      | 1.0             | 1.0   | 0.0                     | 1.0              | -1.0               | -1.0                | 0.831921 |
+| 5120              | 1.0      | 1.0             | 1.0   | -1.0                    | 0.0              | 0.0                | 0.0                 | 0.831608 |
+
+* Just realised, that I was running the experiments on wrong CV split
+* First 2 runs are on CV Split #6, the rest are on #0
+* So dumb...
+
+## 2023-12-26
+
+* WIP. Azure ML integration

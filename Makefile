@@ -8,7 +8,7 @@ pre-commit = pre-commit run --all-files
 
 DATA_DIR=data
 SHELL=/bin/bash
-SPLIT=0
+SPLIT=6
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
@@ -156,10 +156,10 @@ train-single-split:
 		--has_kelp_importance_factor 1.0 \
 		--kelp_pixels_pct_importance_factor 1.0 \
 		--qa_ok_importance_factor 1.0 \
-		--qa_corrupted_pixels_pct_importance_factor 1.0 \
-		--almost_all_water_importance_factor 1.0 \
-		--dem_nan_pixels_pct_importance_factor 1.0 \
-		--dem_zero_pixels_pct_importance_factor 1.0 \
+		--qa_corrupted_pixels_pct_importance_factor -1.0 \
+		--almost_all_water_importance_factor 0.0 \
+		--dem_nan_pixels_pct_importance_factor -1.0 \
+		--dem_zero_pixels_pct_importance_factor -1.0 \
 		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder resnet50 \
