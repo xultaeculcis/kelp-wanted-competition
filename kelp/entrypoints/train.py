@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -159,6 +160,14 @@ class TrainConfig(ConfigBase):
             )
 
         return weights
+
+    @property
+    def resolved_experiment_name(self) -> str:
+        return os.environ.get("AZUREML_EXPERIMENT_NAME", self.experiment)
+
+    @property
+    def run_id_from_context(self) -> str | None:
+        return os.environ.get("AZUREML_RUN_ID", None)
 
     @property
     def tags(self) -> dict[str, Any]:
@@ -582,10 +591,11 @@ def main() -> None:
     cfg = parse_args()
     set_gpu_power_limit_if_needed()
 
-    mlflow.set_experiment(cfg.experiment)
+    mlflow.set_experiment(cfg.resolved_experiment_name)
     mlflow.pytorch.autolog()
+    run = mlflow.start_run(run_id=cfg.run_id_from_context)
 
-    with mlflow.start_run() as run:
+    with run:
         pl.seed_everything(cfg.seed, workers=True)
         mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump())
@@ -594,7 +604,7 @@ def main() -> None:
         segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)
         trainer = pl.Trainer(
             logger=make_loggers(
-                experiment=cfg.experiment,
+                experiment=cfg.resolved_experiment_name,
                 tags=cfg.tags,
             ),
             callbacks=make_callbacks(
