@@ -9,10 +9,27 @@ parameters:
     default: dev
     values:
       - dev
-  - name: default_datastore
-    displayName: Default Datastore
+  - name: default_compute
+    displayName: Default Compute
     type: string
-    default: azureml:workspaceblobstore
+    values:
+      - gpu-4c-28g-t4-nc4ast4v3-spot
+      - gpu-6c-112g-v100-nc6sv3-spot
+    default: gpu-4c-28g-t4-nc4ast4v3-spot
+  - name: pipeline_spec_file
+    displayName: Pipeline spec file
+    type: string
+    values:
+      - aml/pipelines/sampler_hparam_search_pipeline.yaml
+    default: aml/pipelines/sampler_hparam_search_pipeline.yaml
+  - name: trials
+    displayName: Trials
+    type: number
+    default: 100
+  - name: experiment_name
+    displayName: Experiment name
+    type: string
+    default: hparam_search_exp
 
 variables:
   - group: ${{parameters.runtime_env}}-vg
@@ -48,10 +65,12 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 run_id=$( \
-                  az ml job create -f aml/pipelines/sampler_weight_hparam_search_pipeline.yaml \
-                  --set experiment_name=$(ENV)_sampler_hparam_search_exp \
-                  display_name=$(ENV)_sampler_hparam_search_exp_$(Build.BuildID) \
-                  settings.default_datastore=${{parameters.default_datastore}} \
+                  az ml job create -f ${{parameters.pipeline_spec_file}} \
+                  --set experiment_name=$(ENV)_${{parameters.experiment_name}} \
+                  display_name=$(ENV)_${{parameters.experiment_name}}_$(Build.BuildID) \
+                  settings.default_datastore=azureml:workspaceblobstore \
+                  settings.default_compute=${{parameters.default_compute}} \
+                  jobs.sweep_step.limits.max_total_trials=${{parameters.trials}}
                   --query name -o tsv \
                 )
 

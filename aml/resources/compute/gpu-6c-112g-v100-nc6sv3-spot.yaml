@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/amlCompute.schema.json
+name: gpu-6c-112g-v100-nc6sv3-spot
+type: amlcompute
+size: STANDARD_NC6S_V3
+min_instances: 0
+max_instances: 20
+idle_time_before_scale_down: 600
+tier: low_priority
