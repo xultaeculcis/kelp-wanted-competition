@@ -70,7 +70,7 @@ stages:
                   display_name=$(ENVIRONMENT)_${{parameters.experiment_name}}_$(Build.BuildID) \
                   settings.default_compute=${{parameters.default_compute}} \
                   jobs.sweep_step.limits.max_total_trials=${{parameters.trials}}
-                  --query name -o tsv \
+                  -o tsv \
                 )
 
                 if [[ -z "$run_id" ]]
