@@ -49,11 +49,11 @@ stages:
           - checkout: self
             path: s/
 
-          - template: mlops/templates/install-az-cli.yaml
+          - template: templates/install-az-cli.yaml
 
-          - template: mlops/templates/install-aml-cli.yaml
+          - template: templates/install-aml-cli.yaml
 
-          - template: mlops/templates/connect-to-aml-workspace.yaml
+          - template: templates/connect-to-aml-workspace.yaml
 
           - task: AzureCLI@2
             displayName: Run HParam Search Pipeline
