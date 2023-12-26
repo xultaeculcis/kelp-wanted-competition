@@ -66,8 +66,8 @@ stages:
               inlineScript: |
                 run_id=$( \
                   az ml job create -f ${{parameters.pipeline_spec_file}} \
-                  --set experiment_name=$(ENV)_${{parameters.experiment_name}} \
-                  display_name=$(ENV)_${{parameters.experiment_name}}_$(Build.BuildID) \
+                  --set experiment_name=$(ENVIRONMENT)_${{parameters.experiment_name}} \
+                  display_name=$(ENVIRONMENT)_${{parameters.experiment_name}}_$(Build.BuildID) \
                   settings.default_compute=${{parameters.default_compute}} \
                   jobs.sweep_step.limits.max_total_trials=${{parameters.trials}}
                   --query name -o tsv \
