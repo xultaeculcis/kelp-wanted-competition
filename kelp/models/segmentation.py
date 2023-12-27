@@ -137,16 +137,15 @@ class KelpForestSegmentationTask(pl.LightningModule):
             plt.close()
 
     def _log_confusion_matrices(self, metrics: Dict[str, Tensor], cmap: str = "Blues") -> None:
-        # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
-        if self.global_step == 0:
-            return
-
         for metric_key, title, matrix_kind in zip(
             ["val/conf_mtrx", "val/norm_conf_mtrx"],
             ["Confusion matrix", "Normalized confusion matrix"],
             ["confusion_matrix", "confusion_matrix_normalized"],
         ):
             conf_matrix = metrics.pop(metric_key)
+            # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
+            if self.global_step == 0:
+                continue
             fig, axes = plt.subplots(1, 1, figsize=(7, 5))
             ConfusionMatrixDisplay(
                 confusion_matrix=conf_matrix.detach().cpu().numpy(),
