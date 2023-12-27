@@ -303,3 +303,7 @@ Findings:
 ## 2023-12-26
 
 * WIP. Azure ML integration
+
+## 2023-12-27
+
+* WIP. Azure ML integration
