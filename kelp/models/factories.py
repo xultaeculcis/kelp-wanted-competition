@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 import segmentation_models_pytorch as smp
 import torch
@@ -17,8 +17,8 @@ def resolve_loss(
     device: torch.device,
     num_classes: int = consts.data.NUM_CLASSES,
     ce_smooth_factor: float = 0.0,
-    ce_class_weights: List[float] | None = None,
-    ignore_index: int | None = None,
+    ce_class_weights: Optional[List[float]] = None,
+    ignore_index: Optional[int] = None,
 ) -> nn.Module:
     if loss_fn == "ce":
         loss = nn.CrossEntropyLoss(
@@ -63,12 +63,12 @@ def resolve_model(
     encoder: str,
     classes: int,
     in_channels: int,
-    encoder_weights: str | None = None,
-    decoder_attention_type: str | None = None,
+    encoder_weights: Optional[str] = None,
+    decoder_attention_type: Optional[str] = None,
     pretrained: bool = False,
     compile: bool = False,
     compile_mode: str = "default",
-    compile_dynamic: bool | None = None,
+    compile_dynamic: Optional[bool] = None,
     ort: bool = False,
 ) -> nn.Module:
     if architecture == "unet":

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from functools import wraps
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Union
 
 from typing_extensions import ParamSpec
 
@@ -13,7 +13,7 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def get_logger(name: str, log_level: int | str = logging.INFO) -> logging.Logger:
+def get_logger(name: str, log_level: Union[int, str] = logging.INFO) -> logging.Logger:
     """
     Builds a `Logger` instance with provided name and log level.
 

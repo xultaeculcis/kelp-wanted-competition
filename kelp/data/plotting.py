@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -11,15 +11,15 @@ from kelp.data.transforms import min_max_normalize
 
 def plot_sample(
     input_arr: np.ndarray,  # type: ignore[type-arg]
-    target_arr: np.ndarray | None = None,  # type: ignore[type-arg]
-    predictions_arr: np.ndarray | None = None,  # type: ignore[type-arg]
+    target_arr: Optional[np.ndarray] = None,  # type: ignore[type-arg]
+    predictions_arr: Optional[np.ndarray] = None,  # type: ignore[type-arg]
     figsize: Tuple[int, int] = (20, 4),
     ndvi_cmap: str = "RdYlGn",
     dem_cmap: str = "viridis",
     qa_mask_cmap: str = "gray",
     mask_cmap: str = consts.data.CMAP,
     show_titles: bool = True,
-    suptitle: str | None = None,
+    suptitle: Optional[str] = None,
 ) -> plt.Figure:
     num_panels = 6
 

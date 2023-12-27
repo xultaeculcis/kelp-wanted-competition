@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Literal
+from typing import Callable, Dict, List, Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,14 +30,14 @@ warnings.filterwarnings(
 
 @dataclass
 class FigureGrids:
-    true_color: plt.Figure | None = None
-    color_infrared: plt.Figure | None = None
-    short_wave_infrared: plt.Figure | None = None
-    mask: plt.Figure | None = None
-    prediction: plt.Figure | None = None
-    qa: plt.Figure | None = None
-    dem: plt.Figure | None = None
-    ndvi: plt.Figure | None = None
+    true_color: Optional[plt.Figure] = None
+    color_infrared: Optional[plt.Figure] = None
+    short_wave_infrared: Optional[plt.Figure] = None
+    mask: Optional[plt.Figure] = None
+    prediction: Optional[plt.Figure] = None
+    qa: Optional[plt.Figure] = None
+    dem: Optional[plt.Figure] = None
+    ndvi: Optional[plt.Figure] = None
 
 
 class KelpForestSegmentationDataset(Dataset):
@@ -47,9 +47,9 @@ class KelpForestSegmentationDataset(Dataset):
     def __init__(
         self,
         image_fps: List[Path],
-        mask_fps: List[Path] | None = None,
-        transforms: Callable[[Dict[str, Tensor]], Dict[str, Tensor]] | None = None,
-        band_order: List[int] | None = None,
+        mask_fps: Optional[List[Path]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        band_order: Optional[List[int]] = None,
     ) -> None:
         self.image_fps = image_fps
         self.mask_fps = mask_fps
@@ -104,7 +104,7 @@ class KelpForestSegmentationDataset(Dataset):
     def plot_sample(
         sample: Dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: str | None = None,
+        suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
@@ -134,7 +134,7 @@ class KelpForestSegmentationDataset(Dataset):
     def _plot_tensor(
         tensor: Tensor,
         interpolation: Literal["antialiased", "none"] = "antialiased",
-        cmap: str | None = None,
+        cmap: Optional[str] = None,
     ) -> plt.Figure:
         tensor = tensor.float()
         h, w = tensor.shape[-2], tensor.shape[-1]

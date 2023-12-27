@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Union
 
 import dask.bag
 import distributed
@@ -62,7 +62,7 @@ def plot_single_image(tile_id_split_tuple: Tuple[str, str], data_dir: Path, outp
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
         input_arr = src.read()
 
-    target_arr: np.ndarray | None = None  # type: ignore[type-arg]
+    target_arr: Optional[np.ndarray] = None  # type: ignore[type-arg]
     if split != "test":
         with rasterio.open(data_dir / split / "masks" / f"{tile_id}_kelp.tif") as src:
             target_arr = src.read(1)
@@ -75,7 +75,7 @@ def plot_single_image(tile_id_split_tuple: Tuple[str, str], data_dir: Path, outp
 def extract_composite(
     tile_id_split_tuple: Tuple[str, str],
     data_dir: Path,
-    bands: int | List[int],
+    bands: Union[int, List[int]],
     name: str,
     output_dir: Path,
 ) -> None:

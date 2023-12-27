@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 import kornia.augmentation as K
 import pandas as pd
@@ -53,15 +53,15 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        train_images: List[Path] | None = None,
-        train_masks: List[Path] | None = None,
-        val_images: List[Path] | None = None,
-        val_masks: List[Path] | None = None,
-        test_images: List[Path] | None = None,
-        test_masks: List[Path] | None = None,
-        predict_images: List[Path] | None = None,
-        spectral_indices: List[str] | None = None,
-        band_order: List[int] | None = None,
+        train_images: Optional[List[Path]] = None,
+        train_masks: Optional[List[Path]] = None,
+        val_images: Optional[List[Path]] = None,
+        val_masks: Optional[List[Path]] = None,
+        test_images: Optional[List[Path]] = None,
+        test_masks: Optional[List[Path]] = None,
+        predict_images: Optional[List[Path]] = None,
+        spectral_indices: Optional[List[str]] = None,
+        band_order: Optional[List[int]] = None,
         batch_size: int = 32,
         num_workers: int = 0,
         image_size: int = 352,
@@ -74,7 +74,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         ] = "quantile",
         use_weighted_sampler: bool = False,
         samples_per_epoch: int = 230,
-        image_weights: List[float] | None = None,
+        image_weights: Optional[List[float]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
@@ -122,7 +122,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             padding_mode="constant",
         )
 
-    def build_dataset(self, images: List[Path], masks: List[Path] | None = None) -> KelpForestSegmentationDataset:
+    def build_dataset(self, images: List[Path], masks: Optional[List[Path]] = None) -> KelpForestSegmentationDataset:
         ds = KelpForestSegmentationDataset(
             image_fps=images,
             mask_fps=masks,
@@ -190,7 +190,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             sample["mask"] = self.pad(sample["mask"])
         return sample
 
-    def setup(self, stage: str | None = None) -> None:
+    def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
 
         This method is called once per GPU per run.
@@ -428,10 +428,10 @@ class KelpForestDataModule(pl.LightningDataModule):
     @classmethod
     def from_folders(
         cls,
-        train_data_folder: Path | None = None,
-        val_data_folder: Path | None = None,
-        test_data_folder: Path | None = None,
-        predict_data_folder: Path | None = None,
+        train_data_folder: Optional[Path] = None,
+        val_data_folder: Optional[Path] = None,
+        test_data_folder: Optional[Path] = None,
+        predict_data_folder: Optional[Path] = None,
         **kwargs: Any,
     ) -> KelpForestDataModule:
         return cls(
@@ -462,14 +462,14 @@ class KelpForestDataModule(pl.LightningDataModule):
     @classmethod
     def from_file_paths(
         cls,
-        train_images: List[Path] | None = None,
-        train_masks: List[Path] | None = None,
-        val_images: List[Path] | None = None,
-        val_masks: List[Path] | None = None,
-        test_images: List[Path] | None = None,
-        test_masks: List[Path] | None = None,
-        predict_images: List[Path] | None = None,
-        spectral_indices: List[str] | None = None,
+        train_images: Optional[List[Path]] = None,
+        train_masks: Optional[List[Path]] = None,
+        val_images: Optional[List[Path]] = None,
+        val_masks: Optional[List[Path]] = None,
+        test_images: Optional[List[Path]] = None,
+        test_masks: Optional[List[Path]] = None,
+        predict_images: Optional[List[Path]] = None,
+        spectral_indices: Optional[List[str]] = None,
         batch_size: int = 32,
         image_size: int = 352,
         num_workers: int = 0,

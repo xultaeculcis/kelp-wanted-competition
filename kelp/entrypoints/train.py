@@ -4,7 +4,7 @@ import argparse
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import mlflow
 import pytorch_lightning as pl
@@ -34,7 +34,7 @@ class TrainConfig(ConfigBase):
     metadata_fp: Path
     cv_split: int = 0
     spectral_indices: List[str]
-    band_order: List[int] | None = None
+    band_order: Optional[List[int]] = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
@@ -58,13 +58,13 @@ class TrainConfig(ConfigBase):
     # model params
     architecture: str
     encoder: str
-    encoder_weights: str | None = None
-    decoder_attention_type: str | None = None
+    encoder_weights: Optional[str] = None
+    decoder_attention_type: Optional[str] = None
     num_classes: int = 2
-    ignore_index: int | None = None
+    ignore_index: Optional[int] = None
     optimizer: Literal["adam", "adamw"] = "adamw"
     weight_decay: float = 1e-4
-    lr_scheduler: Literal["onecycle", "cosine", "reduce_lr_on_plateau"] | None = None
+    lr_scheduler: Optional[Literal["onecycle", "cosine", "reduce_lr_on_plateau"]] = None
     lr: float = 3e-4
     pct_start: float = 0.3
     div_factor: float = 2
@@ -82,10 +82,10 @@ class TrainConfig(ConfigBase):
         "soft_ce",
     ] = "dice"
     ce_smooth_factor: float = 0.0
-    ce_class_weights: Tuple[float, float] | None = None
+    ce_class_weights: Optional[Tuple[float, float]] = None
     compile: bool = False
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
-    compile_dynamic: bool | None = None
+    compile_dynamic: Optional[bool] = None
     ort: bool = False
     plot_n_batches: int = 3
 
@@ -99,9 +99,9 @@ class TrainConfig(ConfigBase):
     precision: str = "16-mixed"
     fast_dev_run: bool = False
     epochs: int = 1
-    limit_train_batches: int | float | None = None
-    limit_val_batches: int | float | None = None
-    limit_test_batches: int | float | None = None
+    limit_train_batches: Optional[Union[int, float]] = None
+    limit_val_batches: Optional[Union[int, float]] = None
+    limit_test_batches: Optional[Union[int, float]] = None
     log_every_n_steps: int = 50
     accumulate_grad_batches: int = 1
     benchmark: bool = False
@@ -112,7 +112,7 @@ class TrainConfig(ConfigBase):
     seed: int = 42
 
     @field_validator("band_order", mode="before")
-    def validate_channel_order(cls, value: str | List[int] | None = None) -> List[int] | None:
+    def validate_channel_order(cls, value: Optional[Union[str, List[int]]] = None) -> Optional[List[int]]:
         if value is None:
             return None
 
@@ -124,7 +124,7 @@ class TrainConfig(ConfigBase):
         return order
 
     @field_validator("spectral_indices", mode="before")
-    def validate_spectral_indices(cls, value: str | List[str] | None = None) -> List[str]:
+    def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
         if not value:
             return []
 
@@ -147,7 +147,7 @@ class TrainConfig(ConfigBase):
         return indices
 
     @field_validator("ce_class_weights", mode="before")
-    def validate_ce_class_weights(cls, value: str | List[float] | None = None) -> List[float] | None:
+    def validate_ce_class_weights(cls, value: Union[str, Optional[List[float]]] = None) -> Optional[List[float]]:
         if not value:
             return None
 
@@ -166,7 +166,7 @@ class TrainConfig(ConfigBase):
         return os.environ.get("MLFLOW_EXPERIMENT_NAME", self.experiment)
 
     @property
-    def run_id_from_context(self) -> str | None:
+    def run_id_from_context(self) -> Optional[str]:
         return os.environ.get("MLFLOW_RUN_ID", None)
 
     @property
