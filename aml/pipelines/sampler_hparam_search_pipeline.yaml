@@ -56,7 +56,7 @@ jobs:
 
     objective:
       goal: maximize
-      primary_metric: val/dice
+      primary_metric: hp_metric
 
     limits:
       max_total_trials: 1000

@@ -311,4 +311,8 @@ Findings:
 * Finally, GPU was detected - had to recreate the env from scratch using Azure's curated base env
 * Installing dependencies via pip... Well, fuck the lock-files I guess ¯\_(ツ)_/¯
 * Training takes forever WTF M$???
-*
+* Alright, downloading dataset instead of using ro_mount fixed slow training
+* Fixed a few issues with confusion matrix logging
+* Fixed double logging
+* Added temporary fix for DEBUG level logging being permanently set by some 3rd party package
+* Will run few hundred experiments overnight
