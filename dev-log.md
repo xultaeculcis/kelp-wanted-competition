@@ -303,7 +303,12 @@ Findings:
 ## 2023-12-26
 
 * WIP. Azure ML integration
+* Env issues - no GPU detected
 
 ## 2023-12-27
 
 * WIP. Azure ML integration
+* Finally, GPU was detected - had to recreate the env from scratch using Azure's curated base env
+* Installing dependencies via pip... Well, fuck the lock-files I guess ¯\_(ツ)_/¯
+* Training takes forever WTF M$???
+*

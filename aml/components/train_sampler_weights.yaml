@@ -50,7 +50,7 @@ outputs:
 environment: azureml:acpt-train-env@latest
 
 resources:
-  shm_size: "8g"
+  shm_size: "12g"
 
 code: ../..
 command: >-

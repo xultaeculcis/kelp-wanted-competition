@@ -12,12 +12,12 @@ jobs:
     type: sweep
 
     resources:
-      shm_size: "8g"
+      shm_size: "12g"
 
     inputs:
       data_dir:
         type: uri_folder
-        mode: ro_mount
+        mode: download
         path: azureml:train_dataset@latest
       metadata_file:
         type: uri_file
