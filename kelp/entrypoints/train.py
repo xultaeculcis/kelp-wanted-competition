@@ -1,27 +1,31 @@
 from __future__ import annotations
 
-import argparse
-import os
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+import logging
 
-import mlflow
-import pytorch_lightning as pl
-import torch
-from mlflow import ActiveRun
-from pydantic import field_validator
-from pytorch_lightning import Callback
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.loggers import Logger, MLFlowLogger
+logging.basicConfig(level=logging.WARNING)
 
-from kelp import consts
-from kelp.core.configs import ConfigBase
-from kelp.data.datamodule import KelpForestDataModule
-from kelp.data.indices import INDICES
-from kelp.models.segmentation import KelpForestSegmentationTask
-from kelp.utils.gpu import set_gpu_power_limit_if_needed
-from kelp.utils.logging import get_logger
+import argparse  # noqa: E402
+import os  # noqa: E402
+from datetime import datetime  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union  # noqa: E402
+
+import mlflow  # noqa: E402
+import pytorch_lightning as pl  # noqa: E402
+import torch  # noqa: E402
+from mlflow import ActiveRun  # noqa: E402
+from pydantic import field_validator  # noqa: E402
+from pytorch_lightning import Callback  # noqa: E402
+from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint  # noqa: E402
+from pytorch_lightning.loggers import Logger, MLFlowLogger  # noqa: E402
+
+from kelp import consts  # noqa: E402
+from kelp.core.configs import ConfigBase  # noqa: E402
+from kelp.data.datamodule import KelpForestDataModule  # noqa: E402
+from kelp.data.indices import INDICES  # noqa: E402
+from kelp.models.segmentation import KelpForestSegmentationTask  # noqa: E402
+from kelp.utils.gpu import set_gpu_power_limit_if_needed  # noqa: E402
+from kelp.utils.logging import get_logger  # noqa: E402
 
 # Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
