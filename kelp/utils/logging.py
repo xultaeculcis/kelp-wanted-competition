@@ -29,10 +29,15 @@ def get_logger(name: str, log_level: Union[int, str] = logging.INFO) -> logging.
     logger = logging.getLogger(name=name)
     logger.setLevel(log_level)
 
-    stream_handler = logging.StreamHandler()
-    formatter = logging.Formatter(fmt=consts.logging.FORMAT)
-    stream_handler.setFormatter(fmt=formatter)
-    logger.addHandler(stream_handler)
+    # Prevent log messages from propagating to the parent logger
+    logger.propagate = False
+
+    # Check if handlers are already set to avoid duplication
+    if not logger.handlers:
+        stream_handler = logging.StreamHandler()
+        formatter = logging.Formatter(fmt=consts.logging.FORMAT)
+        stream_handler.setFormatter(fmt=formatter)
+        logger.addHandler(stream_handler)
 
     return logger
 
