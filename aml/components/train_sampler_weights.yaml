@@ -47,7 +47,7 @@ outputs:
     type: uri_folder
     description: The output dir.
 
-environment: azureml:train-env@latest
+environment: azureml:acpt-train-env@latest
 
 resources:
   shm_size: "8g"
