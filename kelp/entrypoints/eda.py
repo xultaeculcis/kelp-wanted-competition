@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from typing import List, Tuple
 
 import dask.bag
 import distributed
@@ -52,7 +53,7 @@ class SatelliteImageStats(BaseModel):
     high_corrupted_pixels_pct: bool | None = None
 
 
-def calculate_stats(tile_id_aoi_id_split_tuple: tuple[str, int, str], data_dir: Path) -> SatelliteImageStats:
+def calculate_stats(tile_id_aoi_id_split_tuple: Tuple[str, int, str], data_dir: Path) -> SatelliteImageStats:
     tile_id, aoi_id, split = tile_id_aoi_id_split_tuple
     src: rasterio.DatasetReader
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
@@ -264,13 +265,13 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
 
 
 @timed
-def extract_stats(data_dir: Path, records: list[tuple[str, int, str]]) -> list[SatelliteImageStats]:
+def extract_stats(data_dir: Path, records: List[Tuple[str, int, str]]) -> List[SatelliteImageStats]:
     return (  # type: ignore[no-any-return]
         dask.bag.from_sequence(records).map(calculate_stats, data_dir=data_dir).compute()
     )
 
 
-def build_tile_id_aoi_id_and_split_tuples(metadata: pd.DataFrame) -> list[tuple[str, int, str]]:
+def build_tile_id_aoi_id_and_split_tuples(metadata: pd.DataFrame) -> List[Tuple[str, int, str]]:
     records = []
     metadata["split"] = metadata["in_train"].apply(lambda x: "train" if x else "test")
     for _, row in tqdm(metadata.iterrows(), total=len(metadata), desc="Extracting tile_id and split tuples"):

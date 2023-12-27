@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pathlib
+from typing import List
 
 import pytest
 from _pytest.config import Config
@@ -11,7 +12,7 @@ from kelp import consts
 MARKERS = ["unit", "integration", "e2e"]
 
 
-def pytest_collection_modifyitems(config: Config, items: list[Function]) -> None:
+def pytest_collection_modifyitems(config: Config, items: List[Function]) -> None:
     rootdir = pathlib.Path(consts.directories.ROOT_DIR)
     for item in items:
         rel_path = pathlib.Path(item.fspath).relative_to(rootdir)

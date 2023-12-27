@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import List
 
 import pandas as pd
 from pydantic import field_validator
@@ -14,13 +15,13 @@ from kelp.utils.logging import timed
 
 class TrainTestSplitConfig(ConfigBase):
     dataset_metadata_fp: Path
-    stratification_columns: list[str]
+    stratification_columns: List[str]
     seed: int = consts.reproducibility.SEED
     splits: int = 5
     output_dir: Path
 
     @field_validator("stratification_columns", mode="before")
-    def validate_stratification_columns(cls, val: str) -> list[str]:
+    def validate_stratification_columns(cls, val: str) -> List[str]:
         return [s.strip() for s in val.split(",")]
 
 
@@ -69,7 +70,7 @@ def filter_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 @timed
-def make_stratification_column(df: pd.DataFrame, stratification_columns: list[str]) -> pd.DataFrame:
+def make_stratification_column(df: pd.DataFrame, stratification_columns: List[str]) -> pd.DataFrame:
     def make_stratification_key(series: pd.Series) -> str:
         vals = [f"{col}={str(series[col])}" for col in stratification_columns]
         return "-".join(vals)

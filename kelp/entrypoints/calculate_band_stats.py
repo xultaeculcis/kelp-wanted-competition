@@ -4,6 +4,7 @@ import argparse
 import json
 import warnings
 from pathlib import Path
+from typing import Dict, List
 
 import rasterio
 import torch
@@ -31,7 +32,7 @@ class StatisticsCalculationConfig(ConfigBase):
     output_dir: Path
 
     @property
-    def file_paths(self) -> list[Path]:
+    def file_paths(self) -> List[Path]:
         return sorted(list(self.data_dir.rglob("*_satellite.tif")))
 
 
@@ -56,10 +57,10 @@ def parse_args() -> StatisticsCalculationConfig:
 @timed
 @torch.inference_mode()
 def calculate_band_statistics(
-    image_paths: list[Path],
-    band_names: list[str],
+    image_paths: List[Path],
+    band_names: List[str],
     output_dir: Path,
-) -> dict[str, dict[str, float]]:
+) -> Dict[str, Dict[str, float]]:
     # Move computations to GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

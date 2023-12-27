@@ -4,7 +4,7 @@ import argparse
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Dict, List, Literal, Tuple
 
 import mlflow
 import pytorch_lightning as pl
@@ -33,8 +33,8 @@ class TrainConfig(ConfigBase):
     data_dir: Path
     metadata_fp: Path
     cv_split: int = 0
-    spectral_indices: list[str]
-    band_order: list[int] | None = None
+    spectral_indices: List[str]
+    band_order: List[int] | None = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
@@ -82,7 +82,7 @@ class TrainConfig(ConfigBase):
         "soft_ce",
     ] = "dice"
     ce_smooth_factor: float = 0.0
-    ce_class_weights: tuple[float, float] | None = None
+    ce_class_weights: Tuple[float, float] | None = None
     compile: bool = False
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
     compile_dynamic: bool | None = None
@@ -112,7 +112,7 @@ class TrainConfig(ConfigBase):
     seed: int = 42
 
     @field_validator("band_order", mode="before")
-    def validate_channel_order(cls, value: str | list[int] | None = None) -> list[int] | None:
+    def validate_channel_order(cls, value: str | List[int] | None = None) -> List[int] | None:
         if value is None:
             return None
 
@@ -124,7 +124,7 @@ class TrainConfig(ConfigBase):
         return order
 
     @field_validator("spectral_indices", mode="before")
-    def validate_spectral_indices(cls, value: str | list[str] | None = None) -> list[str]:
+    def validate_spectral_indices(cls, value: str | List[str] | None = None) -> List[str]:
         if not value:
             return []
 
@@ -147,7 +147,7 @@ class TrainConfig(ConfigBase):
         return indices
 
     @field_validator("ce_class_weights", mode="before")
-    def validate_ce_class_weights(cls, value: str | list[float] | None = None) -> list[float] | None:
+    def validate_ce_class_weights(cls, value: str | List[float] | None = None) -> List[float] | None:
         if not value:
             return None
 
@@ -170,11 +170,11 @@ class TrainConfig(ConfigBase):
         return os.environ.get("MLFLOW_RUN_ID", None)
 
     @property
-    def tags(self) -> dict[str, Any]:
+    def tags(self) -> Dict[str, Any]:
         return {"trained_at": datetime.utcnow().isoformat()}
 
     @property
-    def data_module_kwargs(self) -> dict[str, Any]:
+    def data_module_kwargs(self) -> Dict[str, Any]:
         return {
             "data_dir": self.data_dir,
             "metadata_fp": self.metadata_fp,
@@ -197,7 +197,7 @@ class TrainConfig(ConfigBase):
         }
 
     @property
-    def callbacks_kwargs(self) -> dict[str, Any]:
+    def callbacks_kwargs(self) -> Dict[str, Any]:
         return {
             "save_top_k": self.save_top_k,
             "monitor_metric": self.monitor_metric,
@@ -206,7 +206,7 @@ class TrainConfig(ConfigBase):
         }
 
     @property
-    def model_kwargs(self) -> dict[str, Any]:
+    def model_kwargs(self) -> Dict[str, Any]:
         return {
             "architecture": self.architecture,
             "encoder": self.encoder,
@@ -236,7 +236,7 @@ class TrainConfig(ConfigBase):
         }
 
     @property
-    def trainer_kwargs(self) -> dict[str, Any]:
+    def trainer_kwargs(self) -> Dict[str, Any]:
         return {
             "precision": self.precision,
             "fast_dev_run": self.fast_dev_run,
@@ -543,8 +543,8 @@ def parse_args() -> TrainConfig:
 
 def make_loggers(
     experiment: str,
-    tags: dict[str, Any],
-) -> list[Logger]:
+    tags: Dict[str, Any],
+) -> List[Logger]:
     mlflow_logger = MLFlowLogger(
         experiment_name=experiment,
         run_id=mlflow.active_run().info.run_id,
@@ -560,7 +560,7 @@ def make_callbacks(
     save_top_k: int = 1,
     monitor_metric: str = "val/dice",
     monitor_mode: str = "max",
-) -> list[Callback]:
+) -> List[Callback]:
     early_stopping = EarlyStopping(
         monitor=monitor_metric,
         patience=early_stopping_patience,

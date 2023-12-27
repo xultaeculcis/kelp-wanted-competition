@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any
+from typing import Any, Dict
 
 import torch
 from torch import Tensor, nn
@@ -33,12 +33,12 @@ class AppendIndex(nn.Module, abc.ABC):
         self.normalize_percentile_high = normalize_percentile_high
         self.band_kwargs = band_kwargs
 
-    def _append_index(self, sample: dict[str, torch.Tensor], index: torch.Tensor) -> dict[str, torch.Tensor]:
+    def _append_index(self, sample: Dict[str, torch.Tensor], index: torch.Tensor) -> Dict[str, torch.Tensor]:
         index = index.unsqueeze(self.dim)
         sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
         return sample
 
-    def _mask_using_qa_band(self, index: Tensor, sample: dict[str, Tensor]) -> Tensor:
+    def _mask_using_qa_band(self, index: Tensor, sample: Dict[str, Tensor]) -> Tensor:
         if not self.mask_using_qa:
             return index
         min_val = index.min()
@@ -58,9 +58,9 @@ class AppendIndex(nn.Module, abc.ABC):
     def _compute_index(self, **kwargs: Any) -> Tensor:
         pass
 
-    def forward(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         if "image" in sample:
-            compute_kwargs: dict[str, Tensor] = {
+            compute_kwargs: Dict[str, Tensor] = {
                 k.replace("index_", ""): sample["image"][..., v, :, :] for k, v in self.band_kwargs.items()
             }
             index = self._compute_index(**compute_kwargs)

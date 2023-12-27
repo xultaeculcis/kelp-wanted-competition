@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Dict
+
 import kornia.augmentation as K
 import numpy as np
 import torch
@@ -16,8 +18,8 @@ class MinMaxNormalize(K.IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: dict[str, Tensor],
-        flags: dict[str, int],
+        params: Dict[str, Tensor],
+        flags: Dict[str, int],
         transform: Tensor | None = None,
     ) -> Tensor:
         mins = torch.as_tensor(flags["mins"], device=input.device, dtype=input.dtype)
@@ -34,8 +36,8 @@ class PerSampleMinMaxNormalize(K.IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: dict[str, Tensor],
-        flags: dict[str, int],
+        params: Dict[str, Tensor],
+        flags: Dict[str, int],
         transform: Tensor | None = None,
     ) -> Tensor:
         vmin = torch.amin(input, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
@@ -51,8 +53,8 @@ class PerSampleQuantileNormalize(K.IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: dict[str, Tensor],
-        flags: dict[str, int],
+        params: Dict[str, Tensor],
+        flags: Dict[str, int],
         transform: Tensor | None = None,
     ) -> Tensor:
         flattened_sample = input.view(input.shape[0], input.shape[1], -1)

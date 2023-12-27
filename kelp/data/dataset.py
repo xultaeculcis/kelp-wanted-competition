@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Callable, Dict, List, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,10 +46,10 @@ class KelpForestSegmentationDataset(Dataset):
 
     def __init__(
         self,
-        image_fps: list[Path],
-        mask_fps: list[Path] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        band_order: list[int] | None = None,
+        image_fps: List[Path],
+        mask_fps: List[Path] | None = None,
+        transforms: Callable[[Dict[str, Tensor]], Dict[str, Tensor]] | None = None,
+        band_order: List[int] | None = None,
     ) -> None:
         self.image_fps = image_fps
         self.mask_fps = mask_fps
@@ -60,7 +60,7 @@ class KelpForestSegmentationDataset(Dataset):
     def __len__(self) -> int:
         return len(self.image_fps)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
             # we need to clamp values to account for corrupted pixels
@@ -84,7 +84,7 @@ class KelpForestSegmentationDataset(Dataset):
         return sample
 
     @staticmethod
-    def _ensure_proper_sample_format(sample: dict[str, Tensor]) -> dict[str, Tensor]:
+    def _ensure_proper_sample_format(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Transform a single sample from the Dataset.
 
         Args:
@@ -102,7 +102,7 @@ class KelpForestSegmentationDataset(Dataset):
 
     @staticmethod
     def plot_sample(
-        sample: dict[str, Tensor],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> plt.Figure:
@@ -151,8 +151,8 @@ class KelpForestSegmentationDataset(Dataset):
 
     @staticmethod
     def plot_batch(
-        batch: dict[str, Tensor],
-        band_index_lookup: dict[str, int],
+        batch: Dict[str, Tensor],
+        band_index_lookup: Dict[str, int],
         samples_per_row: int = 8,
         plot_true_color: bool = False,
         plot_color_infrared_grid: bool = False,

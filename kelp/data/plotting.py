@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Tuple
+
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -11,7 +13,7 @@ def plot_sample(
     input_arr: np.ndarray,  # type: ignore[type-arg]
     target_arr: np.ndarray | None = None,  # type: ignore[type-arg]
     predictions_arr: np.ndarray | None = None,  # type: ignore[type-arg]
-    figsize: tuple[int, int] = (20, 4),
+    figsize: Tuple[int, int] = (20, 4),
     ndvi_cmap: str = "RdYlGn",
     dem_cmap: str = "viridis",
     qa_mask_cmap: str = "gray",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import List
+
 import segmentation_models_pytorch as smp
 import torch
 from lightning_fabric.utilities.exceptions import MisconfigurationException
@@ -15,7 +17,7 @@ def resolve_loss(
     device: torch.device,
     num_classes: int = consts.data.NUM_CLASSES,
     ce_smooth_factor: float = 0.0,
-    ce_class_weights: list[float] | None = None,
+    ce_class_weights: List[float] | None = None,
     ignore_index: int | None = None,
 ) -> nn.Module:
     if loss_fn == "ce":
