@@ -62,7 +62,7 @@ jobs:
     inputs:
       data_dir: ${{parent.inputs.data_dir}}
       output_dir: ${{outputs.output_dir}}
-      metadata_fp: ${{parent.inputs.metadata_file}}
+      metadata_file: ${{parent.inputs.metadata_file}}
       cv_split: ${{parent.inputs.cv_split}}
       batch_size: ${{parent.inputs.batch_size}}
       num_workers: ${{parent.inputs.num_workers}}
