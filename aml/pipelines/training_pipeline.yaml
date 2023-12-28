@@ -95,4 +95,4 @@ jobs:
       precision: ${{parent.inputs.precision}}
       epochs: ${{parent.inputs.epochs}}
     outputs:
-      output_dir: ${{parent.outputs.training_artifacts}}
+      output_dir: ${{parent.outputs.output_dir}}
