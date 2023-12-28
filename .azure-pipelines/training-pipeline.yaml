@@ -105,7 +105,7 @@ parameters:
     displayName: Encoder weights
   - name: lr
     type: number
-    default: 3e-4
+    default: 0.0003
     displayName: Learning rate
   - name: optimizer
     type: string
@@ -117,7 +117,7 @@ parameters:
       - sgd
   - name: weight_decay
     type: number
-    default: 1e-4
+    default: 0.0001
     displayName: Weight decay
   - name: lr_scheduler
     type: string
@@ -132,11 +132,11 @@ parameters:
     displayName: Percent start
   - name: div_factor
     type: number
-    default:
+    default: 2
     displayName: Div factor for lr scheduler
   - name: final_div_factor
     type: number
-    default: 1e2
+    default: 100
     displayName: Final div factor for lr scheduler
   - name: loss
     type: string
