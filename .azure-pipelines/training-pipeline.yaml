@@ -170,7 +170,7 @@ parameters:
     type: number
     default: 7
     displayName: Early stopping patience in epochs
-  - precision:
+  - name: precision
     type: string
     default: 16-mixed
     displayName: Precision
