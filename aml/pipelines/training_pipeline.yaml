@@ -1,0 +1,98 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+description: The Kelp Forest Segmentation model training pipeline job.
+experiment_name: kelp-seg-train-pipeline
+
+inputs:
+  data_dir:
+    type: uri_folder
+    mode: download
+    path: azureml:train_dataset@latest
+  metadata_file:
+    type: uri_file
+    mode: download
+    path: azureml:metadata_file@latest
+  cv_split: 6
+  batch_size: 32
+  num_workers: 6
+  band_order: 2,3,4,0,1,5,6
+  image_size: 352
+  samples_per_epoch: 10240
+  has_kelp_importance_factor: 1
+  kelp_pixels_pct_importance_factor: 1
+  qa_ok_importance_factor: 1
+  qa_corrupted_pixels_pct_importance_factor: 1
+  almost_all_water_importance_factor: 1
+  dem_nan_pixels_pct_importance_factor: 1
+  dem_zero_pixels_pct_importance_factor: 1
+  normalization_strategy: quantile
+  architecture: unet
+  encoder: resnet50
+  encoder_weights: imagenet
+  lr: 3e-4
+  optimizer: adamw
+  weight_decay: 1e-4
+  lr_scheduler: onecycle
+  pct_start: 0.3
+  div_factor: 2
+  final_div_factor: 1e2
+  loss: dice
+  strategy: no-freeze
+  monitor_metric: val/dice
+  save_top_k: 1
+  early_stopping_patience: 7
+  precision: 16-mixed
+  epochs: 10
+
+outputs:
+  output_dir:
+    mode: rw_mount
+
+settings:
+  default_datastore: azureml:workspaceblobstore
+  default_compute: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+  force_rerun: true
+  continue_on_step_failure: false
+
+jobs:
+  model_training:
+    type: command
+    component: file:../components/train.yaml
+    inputs:
+      data_dir: ${{parent.inputs.data_dir}}
+      output_dir: ${{outputs.output_dir}}
+      metadata_fp: ${{parent.inputs.metadata_file}}
+      cv_split: ${{parent.inputs.cv_split}}
+      batch_size: ${{parent.inputs.batch_size}}
+      num_workers: ${{parent.inputs.num_workers}}
+      band_order: ${{parent.inputs.band_order}}
+      image_size: ${{parent.inputs.image_size}}
+      samples_per_epoch: ${{parent.inputs.samples_per_epoch}}
+      has_kelp_importance_factor: ${{parent.inputs.has_kelp_importance_factor}}
+      kelp_pixels_pct_importance_factor: ${{parent.inputs.kelp_pixels_pct_importance_factor}}
+      qa_ok_importance_factor: ${{parent.inputs.qa_ok_importance_factor}}
+      qa_corrupted_pixels_pct_importance_factor: ${{parent.inputs.qa_corrupted_pixels_pct_importance_factor}}
+      almost_all_water_importance_factor: ${{parent.inputs.almost_all_water_importance_factor}}
+      dem_nan_pixels_pct_importance_factor: ${{parent.inputs.dem_nan_pixels_pct_importance_factor}}
+      dem_zero_pixels_pct_importance_factor: ${{parent.inputs.dem_zero_pixels_pct_importance_factor}}
+      normalization_strategy: ${{parent.inputs.normalization_strategy}}
+      architecture: ${{parent.inputs.architecture}}
+      encoder: ${{parent.inputs.encoder}}
+      encoder_weights: ${{parent.inputs.encoder_weights}}
+      lr: ${{parent.inputs.lr}}
+      optimizer: ${{parent.inputs.optimizer}}
+      weight_decay: ${{parent.inputs.weight_decay}}
+      lr_scheduler: ${{parent.inputs.lr_scheduler}}
+      pct_start: ${{parent.inputs.pct_start}}
+      div_factor: ${{parent.inputs.div_factor}}
+      final_div_factor: ${{parent.inputs.final_div_factor}}
+      loss: ${{parent.inputs.loss}}
+      strategy: ${{parent.inputs.strategy}}
+      monitor_metric: ${{parent.inputs.monitor_metric}}
+      save_top_k: ${{parent.inputs.save_top_k}}
+      early_stopping_patience: ${{parent.inputs.early_stopping_patience}}
+      precision: ${{parent.inputs.precision}}
+      epochs: ${{parent.inputs.epochs}}
+    outputs:
+      output_dir: ${{parent.outputs.training_artifacts}}
