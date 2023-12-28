@@ -26,62 +26,62 @@ parameters:
     displayName: Experiment name
     type: string
     default: kelp_training_exp
-  - cv_split:
+  - name: cv_split
     type: number
     displayName: CV split
     default: 6
-  - batch_size:
+  - name: batch_size
     type: number
     displayName: Batch size
     default: 32
-  - num_workers:
+  - name: num_workers
     type: number
     displayName: Number of workers for dataloader
     default: 4
-  - image_size:
+  - name: image_size
     type: number
     displayName: Image size
     default: 352
-  - band_order:
+  - name: band_order
     type: string
     displayName: Band order
     default: 2,3,4,0,1,5,6
-  - samples_per_epoch:
+  - name: samples_per_epoch
     type: number
     displayName: Number of samples per epoch
     default: 5120
     values:
       - 5120
       - 10240
-  - has_kelp_importance_factor:
+  - name: has_kelp_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for has_kelp flag
-  - kelp_pixels_pct_importance_factor:
+  - name: kelp_pixels_pct_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for kelp pixels percentage
-  - qa_ok_importance_factor:
+  - name: qa_ok_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for qa_ok flag
-  - qa_corrupted_pixels_pct_importance_factor:
+  - name: qa_corrupted_pixels_pct_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for QA layer corrupted pixels percentage
-  - almost_all_water_importance_factor:
+  - name: almost_all_water_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for almost_all_water flag
-  - dem_nan_pixels_pct_importance_factor:
+  - name: dem_nan_pixels_pct_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for DEM layer zero pixels percentage
-  - dem_zero_pixels_pct_importance_factor:
+  - name: dem_zero_pixels_pct_importance_factor
     type: number
     default: 1.0
     displayName: Importance factor for DEM layer NaN pixels percentage
-  - normalization_strategy:
+  - name: normalization_strategy
     type: string
     default: quantile
     displayName: Normalization strategy
@@ -91,23 +91,23 @@ parameters:
       - min-max
       - per-sample-min-max
       - per-sample-quantile
-  - architecture:
+  - name: architecture
     type: string
     default: unet
     displayName: Architecture
-  - encoder:
+  - name: encoder
     type: string
     default: resnet50
     displayName: Encoder
-  - encoder_weights:
+  - name: encoder_weights
     type: string
     default: imagenet
     displayName: Encoder weights
-  - lr:
+  - name: lr
     type: number
     default: 3e-4
     displayName: Learning rate
-  - optimizer:
+  - name: optimizer
     type: string
     default: adamw
     displayName: Optimizer
@@ -115,30 +115,30 @@ parameters:
       - adam
       - adamw
       - sgd
-  - weight_decay:
+  - name: weight_decay
     type: number
     default: 1e-4
     displayName: Weight decay
-  - lr_scheduler:
+  - name: lr_scheduler
     type: string
     default: onecycle
     displayName: LR scheduler
     values:
       - onecycle
       - cosine
-  - pct_start:
+  - name: pct_start
     type: number
     default: 0.3
     displayName: Percent start
-  - div_factor:
+  - name: div_factor
     type: number
     default:
     displayName: Div factor for lr scheduler
-  - final_div_factor:
+  - name: final_div_factor
     type: number
     default: 1e2
     displayName: Final div factor for lr scheduler
-  - loss:
+  - name: loss
     type: string
     default: dice
     displayName: Loss function
@@ -150,7 +150,7 @@ parameters:
       - lovasz
       - tversky
       - soft_ce
-  - strategy:
+  - name: strategy
     type: string
     default: no-freeze
     displayName: Fine-tuning strategy
@@ -158,15 +158,15 @@ parameters:
       - freeze
       - no-freeze
       - freeze-unfreeze
-  - monitor_metric:
+  - name: monitor_metric
     type: string
     default: val/dice
     displayName: Monitor metric
-  - save_top_k:
+  - name: save_top_k
     type: number
     default: 1
     displayName: Save top K
-  - early_stopping_patience:
+  - name: early_stopping_patience
     type: number
     default: 7
     displayName: Early stopping patience in epochs
@@ -180,7 +180,7 @@ parameters:
       - bf16-true
       - bf16-mixed
       - 32-true
-  - epochs:
+  - name: epochs
     type: number
     default: 10
     displayName: Epochs
