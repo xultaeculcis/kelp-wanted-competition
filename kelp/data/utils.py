@@ -1,10 +1,12 @@
-from typing import Any, Sequence
+from __future__ import annotations
+
+from typing import Any, Dict, List, Sequence
 
 import torch
 from torch import Tensor
 
 
-def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
+def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Taken from torchgeo.
@@ -16,14 +18,14 @@ def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, 
         a list of dictionaries
 
     """
-    uncollated: list[dict[Any, Any]] = [{} for _ in range(max(map(len, sample.values())))]
+    uncollated: List[Dict[Any, Any]] = [{} for _ in range(max(map(len, sample.values())))]
     for key, values in sample.items():
         for i, value in enumerate(values):
             uncollated[i][key] = value
     return uncollated
 
 
-def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
+def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual

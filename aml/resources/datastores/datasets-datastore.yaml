@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/azureBlob.schema.json
+name: "datasets_datastore"
+type: azure_blob
+description: Datastore with datasets.
+account_name: "{{AZ_BLOB_STORAGE__ACCOUNT_NAME}}"
+container_name: "datasets"
+credentials:
+  account_key: "{{AZ_BLOB_STORAGE__ACCOUNT_KEY}}"

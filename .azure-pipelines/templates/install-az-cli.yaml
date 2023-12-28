@@ -1,0 +1,13 @@
+steps:
+  - task: AzureCLI@2
+    displayName: Install AZ CLI
+    inputs:
+      azureSubscription: $(ADO__SERVICE_CONNECTION_AML_WS)
+      scriptType: bash
+      scriptLocation: inlineScript
+      workingDirectory: code/
+      inlineScript: |
+        set -e # fail on error
+        python -m pip install -U --force-reinstall pip pip install azure-cli
+        az version
+    condition: eq(variables.AZ_CLI_CACHE_RESTORED, 'false')

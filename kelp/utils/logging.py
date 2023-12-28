@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from functools import wraps
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Union
 
 from typing_extensions import ParamSpec
 
@@ -13,7 +13,7 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def get_logger(name: str, log_level: int | str = logging.INFO) -> logging.Logger:
+def get_logger(name: str, log_level: Union[int, str] = logging.INFO) -> logging.Logger:
     """
     Builds a `Logger` instance with provided name and log level.
 
@@ -29,10 +29,15 @@ def get_logger(name: str, log_level: int | str = logging.INFO) -> logging.Logger
     logger = logging.getLogger(name=name)
     logger.setLevel(log_level)
 
-    stream_handler = logging.StreamHandler()
-    formatter = logging.Formatter(fmt=consts.logging.FORMAT)
-    stream_handler.setFormatter(fmt=formatter)
-    logger.addHandler(stream_handler)
+    # Prevent log messages from propagating to the parent logger
+    logger.propagate = False
+
+    # Check if handlers are already set to avoid duplication
+    if not logger.handlers:
+        stream_handler = logging.StreamHandler()
+        formatter = logging.Formatter(fmt=consts.logging.FORMAT)
+        stream_handler.setFormatter(fmt=formatter)
+        logger.addHandler(stream_handler)
 
     return logger
 

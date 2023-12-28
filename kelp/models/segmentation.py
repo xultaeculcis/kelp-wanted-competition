@@ -106,7 +106,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         )
         self.test_metrics = self.val_metrics.clone(prefix="test/")
 
-    def _log_predictions_batch(self, batch: dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
+    def _log_predictions_batch(self, batch: Dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
         epoch = self.current_epoch
         if batch_idx < self.hyperparams["plot_n_batches"] and self.global_step:
@@ -136,13 +136,16 @@ class KelpForestSegmentationTask(pl.LightningModule):
                 )
             plt.close()
 
-    def _log_confusion_matrices(self, metrics: dict[str, Tensor], cmap: str = "Blues") -> None:
+    def _log_confusion_matrices(self, metrics: Dict[str, Tensor], cmap: str = "Blues") -> None:
         for metric_key, title, matrix_kind in zip(
             ["val/conf_mtrx", "val/norm_conf_mtrx"],
             ["Confusion matrix", "Normalized confusion matrix"],
             ["confusion_matrix", "confusion_matrix_normalized"],
         ):
             conf_matrix = metrics.pop(metric_key)
+            # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
+            if self.global_step == 0:
+                continue
             fig, axes = plt.subplots(1, 1, figsize=(7, 5))
             ConfusionMatrixDisplay(
                 confusion_matrix=conf_matrix.detach().cpu().numpy(),

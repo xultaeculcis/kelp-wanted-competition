@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
 import dask.bag
 import distributed
@@ -52,7 +53,7 @@ def parse_args() -> AnalysisConfig:
     return cfg
 
 
-def plot_single_image(tile_id_split_tuple: tuple[str, str], data_dir: Path, output_dir: Path) -> None:
+def plot_single_image(tile_id_split_tuple: Tuple[str, str], data_dir: Path, output_dir: Path) -> None:
     tile_id, split = tile_id_split_tuple
     out_dir = output_dir / "plots"
     out_dir.mkdir(exist_ok=True, parents=True)
@@ -61,7 +62,7 @@ def plot_single_image(tile_id_split_tuple: tuple[str, str], data_dir: Path, outp
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
         input_arr = src.read()
 
-    target_arr: np.ndarray | None = None  # type: ignore[type-arg]
+    target_arr: Optional[np.ndarray] = None  # type: ignore[type-arg]
     if split != "test":
         with rasterio.open(data_dir / split / "masks" / f"{tile_id}_kelp.tif") as src:
             target_arr = src.read(1)
@@ -72,9 +73,9 @@ def plot_single_image(tile_id_split_tuple: tuple[str, str], data_dir: Path, outp
 
 
 def extract_composite(
-    tile_id_split_tuple: tuple[str, str],
+    tile_id_split_tuple: Tuple[str, str],
     data_dir: Path,
-    bands: int | list[int],
+    bands: Union[int, List[int]],
     name: str,
     output_dir: Path,
 ) -> None:
@@ -93,13 +94,13 @@ def extract_composite(
 
 
 @timed
-def plot_samples(data_dir: Path, output_dir: Path, records: list[tuple[str, str]]) -> None:
+def plot_samples(data_dir: Path, output_dir: Path, records: List[Tuple[str, str]]) -> None:
     _logger.info("Running sample plotting")
     (dask.bag.from_sequence(records).map(plot_single_image, data_dir=data_dir, output_dir=output_dir).compute())
 
 
 @timed
-def extract_composites(data_dir: Path, output_dir: Path, records: list[tuple[str, str]]) -> None:
+def extract_composites(data_dir: Path, output_dir: Path, records: List[Tuple[str, str]]) -> None:
     for name, bands in zip(["tci", "false_color", "agriculture", "dem"], [[2, 3, 4], [1, 2, 3], [0, 1, 2], 6]):
         if name != "dem":
             continue
@@ -111,7 +112,7 @@ def extract_composites(data_dir: Path, output_dir: Path, records: list[tuple[str
         )
 
 
-def build_tile_id_and_split_tuples(metadata: pd.DataFrame) -> list[tuple[str, str]]:
+def build_tile_id_and_split_tuples(metadata: pd.DataFrame) -> List[Tuple[str, str]]:
     records = []
     metadata["split"] = metadata["in_train"].apply(lambda x: "train" if x else "test")
     for _, row in tqdm(metadata.iterrows(), total=len(metadata), desc="Extracting tile_id and split tuples"):

@@ -152,14 +152,14 @@ train-single-split:
 		--band_order 2,3,4,0,1,5,6 \
 		--image_size 352 \
 		--use_weighted_sampler \
-		--samples_per_epoch 9600 \
-		--has_kelp_importance_factor 1.0 \
-		--kelp_pixels_pct_importance_factor 1.0 \
-		--qa_ok_importance_factor 1.0 \
-		--qa_corrupted_pixels_pct_importance_factor -1.0 \
-		--almost_all_water_importance_factor 0.0 \
-		--dem_nan_pixels_pct_importance_factor -1.0 \
-		--dem_zero_pixels_pct_importance_factor -1.0 \
+		--samples_per_epoch 5120 \
+		--has_kelp_importance_factor 0.2 \
+		--kelp_pixels_pct_importance_factor 0 \
+		--qa_ok_importance_factor -0.5 \
+		--qa_corrupted_pixels_pct_importance_factor -0.5 \
+		--almost_all_water_importance_factor -0.5 \
+		--dem_nan_pixels_pct_importance_factor 0.25 \
+		--dem_zero_pixels_pct_importance_factor 0.5 \
 		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder resnet50 \

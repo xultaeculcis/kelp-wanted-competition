@@ -1,26 +1,31 @@
 from __future__ import annotations
 
-import argparse
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Literal
+import logging
 
-import mlflow
-import pytorch_lightning as pl
-import torch
-from mlflow import ActiveRun
-from pydantic import field_validator
-from pytorch_lightning import Callback
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.loggers import Logger, MLFlowLogger
+logging.basicConfig(level=logging.WARNING)
 
-from kelp import consts
-from kelp.core.configs import ConfigBase
-from kelp.data.datamodule import KelpForestDataModule
-from kelp.data.indices import INDICES
-from kelp.models.segmentation import KelpForestSegmentationTask
-from kelp.utils.gpu import set_gpu_power_limit_if_needed
-from kelp.utils.logging import get_logger
+import argparse  # noqa: E402
+import os  # noqa: E402
+from datetime import datetime  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union  # noqa: E402
+
+import mlflow  # noqa: E402
+import pytorch_lightning as pl  # noqa: E402
+import torch  # noqa: E402
+from mlflow import ActiveRun  # noqa: E402
+from pydantic import field_validator  # noqa: E402
+from pytorch_lightning import Callback  # noqa: E402
+from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint  # noqa: E402
+from pytorch_lightning.loggers import Logger, MLFlowLogger  # noqa: E402
+
+from kelp import consts  # noqa: E402
+from kelp.core.configs import ConfigBase  # noqa: E402
+from kelp.data.datamodule import KelpForestDataModule  # noqa: E402
+from kelp.data.indices import INDICES  # noqa: E402
+from kelp.models.segmentation import KelpForestSegmentationTask  # noqa: E402
+from kelp.utils.gpu import set_gpu_power_limit_if_needed  # noqa: E402
+from kelp.utils.logging import get_logger  # noqa: E402
 
 # Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
@@ -32,8 +37,8 @@ class TrainConfig(ConfigBase):
     data_dir: Path
     metadata_fp: Path
     cv_split: int = 0
-    spectral_indices: list[str]
-    band_order: list[int] | None = None
+    spectral_indices: List[str]
+    band_order: Optional[List[int]] = None
     image_size: int = 352
     batch_size: int = 32
     num_workers: int = 4
@@ -57,13 +62,13 @@ class TrainConfig(ConfigBase):
     # model params
     architecture: str
     encoder: str
-    encoder_weights: str | None = None
-    decoder_attention_type: str | None = None
+    encoder_weights: Optional[str] = None
+    decoder_attention_type: Optional[str] = None
     num_classes: int = 2
-    ignore_index: int | None = None
+    ignore_index: Optional[int] = None
     optimizer: Literal["adam", "adamw"] = "adamw"
     weight_decay: float = 1e-4
-    lr_scheduler: Literal["onecycle", "cosine", "reduce_lr_on_plateau"] | None = None
+    lr_scheduler: Optional[Literal["onecycle", "cosine", "reduce_lr_on_plateau"]] = None
     lr: float = 3e-4
     pct_start: float = 0.3
     div_factor: float = 2
@@ -81,10 +86,10 @@ class TrainConfig(ConfigBase):
         "soft_ce",
     ] = "dice"
     ce_smooth_factor: float = 0.0
-    ce_class_weights: tuple[float, float] | None = None
+    ce_class_weights: Optional[Tuple[float, float]] = None
     compile: bool = False
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
-    compile_dynamic: bool | None = None
+    compile_dynamic: Optional[bool] = None
     ort: bool = False
     plot_n_batches: int = 3
 
@@ -98,9 +103,9 @@ class TrainConfig(ConfigBase):
     precision: str = "16-mixed"
     fast_dev_run: bool = False
     epochs: int = 1
-    limit_train_batches: int | float | None = None
-    limit_val_batches: int | float | None = None
-    limit_test_batches: int | float | None = None
+    limit_train_batches: Optional[Union[int, float]] = None
+    limit_val_batches: Optional[Union[int, float]] = None
+    limit_test_batches: Optional[Union[int, float]] = None
     log_every_n_steps: int = 50
     accumulate_grad_batches: int = 1
     benchmark: bool = False
@@ -111,7 +116,7 @@ class TrainConfig(ConfigBase):
     seed: int = 42
 
     @field_validator("band_order", mode="before")
-    def validate_channel_order(cls, value: str | list[int] | None = None) -> list[int] | None:
+    def validate_channel_order(cls, value: Optional[Union[str, List[int]]] = None) -> Optional[List[int]]:
         if value is None:
             return None
 
@@ -123,7 +128,7 @@ class TrainConfig(ConfigBase):
         return order
 
     @field_validator("spectral_indices", mode="before")
-    def validate_spectral_indices(cls, value: str | list[str] | None = None) -> list[str]:
+    def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
         if not value:
             return []
 
@@ -146,7 +151,7 @@ class TrainConfig(ConfigBase):
         return indices
 
     @field_validator("ce_class_weights", mode="before")
-    def validate_ce_class_weights(cls, value: str | list[float] | None = None) -> list[float] | None:
+    def validate_ce_class_weights(cls, value: Union[str, Optional[List[float]]] = None) -> Optional[List[float]]:
         if not value:
             return None
 
@@ -161,11 +166,19 @@ class TrainConfig(ConfigBase):
         return weights
 
     @property
-    def tags(self) -> dict[str, Any]:
+    def resolved_experiment_name(self) -> str:
+        return os.environ.get("MLFLOW_EXPERIMENT_NAME", self.experiment)
+
+    @property
+    def run_id_from_context(self) -> Optional[str]:
+        return os.environ.get("MLFLOW_RUN_ID", None)
+
+    @property
+    def tags(self) -> Dict[str, Any]:
         return {"trained_at": datetime.utcnow().isoformat()}
 
     @property
-    def data_module_kwargs(self) -> dict[str, Any]:
+    def data_module_kwargs(self) -> Dict[str, Any]:
         return {
             "data_dir": self.data_dir,
             "metadata_fp": self.metadata_fp,
@@ -188,7 +201,7 @@ class TrainConfig(ConfigBase):
         }
 
     @property
-    def callbacks_kwargs(self) -> dict[str, Any]:
+    def callbacks_kwargs(self) -> Dict[str, Any]:
         return {
             "save_top_k": self.save_top_k,
             "monitor_metric": self.monitor_metric,
@@ -197,7 +210,7 @@ class TrainConfig(ConfigBase):
         }
 
     @property
-    def model_kwargs(self) -> dict[str, Any]:
+    def model_kwargs(self) -> Dict[str, Any]:
         return {
             "architecture": self.architecture,
             "encoder": self.encoder,
@@ -227,7 +240,7 @@ class TrainConfig(ConfigBase):
         }
 
     @property
-    def trainer_kwargs(self) -> dict[str, Any]:
+    def trainer_kwargs(self) -> Dict[str, Any]:
         return {
             "precision": self.precision,
             "fast_dev_run": self.fast_dev_run,
@@ -534,8 +547,8 @@ def parse_args() -> TrainConfig:
 
 def make_loggers(
     experiment: str,
-    tags: dict[str, Any],
-) -> list[Logger]:
+    tags: Dict[str, Any],
+) -> List[Logger]:
     mlflow_logger = MLFlowLogger(
         experiment_name=experiment,
         run_id=mlflow.active_run().info.run_id,
@@ -551,7 +564,7 @@ def make_callbacks(
     save_top_k: int = 1,
     monitor_metric: str = "val/dice",
     monitor_mode: str = "max",
-) -> list[Callback]:
+) -> List[Callback]:
     early_stopping = EarlyStopping(
         monitor=monitor_metric,
         patience=early_stopping_patience,
@@ -582,10 +595,11 @@ def main() -> None:
     cfg = parse_args()
     set_gpu_power_limit_if_needed()
 
-    mlflow.set_experiment(cfg.experiment)
+    mlflow.set_experiment(cfg.resolved_experiment_name)
     mlflow.pytorch.autolog()
+    run = mlflow.start_run(run_id=cfg.run_id_from_context)
 
-    with mlflow.start_run() as run:
+    with run:
         pl.seed_everything(cfg.seed, workers=True)
         mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump())
@@ -594,7 +608,7 @@ def main() -> None:
         segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)
         trainer = pl.Trainer(
             logger=make_loggers(
-                experiment=cfg.experiment,
+                experiment=cfg.resolved_experiment_name,
                 tags=cfg.tags,
             ),
             callbacks=make_callbacks(

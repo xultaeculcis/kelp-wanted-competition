@@ -1,0 +1,266 @@
+trigger: none
+
+pr: none
+
+parameters:
+  - name: runtime_env
+    displayName: Runtime Environment
+    type: string
+    default: dev
+    values:
+      - dev
+  - name: default_compute
+    displayName: Default Compute
+    type: string
+    values:
+      - azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+      - azureml:gpu-6c-112g-v100-nc6sv3-spot
+    default: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+  - name: pipeline_spec_file
+    displayName: Pipeline spec file
+    type: string
+    values:
+      - aml/pipelines/training_pipeline.yaml
+    default: aml/pipelines/training_pipeline.yaml
+  - name: experiment_name
+    displayName: Experiment name
+    type: string
+    default: kelp_training_exp
+  - name: cv_split
+    type: number
+    displayName: CV split
+    default: 6
+  - name: batch_size
+    type: number
+    displayName: Batch size
+    default: 32
+  - name: num_workers
+    type: number
+    displayName: Number of workers for dataloader
+    default: 4
+  - name: image_size
+    type: number
+    displayName: Image size
+    default: 352
+  - name: band_order
+    type: string
+    displayName: Band order
+    default: 2,3,4,0,1,5,6
+  - name: samples_per_epoch
+    type: number
+    displayName: Number of samples per epoch
+    default: 5120
+    values:
+      - 5120
+      - 10240
+  - name: has_kelp_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for has_kelp flag
+  - name: kelp_pixels_pct_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for kelp pixels percentage
+  - name: qa_ok_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for qa_ok flag
+  - name: qa_corrupted_pixels_pct_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for QA layer corrupted pixels percentage
+  - name: almost_all_water_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for almost_all_water flag
+  - name: dem_nan_pixels_pct_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for DEM layer zero pixels percentage
+  - name: dem_zero_pixels_pct_importance_factor
+    type: number
+    default: 1.0
+    displayName: Importance factor for DEM layer NaN pixels percentage
+  - name: normalization_strategy
+    type: string
+    default: quantile
+    displayName: Normalization strategy
+    values:
+      - quantile
+      - z-score
+      - min-max
+      - per-sample-min-max
+      - per-sample-quantile
+  - name: architecture
+    type: string
+    default: unet
+    displayName: Architecture
+  - name: encoder
+    type: string
+    default: resnet50
+    displayName: Encoder
+  - name: encoder_weights
+    type: string
+    default: imagenet
+    displayName: Encoder weights
+  - name: lr
+    type: number
+    default: 0.0003
+    displayName: Learning rate
+  - name: optimizer
+    type: string
+    default: adamw
+    displayName: Optimizer
+    values:
+      - adam
+      - adamw
+      - sgd
+  - name: weight_decay
+    type: number
+    default: 0.0001
+    displayName: Weight decay
+  - name: lr_scheduler
+    type: string
+    default: onecycle
+    displayName: LR scheduler
+    values:
+      - onecycle
+      - cosine
+  - name: pct_start
+    type: number
+    default: 0.3
+    displayName: Percent start
+  - name: div_factor
+    type: number
+    default: 2
+    displayName: Div factor for lr scheduler
+  - name: final_div_factor
+    type: number
+    default: 100
+    displayName: Final div factor for lr scheduler
+  - name: loss
+    type: string
+    default: dice
+    displayName: Loss function
+    values:
+      - ce
+      - jaccard
+      - dice
+      - focal
+      - lovasz
+      - tversky
+      - soft_ce
+  - name: strategy
+    type: string
+    default: no-freeze
+    displayName: Fine-tuning strategy
+    values:
+      - freeze
+      - no-freeze
+      - freeze-unfreeze
+  - name: monitor_metric
+    type: string
+    default: val/dice
+    displayName: Monitor metric
+  - name: save_top_k
+    type: number
+    default: 1
+    displayName: Save top K
+  - name: early_stopping_patience
+    type: number
+    default: 7
+    displayName: Early stopping patience in epochs
+  - name: precision
+    type: string
+    default: 16-mixed
+    displayName: Precision
+    values:
+      - 16-true
+      - 16-mixed
+      - bf16-true
+      - bf16-mixed
+      - 32-true
+  - name: epochs
+    type: number
+    default: 10
+    displayName: Epochs
+
+variables:
+  - group: ${{parameters.runtime_env}}-vg
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage:
+    displayName: Execute hparam search pipeline @${{parameters.runtime_env}}
+
+    jobs:
+      - job: hparam_search
+        displayName: Execute training pipeline
+
+        steps:
+          - checkout: self
+            path: s/
+
+          - template: templates/install-az-cli.yaml
+
+          - template: templates/install-aml-cli.yaml
+
+          - template: templates/connect-to-aml-workspace.yaml
+
+          - task: AzureCLI@2
+            displayName: Run Training Pipeline
+            continueOnError: true
+            inputs:
+              azureSubscription: $(ADO__SERVICE_CONNECTION_RG) # needs to have access at the RG level
+              scriptType: bash
+              workingDirectory: $(System.DefaultWorkingDirectory)
+              scriptLocation: inlineScript
+              inlineScript: |
+                run_id=$( \
+                  az ml job create -f ${{parameters.pipeline_spec_file}} \
+                  --set experiment_name=$(ENVIRONMENT)_${{parameters.experiment_name}} \
+                  display_name=$(ENVIRONMENT)_${{parameters.experiment_name}}_$(Build.BuildID) \
+                  settings.default_compute=${{parameters.default_compute}} \
+                  inputs.cv_split=${{parameters.cv_split}} \
+                  inputs.band_order=${{parameters.band_order}} \
+                  inputs.image_size=${{parameters.image_size}} \
+                  inputs.batch_size=${{parameters.batch_size}} \
+                  inputs.num_workers=${{parameters.num_workers}} \
+                  inputs.normalization_strategy=${{parameters.normalization_strategy}} \
+                  inputs.samples_per_epoch=${{parameters.samples_per_epoch}} \
+                  inputs.has_kelp_importance_factor=${{parameters.has_kelp_importance_factor}} \
+                  inputs.kelp_pixels_pct_importance_factor=${{parameters.kelp_pixels_pct_importance_factor}} \
+                  inputs.qa_ok_importance_factor=${{parameters.qa_ok_importance_factor}} \
+                  inputs.qa_corrupted_pixels_pct_importance_factor=${{parameters.qa_corrupted_pixels_pct_importance_factor}} \
+                  inputs.almost_all_water_importance_factor=${{parameters.almost_all_water_importance_factor}} \
+                  inputs.dem_nan_pixels_pct_importance_factor=${{parameters.dem_nan_pixels_pct_importance_factor}} \
+                  inputs.dem_zero_pixels_pct_importance_factor=${{parameters.dem_zero_pixels_pct_importance_factor}} \
+                  inputs.architecture=${{parameters.architecture}} \
+                  inputs.encoder=${{parameters.encoder}} \
+                  inputs.encoder_weights=${{parameters.encoder_weights}} \
+                  inputs.optimizer=${{parameters.optimizer}} \
+                  inputs.weight_decay=${{parameters.weight_decay}} \
+                  inputs.lr_scheduler=${{parameters.lr_scheduler}} \
+                  inputs.lr=${{parameters.lr}} \
+                  inputs.pct_start=${{parameters.pct_start}} \
+                  inputs.div_factor=${{parameters.div_factor}} \
+                  inputs.final_div_factor=${{parameters.final_div_factor}} \
+                  inputs.strategy=${{parameters.strategy}} \
+                  inputs.loss=${{parameters.loss}} \
+                  inputs.save_top_k=${{parameters.save_top_k}} \
+                  inputs.monitor_metric=${{parameters.monitor_metric}} \
+                  inputs.early_stopping_patience=${{parameters.early_stopping_patience}} \
+                  inputs.precision=${{parameters.precision}} \
+                  inputs.epochs=${{parameters.epochs}} \
+                  --query name -o tsv \
+                )
+
+                if [[ -z "$run_id" ]]
+                then
+                  echo "Job creation failed"
+                  exit 3
+                fi
+
+                az ml job show -n $run_id --web

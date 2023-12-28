@@ -21,14 +21,14 @@ ENV CONDA_ENV=kelp \
 
 # All env vars that reference other env vars need to be in their own ENV block
 # Path to the python environment where the packages are installed
-ENV PS_PYTHON_PREFIX=${CONDA_DIR}/envs/${CONDA_ENV} \
+ENV ENV_PYTHON_PREFIX=${CONDA_DIR}/envs/${CONDA_ENV} \
     # Home directory of our non-root user
     HOME=/home/${APP_USER}
 
-# Add both our ParkSpace env as well as default conda installation to $PATH
+# Add both our Kelp env as well as default conda installation to $PATH
 # Thus, when we start a `python` process, it loads the python in the ps conda environment,
 # as that comes first here.
-ENV PATH=${PS_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${PATH}
+ENV PATH=${ENV_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${PATH}
 
 RUN echo "Creating ${APP_USER} user..." \
     # Create a group for the user to be part of, with gid same as uid
@@ -41,7 +41,7 @@ RUN echo "Creating ${APP_USER} user..." \
 # Run conda activate each time a bash shell starts, so users don't have to manually type conda activate
 # Note this is only read by shell, but not by the jupyter notebook - that relies
 # on us starting the correct `python` process, which we do by adding the notebook conda environment's
-# bin to PATH earlier ($PS_PYTHON_PREFIX/bin)
+# bin to PATH earlier ($ENV_PYTHON_PREFIX/bin)
 RUN echo ". ${CONDA_DIR}/etc/profile.d/conda.sh ; conda activate ${CONDA_ENV}" > /etc/profile.d/init_conda.sh
 
 # Install basic apt packages
@@ -86,8 +86,8 @@ RUN conda-lock install --name ${CONDA_ENV} conda-lock.yml && \
     mamba clean -yaf && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    if [ -d ${PS_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static ]; then \
-    find ${PS_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete \
+    if [ -d ${ENV_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static ]; then \
+    find ${ENV_PYTHON_PREFIX}/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete \
     ; fi
 
 CMD ["bash"]

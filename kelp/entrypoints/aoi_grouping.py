@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -32,7 +34,7 @@ class AOIGroupingConfig(ConfigBase):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, fps: list[Path], transform: Callable[[Any], Tensor]) -> None:
+    def __init__(self, fps: List[Path], transform: Callable[[Any], Tensor]) -> None:
         self.fps = fps
         self.transform = transform
 
@@ -89,10 +91,10 @@ def parse_args() -> AOIGroupingConfig:
 @timed
 def generate_embeddings(
     data_folder: Path,
-    tile_ids: list[str],
+    tile_ids: List[str],
     batch_size: int = 32,
     num_workers: int = 6,
-) -> tuple[np.ndarray, ImageDataset]:  # type: ignore[type-arg]
+) -> Tuple[np.ndarray, ImageDataset]:  # type: ignore[type-arg]
     fps = sorted([data_folder / f"{tile_id}_dem.png" for tile_id in tile_ids])
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -127,7 +129,7 @@ def calculate_similarity_groups(
     dataset: ImageDataset,
     features: np.ndarray,  # type: ignore[type-arg]
     threshold: float = 0.95,
-) -> list[list[str]]:
+) -> List[List[str]]:
     similarity_matrix = cosine_similarity(features)
     groups = []
     for i in tqdm(range(len(similarity_matrix)), desc="Grouping similar images", total=len(similarity_matrix)):
@@ -149,11 +151,11 @@ def calculate_similarity_groups(
 @timed
 def find_similar_images(
     data_folder: Path,
-    tile_ids: list[str],
+    tile_ids: List[str],
     threshold: float = 0.95,
     batch_size: int = 32,
     num_workers: int = 6,
-) -> list[list[str]]:
+) -> List[List[str]]:
     features, dataset = generate_embeddings(
         data_folder=data_folder,
         tile_ids=tile_ids,
@@ -169,13 +171,13 @@ def find_similar_images(
 
 
 @timed
-def group_duplicate_images(groups: list[list[str]]) -> list[list[str]]:
+def group_duplicate_images(groups: List[List[str]]) -> List[List[str]]:
     # Step 1: Flatten the list of lists
     flattened_list = [tile_id for similar_image_group in groups for tile_id in similar_image_group]
 
     # Step 2: Create a map of image IDs to groups
-    id_to_group: dict[str, int] = {}
-    group_to_ids: dict[int, set[str]] = defaultdict(set)
+    id_to_group: Dict[str, int] = {}
+    group_to_ids: Dict[int, set[str]] = defaultdict(set)
 
     # Step 3: Iterate through the image IDs
     for tile_id in flattened_list:
@@ -210,7 +212,7 @@ def group_duplicate_images(groups: list[list[str]]) -> list[list[str]]:
 
 
 @timed
-def explode_groups_if_needed(groups: list[list[str]]) -> list[list[str]]:
+def explode_groups_if_needed(groups: List[List[str]]) -> List[List[str]]:
     final_groups = []
     for group in groups:
         if len(group) > IMAGES_PER_GROUP_EXPLODE_THRESHOLD:
@@ -227,7 +229,7 @@ def save_json(fp: Path, data: Any) -> None:
 
 
 @timed
-def groups_to_dataframe(groups: list[list[str]]) -> pd.DataFrame:
+def groups_to_dataframe(groups: List[List[str]]) -> pd.DataFrame:
     records = []
     for idx, group in enumerate(groups):
         for tile_id in group:

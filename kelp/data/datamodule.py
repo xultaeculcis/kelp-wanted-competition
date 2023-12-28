@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 import kornia.augmentation as K
 import pandas as pd
@@ -53,15 +53,15 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        train_images: list[Path] | None = None,
-        train_masks: list[Path] | None = None,
-        val_images: list[Path] | None = None,
-        val_masks: list[Path] | None = None,
-        test_images: list[Path] | None = None,
-        test_masks: list[Path] | None = None,
-        predict_images: list[Path] | None = None,
-        spectral_indices: list[str] | None = None,
-        band_order: list[int] | None = None,
+        train_images: Optional[List[Path]] = None,
+        train_masks: Optional[List[Path]] = None,
+        val_images: Optional[List[Path]] = None,
+        val_masks: Optional[List[Path]] = None,
+        test_images: Optional[List[Path]] = None,
+        test_masks: Optional[List[Path]] = None,
+        predict_images: Optional[List[Path]] = None,
+        spectral_indices: Optional[List[str]] = None,
+        band_order: Optional[List[int]] = None,
         batch_size: int = 32,
         num_workers: int = 0,
         image_size: int = 352,
@@ -74,7 +74,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         ] = "quantile",
         use_weighted_sampler: bool = False,
         samples_per_epoch: int = 230,
-        image_weights: list[float] | None = None,
+        image_weights: Optional[List[float]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
@@ -122,7 +122,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             padding_mode="constant",
         )
 
-    def build_dataset(self, images: list[Path], masks: list[Path] | None = None) -> KelpForestSegmentationDataset:
+    def build_dataset(self, images: List[Path], masks: Optional[List[Path]] = None) -> KelpForestSegmentationDataset:
         ds = KelpForestSegmentationDataset(
             image_fps=images,
             mask_fps=masks,
@@ -133,9 +133,9 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def apply_transform(
         self,
-        transforms: Callable[[Tensor, Tensor], tuple[Tensor, Tensor]],
-        batch: dict[str, Tensor],
-    ) -> dict[str, Tensor]:
+        transforms: Callable[[Tensor, Tensor], Tuple[Tensor, Tensor]],
+        batch: Dict[str, Tensor],
+    ) -> Dict[str, Tensor]:
         x = batch["image"]
         # Kornia expects masks to be floats with a channel dimension
         y = batch["mask"].float().unsqueeze(1)
@@ -148,14 +148,14 @@ class KelpForestDataModule(pl.LightningDataModule):
     def apply_predict_transform(
         self,
         transforms: Callable[[Tensor], Tensor],
-        batch: dict[str, Tensor],
-    ) -> dict[str, Tensor]:
+        batch: Dict[str, Tensor],
+    ) -> Dict[str, Tensor]:
         x = batch["image"]
         x = transforms(x)
         batch["image"] = x
         return batch
 
-    def on_after_batch_transfer(self, batch: dict[str, Any], batch_idx: int) -> dict[str, Any]:
+    def on_after_batch_transfer(self, batch: Dict[str, Any], batch_idx: int) -> Dict[str, Any]:
         """Apply batch augmentations after batch is transferred to the device.
 
         Args:
@@ -184,13 +184,13 @@ class KelpForestDataModule(pl.LightningDataModule):
 
         return batch
 
-    def common_transforms(self, sample: dict[str, Tensor]) -> dict[str, Tensor]:
+    def common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         sample["image"] = self.pad(sample["image"])
         if "mask" in sample:
             sample["mask"] = self.pad(sample["mask"])
         return sample
 
-    def setup(self, stage: str | None = None) -> None:
+    def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
 
         This method is called once per GPU per run.
@@ -273,7 +273,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
 
-    def resolve_normalization_stats(self) -> tuple[BandStats, int]:
+    def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
         band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
         for index in self.spectral_indices:
             band_stats[index] = DATASET_STATS[index]
@@ -314,7 +314,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         metadata: pd.DataFrame,
         cv_split: int,
         split: str,
-    ) -> tuple[list[Path], list[Path]]:
+    ) -> Tuple[List[Path], List[Path]]:
         split_data = metadata[metadata[f"split_{cv_split}"] == split]
         img_folder = consts.data.TRAIN if split in [consts.data.TRAIN, consts.data.VAL] else consts.data.TEST
         image_paths = sorted(
@@ -373,7 +373,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         return df
 
     @classmethod
-    def resolve_image_weights(cls, df: pd.DataFrame, image_paths: list[Path]) -> list[float]:
+    def resolve_image_weights(cls, df: pd.DataFrame, image_paths: List[Path]) -> List[float]:
         tile_ids = [fp.stem.split("_")[0] for fp in image_paths]
         weights = df[df["tile_id"].isin(tile_ids)].sort_values("tile_id")["weight"].tolist()
         return weights  # type: ignore[no-any-return]
@@ -428,10 +428,10 @@ class KelpForestDataModule(pl.LightningDataModule):
     @classmethod
     def from_folders(
         cls,
-        train_data_folder: Path | None = None,
-        val_data_folder: Path | None = None,
-        test_data_folder: Path | None = None,
-        predict_data_folder: Path | None = None,
+        train_data_folder: Optional[Path] = None,
+        val_data_folder: Optional[Path] = None,
+        test_data_folder: Optional[Path] = None,
+        predict_data_folder: Optional[Path] = None,
         **kwargs: Any,
     ) -> KelpForestDataModule:
         return cls(
@@ -462,14 +462,14 @@ class KelpForestDataModule(pl.LightningDataModule):
     @classmethod
     def from_file_paths(
         cls,
-        train_images: list[Path] | None = None,
-        train_masks: list[Path] | None = None,
-        val_images: list[Path] | None = None,
-        val_masks: list[Path] | None = None,
-        test_images: list[Path] | None = None,
-        test_masks: list[Path] | None = None,
-        predict_images: list[Path] | None = None,
-        spectral_indices: list[str] | None = None,
+        train_images: Optional[List[Path]] = None,
+        train_masks: Optional[List[Path]] = None,
+        val_images: Optional[List[Path]] = None,
+        val_masks: Optional[List[Path]] = None,
+        test_images: Optional[List[Path]] = None,
+        test_masks: Optional[List[Path]] = None,
+        predict_images: Optional[List[Path]] = None,
+        spectral_indices: Optional[List[str]] = None,
         batch_size: int = 32,
         image_size: int = 352,
         num_workers: int = 0,

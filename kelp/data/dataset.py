@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Callable, Dict, List, Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,14 +30,14 @@ warnings.filterwarnings(
 
 @dataclass
 class FigureGrids:
-    true_color: plt.Figure | None = None
-    color_infrared: plt.Figure | None = None
-    short_wave_infrared: plt.Figure | None = None
-    mask: plt.Figure | None = None
-    prediction: plt.Figure | None = None
-    qa: plt.Figure | None = None
-    dem: plt.Figure | None = None
-    ndvi: plt.Figure | None = None
+    true_color: Optional[plt.Figure] = None
+    color_infrared: Optional[plt.Figure] = None
+    short_wave_infrared: Optional[plt.Figure] = None
+    mask: Optional[plt.Figure] = None
+    prediction: Optional[plt.Figure] = None
+    qa: Optional[plt.Figure] = None
+    dem: Optional[plt.Figure] = None
+    ndvi: Optional[plt.Figure] = None
 
 
 class KelpForestSegmentationDataset(Dataset):
@@ -46,10 +46,10 @@ class KelpForestSegmentationDataset(Dataset):
 
     def __init__(
         self,
-        image_fps: list[Path],
-        mask_fps: list[Path] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        band_order: list[int] | None = None,
+        image_fps: List[Path],
+        mask_fps: Optional[List[Path]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        band_order: Optional[List[int]] = None,
     ) -> None:
         self.image_fps = image_fps
         self.mask_fps = mask_fps
@@ -60,7 +60,7 @@ class KelpForestSegmentationDataset(Dataset):
     def __len__(self) -> int:
         return len(self.image_fps)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
             # we need to clamp values to account for corrupted pixels
@@ -84,7 +84,7 @@ class KelpForestSegmentationDataset(Dataset):
         return sample
 
     @staticmethod
-    def _ensure_proper_sample_format(sample: dict[str, Tensor]) -> dict[str, Tensor]:
+    def _ensure_proper_sample_format(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Transform a single sample from the Dataset.
 
         Args:
@@ -102,9 +102,9 @@ class KelpForestSegmentationDataset(Dataset):
 
     @staticmethod
     def plot_sample(
-        sample: dict[str, Tensor],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: str | None = None,
+        suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
@@ -134,7 +134,7 @@ class KelpForestSegmentationDataset(Dataset):
     def _plot_tensor(
         tensor: Tensor,
         interpolation: Literal["antialiased", "none"] = "antialiased",
-        cmap: str | None = None,
+        cmap: Optional[str] = None,
     ) -> plt.Figure:
         tensor = tensor.float()
         h, w = tensor.shape[-2], tensor.shape[-1]
@@ -151,8 +151,8 @@ class KelpForestSegmentationDataset(Dataset):
 
     @staticmethod
     def plot_batch(
-        batch: dict[str, Tensor],
-        band_index_lookup: dict[str, int],
+        batch: Dict[str, Tensor],
+        band_index_lookup: Dict[str, int],
         samples_per_row: int = 8,
         plot_true_color: bool = False,
         plot_color_infrared_grid: bool = False,

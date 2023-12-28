@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Union
 
 import mlflow
 import pytorch_lightning as pl
@@ -42,12 +42,11 @@ class PredictConfig(ConfigBase):
     data_dir: Path
     original_training_config_fp: Path
     model_checkpoint: Path
-    run_dir: Path | None
+    run_dir: Optional[Path]
     output_dir: Path
 
     @model_validator(mode="before")
-    @classmethod
-    def validate_inputs(cls, data: dict[str, Any]) -> dict[str, Any]:
+    def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         if data.get("run_dir", None) and (
             data.get("model_checkpoint", None) or data.get("original_training_config_fp", None)
         ):
@@ -104,7 +103,7 @@ def predict(dm: pl.LightningDataModule, model: pl.LightningModule, train_cfg: Tr
     with torch.no_grad():
         trainer = pl.Trainer(**train_cfg.trainer_kwargs, logger=False)
 
-        preds: list[dict[str, Tensor | str]] = trainer.predict(model=model, datamodule=dm)
+        preds: List[Dict[str, Union[Tensor, str]]] = trainer.predict(model=model, datamodule=dm)
 
         for prediction_batch in tqdm(preds, "Saving prediction batches"):
             individual_samples = unbind_samples(prediction_batch)

@@ -22,7 +22,8 @@ Checklist:
 - [x] More robust CV split with deduplication of images from val set
 - [x] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)
 - [x] Different loss functions
-- [ ] Weighted sampler
+- [x] Weighted sampler
+- [x] Azure ML Hparam Search
 - [ ] Add extra spectral indices combinations
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
@@ -53,6 +54,14 @@ Checklist:
 * AOI grouping (removing leakage)
 * Quantile normalization
 * Dice Loss
+* Weighted sampler
+  * `has_kelp_importance_factor=3.0`
+  * `kelp_pixels_pct_importance_factor=0.2`
+  * `qa_ok_importance_factor=0.0`
+  * `qa_corrupted_pixels_pct_importance_factor=-1.0`
+  * `almost_all_water_importance_factor=0.5`
+  * `dem_nan_pixels_pct_importance_factor=0.25`
+  * `dem_zero_pixels_pct_importance_factor=-1.0`
 
 ## 2023-12-02
 
@@ -302,3 +311,58 @@ Findings:
 ## 2023-12-26
 
 * WIP. Azure ML integration
+* Env issues - no GPU detected
+
+## 2023-12-27
+
+* WIP. Azure ML integration
+* Finally, GPU was detected - had to recreate the env from scratch using Azure's curated base env
+* Installing dependencies via pip... Well, fuck the lock-files I guess ¯\_(ツ)_/¯
+* Training takes forever WTF M$???
+* Alright, downloading dataset instead of using ro_mount fixed slow training
+* Fixed a few issues with confusion matrix logging
+* Fixed double logging
+* Added temporary fix for DEBUG level logging being permanently set by some 3rd party package
+* Will run few hundred experiments overnight
+
+## 2023-12-28
+
+* Some results after whole night of training:
+
+| samples_per_epoch | has_kelp | kelp_pixels_pct | qa_ok | qa_corrupted_pixels_pct | almost_all_water | dem_nan_pixels_pct | dem_zero_pixels_pct | val/dice |
+|-------------------|----------|-----------------|-------|-------------------------|------------------|--------------------|---------------------|----------|
+| 5120              | 2        | 0.5             | 0.5   | -0.5                    | -1               | 0                  | -0.25               | 0.84405  |
+| 5120              | 0.2      | 0               | -0.5  | -0.5                    | -0.5             | 0.25               | 0.5                 | 0.84402  |
+| 5120              | 3        | 0.5             | -1    | 0                       | -1               | 0.25               | 0                   | 0.84396  |
+| 5120              | 3        | 0.2             | 0     | -1                      | 0.5              | 0.25               | -1                  | 0.84396  |
+| 5120              | 2        | 0               | 0.5   | 0                       | 0.25             | 0                  | -0.5                | 0.84391  |
+| 5120              | 0.5      | 0.2             | -0.5  | 0.75                    | 0.5              | -1                 | -0.25               | 0.84390  |
+| 5120              | 3        | 0.2             | 0.5   | -0.25                   | 0.75             | -0.25              | 0.5                 | 0.84382  |
+| 5120              | 3        | 0.5             | 1     | -0.25                   | 0.5              | -0.5               | 0                   | 0.84382  |
+| 5120              | 3        | 2               | -0.25 | -0.5                    | -0.5             | -1                 | 0.75                | 0.84380  |
+| 5120              | 2        | 1               | 0.25  | -1                      | 0.75             | 0.75               | 1                   | 0.84377  |
+| 5120              | 2        | 0               | -0.5  | 0                       | -1               | -1                 | -1                  | 0.84374  |
+| 5120              | 0.5      | 0               | -1    | -0.25                   | 0.25             | -0.25              | -0.5                | 0.84373  |
+| 5120              | 0.2      | 0               | 0     | 0.25                    | -1               | 0.25               | 0.5                 | 0.84370  |
+| 5120              | 2        | 0.5             | 0.25  | -0.5                    | 0.25             | 0.5                | -0.5                | 0.84369  |
+
+* After retraining using 10240 samples per epoch:
+
+| samples_per_epoch | has_kelp | kelp_pixels_pct | qa_ok | qa_corrupted_pixels_pct | almost_all_water | dem_nan_pixels_pct | dem_zero_pixels_pct | val/dice |
+|-------------------|----------|-----------------|-------|-------------------------|------------------|--------------------|---------------------|----------|
+| 10240             | 2        | 0.5             | 0.5   | -0.5                    | -1               | 0                  | -0.25               | 0.84459  |
+| 10240             | 0.2      | 0               | -0.5  | -0.5                    | -0.5             | 0.25               | 0.5                 | 0.84456  |
+| 10240             | 3        | 0.5             | -1    | 0                       | -1               | 0.25               | 0                   | 0.84501  |
+| 10240             | 3        | 0.2             | 0     | -1                      | 0.5              | 0.25               | -1                  | 0.84801  |
+| 10240             | 2        | 0               | 0.5   | 0                       | 0.25             | 0                  | -0.5                | 0.84641  |
+| 10240             | 0.5      | 0.2             | -0.5  | 0.75                    | 0.5              | -1                 | -0.25               | 0.84622  |
+| 10240             | 3        | 0.2             | 0.5   | -0.25                   | 0.75             | -0.25              | 0.5                 | 0.84546  |
+| 10240             | 3        | 0.5             | 1     | -0.25                   | 0.5              | -0.5               | 0                   | 0.84619  |
+| 10240             | 3        | 2               | -0.25 | -0.5                    | -0.5             | -1                 | 0.75                | 0.84500  |
+| 10240             | 2        | 1               | 0.25  | -1                      | 0.75             | 0.75               | 1                   | 0.84508  |
+| 10240             | 2        | 0               | -0.5  | 0                       | -1               | -1                 | -1                  | 0.84430  |
+| 10240             | 0.5      | 0               | -1    | -0.25                   | 0.25             | -0.25              | -0.5                | 0.84496  |
+| 10240             | 0.2      | 0               | 0     | 0.25                    | -1               | 0.25               | 0.5                 | 0.84522  |
+| 10240             | 2        | 0.5             | 0.25  | -0.5                    | 0.25             | 0.5                | -0.5                | 0.84538  |
+
+* Using more samples over the basic configuration yields very small increase 0.84405 vs 0.84801. But will use those weights for the future.

@@ -1,0 +1,97 @@
+trigger: none
+
+pr: none
+
+parameters:
+  - name: runtime_env
+    displayName: Runtime Environment
+    type: string
+    default: dev
+    values:
+      - dev
+  - name: default_compute
+    displayName: Default Compute
+    type: string
+    values:
+      - azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+      - azureml:gpu-6c-112g-v100-nc6sv3-spot
+    default: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+  - name: pipeline_spec_file
+    displayName: Pipeline spec file
+    type: string
+    values:
+      - aml/pipelines/sampler_hparam_search_pipeline.yaml
+    default: aml/pipelines/sampler_hparam_search_pipeline.yaml
+  - name: trials
+    displayName: Trials
+    type: number
+    default: 100
+  - name: max_concurrent_trials
+    displayName: Concurrent trials
+    type: number
+    default: 10
+  - name: trial_timeout
+    displayName: Trial timeout
+    type: number
+    default: 3600
+  - name: job_timeout
+    displayName: Job timeout
+    type: number
+    default: 259200
+  - name: experiment_name
+    displayName: Experiment name
+    type: string
+    default: hparam_search_exp
+
+variables:
+  - group: ${{parameters.runtime_env}}-vg
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage:
+    displayName: Execute hparam search pipeline @${{parameters.runtime_env}}
+
+    jobs:
+      - job: hparam_search
+        displayName: Execute hparam search pipeline
+
+        steps:
+          - checkout: self
+            path: s/
+
+          - template: templates/install-az-cli.yaml
+
+          - template: templates/install-aml-cli.yaml
+
+          - template: templates/connect-to-aml-workspace.yaml
+
+          - task: AzureCLI@2
+            displayName: Run HParam Search Pipeline
+            continueOnError: true
+            inputs:
+              azureSubscription: $(ADO__SERVICE_CONNECTION_RG) # needs to have access at the RG level
+              scriptType: bash
+              workingDirectory: $(System.DefaultWorkingDirectory)
+              scriptLocation: inlineScript
+              inlineScript: |
+                run_id=$( \
+                  az ml job create -f ${{parameters.pipeline_spec_file}} \
+                  --set experiment_name=$(ENVIRONMENT)_${{parameters.experiment_name}} \
+                  display_name=$(ENVIRONMENT)_${{parameters.experiment_name}}_$(Build.BuildID) \
+                  settings.default_compute=${{parameters.default_compute}} \
+                  jobs.sweep_step.limits.max_total_trials=${{parameters.trials}} \
+                  jobs.sweep_step.limits.max_concurrent_trials=${{parameters.max_concurrent_trials}} \
+                  jobs.sweep_step.limits.trial_timeout=${{parameters.trial_timeout}} \
+                  jobs.sweep_step.limits.timeout=${{parameters.job_timeout}} \
+                  --query name -o tsv \
+                )
+
+                if [[ -z "$run_id" ]]
+                then
+                  echo "Job creation failed"
+                  exit 3
+                fi
+
+                az ml job show -n $run_id --web

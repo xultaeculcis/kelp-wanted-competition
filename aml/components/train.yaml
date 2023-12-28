@@ -1,0 +1,191 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: train
+version: 0.0.1
+display_name: Model training
+description: Trains the Kelp Forest Segmentation model.
+
+inputs:
+  data_dir:
+    type: uri_folder
+    description: The training data dir.
+  metadata_file:
+    type: uri_file
+    description: The metadata file.
+  cv_split:
+    type: integer
+    description: The CV split.
+    default: 6
+  batch_size:
+    type: integer
+    description: The batch size.
+    default: 32
+  num_workers:
+    type: integer
+    description: The number of workers for dataloader.
+    default: 4
+  image_size:
+    type: integer
+    description: The image size.
+    default: 352
+  band_order:
+    type: string
+    description: The band order.
+    default: 2,3,4,0,1,5,6
+  samples_per_epoch:
+    type: integer
+    description: The number of samples per epoch.
+    default: 5120
+  has_kelp_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for has_kelp flag.
+  kelp_pixels_pct_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for kelp pixels percentage.
+  qa_ok_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for qa_ok flag.
+  qa_corrupted_pixels_pct_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for QA layer corrupted pixels percentage.
+  almost_all_water_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for almost_all_water flag.
+  dem_nan_pixels_pct_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for DEM layer zero pixels percentage.
+  dem_zero_pixels_pct_importance_factor:
+    type: number
+    default: 1.0
+    description: The importance factor for DEM layer NaN pixels percentage.
+  normalization_strategy:
+    type: string
+    default: quantile
+    description: The normalization strategy.
+  architecture:
+    type: string
+    default: unet
+    description: The network architecture.
+  encoder:
+    type: string
+    default: resnet50
+    description: The network encoder.
+  encoder_weights:
+    type: string
+    default: imagenet
+    description: The encoder weights.
+  lr:
+    type: number
+    default: 3e-4
+    description: The learning rate.
+  optimizer:
+    type: string
+    default: adamw
+    description: The optimizer.
+  weight_decay:
+    type: number
+    default: 1e-4
+    description: The weight decay.
+  lr_scheduler:
+    type: string
+    default: onecycle
+    description: The learning rate scheduler.
+  pct_start:
+    type: number
+    default: 0.3
+    description: The percentage of training when the lr will be at peak value.
+  div_factor:
+    type: number
+    default: 2
+    description: The div factor for lr scheduler.
+  final_div_factor:
+    type: number
+    default: 1e2
+    description: The final div factor for lr scheduler.
+  loss:
+    type: string
+    default: dice
+    description: The loss function.
+  strategy:
+    type: string
+    default: no-freeze
+    description: The fine-tuning strategy.
+  monitor_metric:
+    type: string
+    default: val/dice
+    description: The metric to monitor for early stopping.
+  save_top_k:
+    type: integer
+    default: 1
+    description: How many top-k checkpoints to save.
+  early_stopping_patience:
+    type: integer
+    default: 7
+    description: Early stopping patience in epochs.
+  precision:
+    type: string
+    default: 16-mixed
+    description: The training precision.
+  epochs:
+    type: integer
+    default: 10
+    description: The epochs.
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: The output dir.
+
+environment: azureml:acpt-train-env@latest
+
+resources:
+  shm_size: "12g"
+
+code: ../..
+command: >-
+  PYTHONPATH=$PYTHONPATH:. ; export PYTHONPATH ;
+  python ./kelp/entrypoints/train.py
+  --data_dir ${{inputs.data_dir}}
+  --output_dir ${{outputs.output_dir}}
+  --metadata_fp ${{inputs.metadata_file}}
+  --cv_split ${{inputs.cv_split}}
+  --batch_size ${{inputs.batch_size}}
+  --num_workers ${{inputs.num_workers}}
+  --band_order ${{inputs.band_order}}
+  --image_size ${{inputs.image_size}}
+  --use_weighted_sampler
+  --samples_per_epoch ${{inputs.samples_per_epoch}}
+  --has_kelp_importance_factor ${{inputs.has_kelp_importance_factor}}
+  --kelp_pixels_pct_importance_factor ${{inputs.kelp_pixels_pct_importance_factor}}
+  --qa_ok_importance_factor ${{inputs.qa_ok_importance_factor}}
+  --qa_corrupted_pixels_pct_importance_factor ${{inputs.qa_corrupted_pixels_pct_importance_factor}}
+  --almost_all_water_importance_factor ${{inputs.almost_all_water_importance_factor}}
+  --dem_nan_pixels_pct_importance_factor ${{inputs.dem_nan_pixels_pct_importance_factor}}
+  --dem_zero_pixels_pct_importance_factor ${{inputs.dem_zero_pixels_pct_importance_factor}}
+  --normalization_strategy ${{inputs.normalization_strategy}}
+  --architecture ${{inputs.architecture}}
+  --encoder ${{inputs.encoder}}
+  --pretrained
+  --encoder_weights ${{inputs.encoder_weights}}
+  --lr ${{inputs.lr}}
+  --optimizer ${{inputs.optimizer}}
+  --weight_decay ${{inputs.weight_decay}}
+  --lr_scheduler ${{inputs.lr_scheduler}}
+  --pct_start ${{inputs.pct_start}}
+  --div_factor ${{inputs.div_factor}}
+  --final_div_factor ${{inputs.final_div_factor}}
+  --loss ${{inputs.loss}}
+  --strategy ${{inputs.strategy}}
+  --monitor_metric ${{inputs.monitor_metric}}
+  --save_top_k ${{inputs.save_top_k}}
+  --early_stopping_patience ${{inputs.early_stopping_patience}}
+  --precision ${{inputs.precision}}
+  --epochs ${{inputs.epochs}}
+is_deterministic: false
