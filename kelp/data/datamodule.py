@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
 from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
@@ -99,21 +100,10 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.image_weights = image_weights or [1.0 for _ in self.train_images]
         self.band_stats, self.in_channels = self.resolve_normalization_stats()
         self.normalization_transform = self.resolve_normalization_transform()
-        self.train_augmentations = K.AugmentationSequential(
-            self.normalization_transform,
-            K.RandomRotation(p=0.5, degrees=90),
-            K.RandomHorizontalFlip(p=0.5),
-            K.RandomVerticalFlip(p=0.5),
-            data_keys=["input", "mask"],
-        )
-        self.val_augmentations = K.AugmentationSequential(
-            self.normalization_transform,
-            data_keys=["input", "mask"],
-        )
-        self.predict_augmentations = K.AugmentationSequential(
-            self.normalization_transform,
-            data_keys=["input"],
-        )
+        self.train_augmentations = self.resolve_transforms(stage="train")
+        self.val_augmentations = self.resolve_transforms(stage="val")
+        self.test_augmentations = self.resolve_transforms(stage="test")
+        self.predict_augmentations = self.resolve_transforms(stage="test")
         self.pad = T.Pad(
             padding=[
                 (image_size - TILE_SIZE) // 2,
@@ -272,6 +262,37 @@ class KelpForestDataModule(pl.LightningDataModule):
     def plot_batch(self, *args: Any, **kwargs: Any) -> FigureGrids:
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
+
+    def resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
+        common_transforms = []
+
+        for index_name in self.spectral_indices:
+            common_transforms.append(
+                SPECTRAL_INDEX_LOOKUP[index_name](
+                    index_swir=self.reordered_bands.index("SWIR"),
+                    index_nir=self.reordered_bands.index("NIR"),
+                    index_red=self.reordered_bands.index("R"),
+                    index_green=self.reordered_bands.index("G"),
+                    index_blue=self.reordered_bands.index("B"),
+                    index_dem=self.reordered_bands.index("DEM"),
+                    index_qa=self.reordered_bands.index("QA"),
+                )
+            )
+
+        common_transforms.append(self.normalization_transform)
+
+        if stage == "train":
+            return K.AugmentationSequential(
+                *common_transforms,
+                K.RandomRotation(p=0.5, degrees=90),
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomVerticalFlip(p=0.5),
+                data_keys=["input", "mask"],
+            )
+        return K.AugmentationSequential(
+            *common_transforms,
+            data_keys=["input", "mask"],
+        )
 
     def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
         band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}

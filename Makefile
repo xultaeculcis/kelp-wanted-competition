@@ -150,6 +150,7 @@ train-single-split:
 		--batch_size 32 \
 		--num_workers 6 \
 		--band_order 2,3,4,0,1,5,6 \
+		--spectral_indices CVI,EVI,SRNIRR,TNDVI,TVI \
 		--image_size 352 \
 		--use_weighted_sampler \
 		--samples_per_epoch 5120 \

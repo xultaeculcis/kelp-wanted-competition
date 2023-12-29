@@ -64,9 +64,9 @@ class KelpForestSegmentationDataset(Dataset):
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
             # we need to clamp values to account for corrupted pixels
-            img = torch.from_numpy(src.read(self.band_order)).clamp(min=0)
+            img = torch.from_numpy(src.read(self.band_order)).clamp(min=0).float()
 
-        sample = {"image": img, "tile_id": self.image_fps[index].stem.split("_")[0]}
+        sample = {"tile_id": self.image_fps[index].stem.split("_")[0]}
 
         if self.mask_fps:
             with rasterio.open(self.mask_fps[index]) as src:
@@ -74,7 +74,7 @@ class KelpForestSegmentationDataset(Dataset):
                 sample["mask"] = target
 
         # Always append NDVI index
-        sample = self.append_ndvi(sample)
+        sample["image"] = self.append_ndvi(img.unsqueeze(0)).squeeze()
 
         if self.transforms:
             sample = self.transforms(sample)

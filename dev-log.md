@@ -366,3 +366,7 @@ Findings:
 | 10240             | 2        | 0.5             | 0.25  | -0.5                    | 0.25             | 0.5                | -0.5                | 0.84538  |
 
 * Using more samples over the basic configuration yields very small increase 0.84405 vs 0.84801. But will use those weights for the future.
+
+## 2023-12-29
+
+* Working on verifying impact of adding different spectral indices to the input
