@@ -38,6 +38,7 @@ class FigureGrids:
     qa: Optional[plt.Figure] = None
     dem: Optional[plt.Figure] = None
     ndvi: Optional[plt.Figure] = None
+    spectral_indices: Optional[Dict[str, plt.Figure]] = None
 
 
 class KelpForestSegmentationDataset(Dataset):
@@ -157,6 +158,7 @@ class KelpForestSegmentationDataset(Dataset):
         plot_true_color: bool = False,
         plot_color_infrared_grid: bool = False,
         plot_short_wave_infrared_grid: bool = False,
+        plot_spectral_indices: bool = False,
         plot_qa_grid: bool = False,
         plot_dem_grid: bool = False,
         plot_ndvi_grid: bool = False,
@@ -164,6 +166,7 @@ class KelpForestSegmentationDataset(Dataset):
         plot_prediction_grid: bool = False,
         ndvi_cmap: str = "RdYlGn",
         dem_cmap: str = "viridis",
+        spectral_indices_cmap: str = "viridis",
         qa_mask_cmap: str = "gray",
         mask_cmap: str = consts.data.CMAP,
     ) -> FigureGrids:
@@ -250,5 +253,16 @@ class KelpForestSegmentationDataset(Dataset):
                 cmap=ndvi_cmap,
             )
             if plot_ndvi_grid
+            else None,
+            spectral_indices={
+                band_name: KelpForestSegmentationDataset._plot_tensor(
+                    tensor=image_grid[band_index_lookup[band_name], :, :],
+                    interpolation="none" if band_name.endswith("WM") else "antialiased",
+                    cmap=qa_mask_cmap if band_name.endswith("WM") else spectral_indices_cmap,
+                )
+                for band_name, band_number in band_index_lookup.items()
+                if band_name not in ["SWIR", "NIR", "R", "G", "B", "QA", "DEM"]
+            }
+            if plot_spectral_indices
             else None,
         )

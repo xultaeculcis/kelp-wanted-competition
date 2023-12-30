@@ -1078,7 +1078,9 @@ class AppendIPVI(AppendIndex):
         )
 
     def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor) -> Tensor:
-        return (nir / (nir + red + consts.data.EPS) / 2) * (((red - green) / red + green) + 1 + consts.data.EPS)
+        return (nir / (nir + red + consts.data.EPS) / 2) * (
+            ((red - green) / (red + consts.data.EPS) + green) + 1 + consts.data.EPS
+        )
 
 
 class AppendGVMI(AppendIndex):
@@ -1438,7 +1440,7 @@ class AppendCYA(AppendIndex):
         red = red / 65_535
         green = green / 65_535
         blue = blue / 65_535
-        return torch.pow(((green * red) / (blue + consts.data.EPS)), 2.38)  # * 115_530.31
+        return torch.pow(((green * red + consts.data.EPS) / (blue + consts.data.EPS)), 2.38)  # * 115_530.31
 
 
 class AppendTURB(AppendIndex):
@@ -1545,6 +1547,142 @@ class AppendWaterColor(AppendIndex):
         return 25366 * torch.exp(-4.53 * green / (red + consts.data.EPS))
 
 
+class AppendSABI(AppendIndex):
+    """
+    Surface Algal Bloom Index
+
+    Source: https://doi.org/10.1002/eap.1708
+    """
+
+    def __init__(
+        self,
+        index_nir: int,
+        index_red: int,
+        index_green: int,
+        index_blue: int,
+        index_qa: int = 5,
+        mask_using_qa: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            index_qa=index_qa,
+            mask_using_qa=mask_using_qa,
+            index_nir=index_nir,
+            index_red=index_red,
+            index_green=index_green,
+            index_blue=index_blue,
+        )
+
+    def _compute_index(self, nir: Tensor, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (nir - red) / (green + blue + consts.data.EPS)
+
+
+class AppendKIVU(AppendIndex):
+    """
+    KIVU
+
+    Source: https://doi.org/10.1002/eap.1708
+    """
+
+    def __init__(
+        self,
+        index_red: int,
+        index_green: int,
+        index_blue: int,
+        index_qa: int = 5,
+        mask_using_qa: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            index_qa=index_qa,
+            mask_using_qa=mask_using_qa,
+            index_red=index_red,
+            index_green=index_green,
+            index_blue=index_blue,
+        )
+
+    def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
+        return (blue - red) / (green + consts.data.EPS)
+
+
+class AppendKab1(AppendIndex):
+    """
+    Kabbara Index 1
+
+    Source: https://doi.org/10.1002/eap.1708
+    """
+
+    def __init__(
+        self,
+        index_green: int,
+        index_blue: int,
+        index_qa: int = 5,
+        mask_using_qa: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            index_qa=index_qa,
+            mask_using_qa=mask_using_qa,
+            index_green=index_green,
+            index_blue=index_blue,
+        )
+
+    def _compute_index(self, green: Tensor, blue: Tensor) -> Tensor:
+        return 1.67 - 3.94 * torch.log(blue + consts.data.EPS) + 3.78 * torch.log(green + consts.data.EPS)
+
+
+class AppendNDAVI(AppendIndex):
+    """
+    Normalized Difference Aquatic Vegetation Index
+
+    Source: https://doi.org/10.1016/j.jag.2014.01.017
+    """
+
+    def __init__(
+        self,
+        index_nir: int,
+        index_blue: int,
+        index_qa: int = 5,
+        mask_using_qa: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            index_qa=index_qa,
+            mask_using_qa=mask_using_qa,
+            index_nir=index_nir,
+            index_blue=index_blue,
+        )
+
+    def _compute_index(self, nir: Tensor, blue: Tensor) -> Tensor:
+        return (nir - blue) / (nir + blue + consts.data.EPS)
+
+
+class AppendWAVI(AppendIndex):
+    """
+    Water Adjusted Vegetation Index
+
+    Source: https://doi.org/10.1016/j.jag.2014.01.017
+    """
+
+    def __init__(
+        self,
+        index_nir: int,
+        index_blue: int,
+        index_qa: int = 5,
+        mask_using_qa: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            index_qa=index_qa,
+            mask_using_qa=mask_using_qa,
+            index_nir=index_nir,
+            index_blue=index_blue,
+        )
+
+    def _compute_index(self, nir: Tensor, blue: Tensor) -> Tensor:
+        return 1.5 * (nir - blue) / (nir + blue + 0.5 + consts.data.EPS)
+
+
 INDICES = {
     "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),
     "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),
@@ -1564,7 +1702,7 @@ INDICES = {
     "GRNDVI": AppendGRNDVI(index_nir=1, index_red=2, index_green=3),
     "GBNDVI": AppendGBNDVI(index_nir=1, index_green=3, index_blue=4),
     "GVMI": AppendGVMI(index_swir=0, index_nir=1),
-    # "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),  # Do not use - produces nan and/or inf vals
+    "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),
     "I": AppendI(index_red=2, index_green=3, index_blue=4),
     "H": AppendH(index_red=2, index_green=3, index_blue=4),
     "LogR": AppendLogR(index_nir=1, index_red=2),
@@ -1594,12 +1732,17 @@ INDICES = {
     "VARIGreen": AppendVARIGreen(index_red=2, index_green=3, index_blue=4),
     "WDRVI": AppendWDRVI(index_nir=1, index_red=2),
     "DEMWM": AppendDEMWM(index_dem=7),
-    "CHLA": AppendCHLA(index_green=3, index_blue=4),
+    # "CHLA": AppendCHLA(index_green=3, index_blue=4),  # Do not use - produces nan and/or inf vals
     "CYA": AppendCYA(index_red=2, index_green=3, index_blue=4),
     "TURB": AppendTURB(index_green=3, index_blue=4),
     "CDOM": AppendCDOM(index_red=2, index_green=3),
     "DOC": AppendDOC(index_red=2, index_green=3),
     "WATERCOLOR": AppendWaterColor(index_red=2, index_green=3),
+    "SABI": AppendSABI(index_nir=1, index_red=2, index_green=3, index_blue=4),
+    "KIVU": AppendKIVU(index_red=2, index_green=3, index_blue=4),
+    "Kab1": AppendKab1(index_green=3, index_blue=4),
+    "NDAVI": AppendNDAVI(index_nir=1, index_blue=4),
+    "WAVI": AppendWAVI(index_nir=1, index_blue=4),
 }
 
 SPECTRAL_INDEX_LOOKUP = {
@@ -1621,7 +1764,7 @@ SPECTRAL_INDEX_LOOKUP = {
     "GRNDVI": AppendGRNDVI,
     "GBNDVI": AppendGBNDVI,
     "GVMI": AppendGVMI,
-    # "IPVI": AppendIPVI,  # Do not use - produces nan and/or inf vals
+    "IPVI": AppendIPVI,
     "I": AppendI,
     "H": AppendH,
     "LogR": AppendLogR,
@@ -1657,4 +1800,9 @@ SPECTRAL_INDEX_LOOKUP = {
     "CDOM": AppendCDOM,
     "DOC": AppendDOC,
     "WATERCOLOR": AppendWaterColor,
+    "SABI": AppendSABI,
+    "KIVU": AppendKIVU,
+    "Kab1": AppendKab1,
+    "NDAVI": AppendNDAVI,
+    "WAVI": AppendWAVI,
 }

@@ -91,7 +91,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.predict_images = predict_images or []
         self.spectral_indices = spectral_indices or []
         self.band_order = band_order or list(range(7))
-        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
+        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"] + self.spectral_indices
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.normalization_strategy = normalization_strategy

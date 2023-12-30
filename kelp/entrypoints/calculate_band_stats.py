@@ -6,6 +6,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, List
 
+import kornia.augmentation as K
 import rasterio
 import torch
 from dask.diagnostics import ProgressBar
@@ -63,6 +64,9 @@ def calculate_band_statistics(
 ) -> Dict[str, Dict[str, float]]:
     # Move computations to GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    transform = K.AugmentationSequential(
+        *[append_index_transform for append_index_transform in INDICES.values()], data_keys=["input"]
+    ).to(device)
 
     # Initialize statistics arrays
     num_bands = len(band_names)
@@ -80,13 +84,9 @@ def calculate_band_statistics(
         with rasterio.open(image_path) as src:
             image_arr = src.read()
             # Convert image to PyTorch tensor and ensure non-negative values
-            image: Tensor = torch.from_numpy(image_arr).float().nan_to_num(0).clamp(min=0).to(device)
-            sample = image.unsqueeze(0)
+            image: Tensor = torch.from_numpy(image_arr).float().nan_to_num(0).clamp(min=0).to(device).unsqueeze(0)
 
-        for _, transform in INDICES.items():
-            sample = transform(sample)
-
-        image = sample.squeeze()
+        image = transform(image).squeeze()
 
         # Assuming the image has shape (num_bands, height, width)
         if image.shape[0] != num_bands:
