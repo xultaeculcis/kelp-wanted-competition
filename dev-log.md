@@ -63,6 +63,16 @@ Checklist:
   * `dem_nan_pixels_pct_importance_factor=0.25`
   * `dem_zero_pixels_pct_importance_factor=-1.0`
 
+## What did not work
+
+* Training from scratch
+* Larger or smaller `weight_decay`
+* Larger or smaller `lr`
+* `decoder_attention_type="scse"`
+* Losses other than dice (CE with weighting was close)
+* Compiling the model and `torch-ort`
+* Normalization strategies other than `quantile` / `z-score`
+
 ## 2023-12-02
 
 * Initial commit
@@ -370,3 +380,14 @@ Findings:
 ## 2023-12-29
 
 * Working on verifying impact of adding different spectral indices to the input
+* Added new indices
+* Refactored all indices into Kornia compatible classes
+
+## 2023-12-30
+
+* Added new aquatic vegetation indices
+* Re-calculate band stats
+* Added spectral indices plotting logic to the dataset
+* Tried again to add `decoder_attention_type="scse"` but it gives worse performance
+* DEMWM and NDVI are now always appended to the spectral_indices list
+* Added option to mask spectral indices using DEMWM - needs testing

@@ -19,7 +19,10 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
     def __init__(
         self,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **band_kwargs: Any,
     ) -> None:
         super().__init__(p=1, same_on_batch=True)
@@ -28,8 +31,11 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
             f"Found following keys: {list(band_kwargs.keys())}"
         )
         self.index_qa = index_qa
+        self.index_water_mask = index_water_mask
         self.dim = -3
         self.mask_using_qa = mask_using_qa
+        self.mask_using_water_mask = mask_using_water_mask
+        self.fill_val = fill_val
         self.band_kwargs = band_kwargs
 
     def _append_index(self, sample: Tensor, index: Tensor) -> Tensor:
@@ -37,12 +43,11 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
         sample = torch.cat([sample, index], dim=self.dim)
         return sample
 
-    def _mask_using_qa_band(self, index: Tensor, sample: Tensor) -> Tensor:
-        if not self.mask_using_qa:
+    def _mask_index(self, index: Tensor, sample: Tensor, masking_band_index: int, apply_mask: bool) -> Tensor:
+        if not apply_mask:
             return index
-        min_val = index.min()
-        qa_band = sample[..., self.index_qa, :, :]
-        index = torch.where(qa_band == 0, index, min_val)
+        mask = sample[..., masking_band_index, :, :]
+        index = torch.where(mask == 0, index, self.fill_val)
         return index
 
     @abc.abstractmethod
@@ -56,12 +61,31 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
         flags: Dict[str, int],
         transform: Optional[Tensor] = None,
     ) -> Tensor:
+        # Compute the index
         compute_kwargs: Dict[str, Tensor] = {
             k.replace("index_", ""): input[..., v, :, :] for k, v in self.band_kwargs.items()
         }
         index = self._compute_index(**compute_kwargs)
-        index = self._mask_using_qa_band(index=index, sample=input)
+
+        # Mask using QA band if requested
+        index = self._mask_index(
+            index=index,
+            sample=input,
+            masking_band_index=self.index_qa,
+            apply_mask=self.mask_using_qa,
+        )
+
+        # Mask using Water Mask if requested
+        index = self._mask_index(
+            index=index,
+            sample=input,
+            masking_band_index=self.index_water_mask,
+            apply_mask=self.mask_using_water_mask,
+        )
+
+        # Append to the input tensor
         input = self._append_index(sample=input, index=index)
+
         return input
 
 
@@ -77,12 +101,18 @@ class AppendNDVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -103,12 +133,18 @@ class AppendNDWI(AppendIndex):
         index_nir: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
         )
@@ -129,12 +165,18 @@ class AppendATSAVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -159,12 +201,18 @@ class AppendAFRI1600(AppendIndex):
         index_swir: int,
         index_nir: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_swir=index_swir,
             index_nir=index_nir,
         )
@@ -185,12 +233,18 @@ class AppendAVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -211,12 +265,18 @@ class AppendARVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -237,12 +297,18 @@ class AppendBWDRVI(AppendIndex):
         index_swir: int,
         index_nir: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_swir=index_swir,
             index_nir=index_nir,
         )
@@ -263,12 +329,18 @@ class AppendBWDRV(AppendIndex):
         index_nir: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_blue=index_blue,
         )
@@ -289,12 +361,18 @@ class AppendClGreen(AppendIndex):
         index_nir: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
         )
@@ -316,12 +394,18 @@ class AppendCVI(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -342,12 +426,18 @@ class AppendDEMWM(AppendIndex):
         self,
         index_dem: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_dem=index_dem,
         )
 
@@ -367,12 +457,18 @@ class AppendWDRVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -394,12 +490,18 @@ class AppendVARIGreen(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
             index_blue=index_blue,
@@ -421,12 +523,18 @@ class AppendTVI(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
         )
@@ -447,12 +555,18 @@ class AppendTNDVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -473,12 +587,18 @@ class AppendSQRTNIRR(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -500,12 +620,18 @@ class AppendRBNDVI(AppendIndex):
         index_red: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_blue=index_blue,
@@ -527,12 +653,18 @@ class AppendSRSWIRNIR(AppendIndex):
         index_swir: int,
         index_nir: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_swir=index_swir,
             index_nir=index_nir,
         )
@@ -553,12 +685,18 @@ class AppendSRNIRSWIR(AppendIndex):
         index_swir: int,
         index_nir: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_swir=index_swir,
             index_nir=index_nir,
         )
@@ -579,12 +717,18 @@ class AppendSRNIRR(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -605,12 +749,18 @@ class AppendSRNIRG(AppendIndex):
         index_nir: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
         )
@@ -631,12 +781,18 @@ class AppendSRGR(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
         )
@@ -659,12 +815,18 @@ class AppendPNDVI(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -688,12 +850,18 @@ class AppendNormR(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -716,12 +884,18 @@ class AppendNormNIR(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -744,12 +918,18 @@ class AppendNormG(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -771,12 +951,18 @@ class AppendNDWIWM(AppendIndex):
         index_nir: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
         )
@@ -797,12 +983,18 @@ class AppendNDVIWM(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -823,12 +1015,18 @@ class AppendNLI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -849,12 +1047,18 @@ class AppendMSAVI(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -875,12 +1079,18 @@ class AppendMSRNirRed(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -902,12 +1112,18 @@ class AppendMCARI(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -929,12 +1145,18 @@ class AppendMVI(AppendIndex):
         index_swir: int,
         index_nir: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_swir=index_swir,
             index_nir=index_nir,
         )
@@ -956,12 +1178,18 @@ class AppendMCRIG(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
             index_blue=index_blue,
@@ -983,12 +1211,18 @@ class AppendLogR(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -1010,12 +1244,18 @@ class AppendH(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
             index_blue=index_blue,
@@ -1038,12 +1278,18 @@ class AppendI(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
             index_blue=index_blue,
@@ -1066,12 +1312,18 @@ class AppendIPVI(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -1095,12 +1347,18 @@ class AppendGVMI(AppendIndex):
         index_swir: int,
         index_nir: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_swir=index_swir,
             index_nir=index_nir,
         )
@@ -1122,12 +1380,18 @@ class AppendGBNDVI(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
             index_blue=index_blue,
@@ -1150,12 +1414,18 @@ class AppendGRNDVI(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -1177,12 +1447,18 @@ class AppendGNDVI(AppendIndex):
         index_nir: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
         )
@@ -1205,12 +1481,18 @@ class AppendGARI(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -1233,12 +1515,18 @@ class AppendEVI22(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -1259,12 +1547,18 @@ class AppendEVI2(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -1286,12 +1580,18 @@ class AppendEVI(AppendIndex):
         index_red: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_blue=index_blue,
@@ -1317,12 +1617,18 @@ class AppendDVIMSS(AppendIndex):
         index_nir: int,
         index_red: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
         )
@@ -1343,12 +1649,18 @@ class AppendGDVI(AppendIndex):
         index_nir: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_green=index_green,
         )
@@ -1369,12 +1681,18 @@ class AppendCI(AppendIndex):
         index_red: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_blue=index_blue,
         )
@@ -1395,12 +1713,18 @@ class AppendCHLA(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_green=index_green,
             index_blue=index_blue,
         )
@@ -1425,12 +1749,18 @@ class AppendCYA(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
             index_blue=index_blue,
@@ -1455,12 +1785,18 @@ class AppendTURB(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_green=index_green,
             index_blue=index_blue,
         )
@@ -1481,12 +1817,18 @@ class AppendCDOM(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
         )
@@ -1507,12 +1849,18 @@ class AppendDOC(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
         )
@@ -1533,12 +1881,18 @@ class AppendWaterColor(AppendIndex):
         index_red: int,
         index_green: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
         )
@@ -1561,12 +1915,18 @@ class AppendSABI(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_red=index_red,
             index_green=index_green,
@@ -1590,12 +1950,18 @@ class AppendKIVU(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_red=index_red,
             index_green=index_green,
             index_blue=index_blue,
@@ -1617,12 +1983,18 @@ class AppendKab1(AppendIndex):
         index_green: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_green=index_green,
             index_blue=index_blue,
         )
@@ -1643,12 +2015,18 @@ class AppendNDAVI(AppendIndex):
         index_nir: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_blue=index_blue,
         )
@@ -1669,12 +2047,18 @@ class AppendWAVI(AppendIndex):
         index_nir: int,
         index_blue: int,
         index_qa: int = 5,
+        index_water_mask: int = 8,
         mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+        fill_val: float = 0.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(
             index_qa=index_qa,
+            index_water_mask=index_water_mask,
             mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+            fill_val=fill_val,
             index_nir=index_nir,
             index_blue=index_blue,
         )

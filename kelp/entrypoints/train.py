@@ -100,7 +100,13 @@ class TrainConfig(ConfigBase):
     early_stopping_patience: int = 1
 
     # trainer params
-    precision: str = "16-mixed"
+    precision: Literal[
+        "16-true",
+        "16-mixed",
+        "bf16-true",
+        "bf16-mixed",
+        "32-true",
+    ] = "16-mixed"
     fast_dev_run: bool = False
     epochs: int = 1
     limit_train_batches: Optional[Union[int, float]] = None
@@ -130,9 +136,13 @@ class TrainConfig(ConfigBase):
     @field_validator("spectral_indices", mode="before")
     def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
         if not value:
-            return []
+            return ["DEMWM", "NDVI"]
 
         indices = value if isinstance(value, list) else [index.strip() for index in value.split(",")]
+
+        if "DEMWM" in indices:
+            _logger.warning("DEMWM is automatically added during training. No need to add it twice.")
+            indices.remove("DEMWM")
 
         if "NDVI" in indices:
             _logger.warning("NDVI is automatically added during training. No need to add it twice.")
@@ -145,10 +155,10 @@ class TrainConfig(ConfigBase):
                 f"Please provide at most 5 comma separated indices: {', '.join(INDICES.keys())}."
             )
 
-        if len(indices) > 5:
-            raise ValueError(f"Please provide at most 5 spectral indices. You provided: {len(indices)}")
+        if len(indices) > 8:
+            raise ValueError(f"Please provide at most 8 spectral indices. You provided: {len(indices)}")
 
-        return indices
+        return ["DEMWM", "NDVI"] + indices
 
     @field_validator("ce_class_weights", mode="before")
     def validate_ce_class_weights(cls, value: Union[str, Optional[List[float]]] = None) -> Optional[List[float]]:

@@ -19,7 +19,6 @@ from torch.utils.data import Dataset
 from torchvision.utils import make_grid
 
 from kelp import consts
-from kelp.data.indices import INDICES
 from kelp.data.plotting import plot_sample
 
 warnings.filterwarnings(
@@ -56,7 +55,6 @@ class KelpForestSegmentationDataset(Dataset):
         self.mask_fps = mask_fps
         self.transforms = transforms
         self.band_order = [band_idx + 1 for band_idx in band_order] if band_order else list(range(1, 8))
-        self.append_ndvi = INDICES["NDVI"]
 
     def __len__(self) -> int:
         return len(self.image_fps)
@@ -67,15 +65,12 @@ class KelpForestSegmentationDataset(Dataset):
             # we need to clamp values to account for corrupted pixels
             img = torch.from_numpy(src.read(self.band_order)).clamp(min=0).float()
 
-        sample = {"tile_id": self.image_fps[index].stem.split("_")[0]}
+        sample = {"image": img, "tile_id": self.image_fps[index].stem.split("_")[0]}
 
         if self.mask_fps:
             with rasterio.open(self.mask_fps[index]) as src:
                 target = torch.from_numpy(src.read(1))
                 sample["mask"] = target
-
-        # Always append NDVI index
-        sample["image"] = self.append_ndvi(img.unsqueeze(0)).squeeze()
 
         if self.transforms:
             sample = self.transforms(sample)

@@ -49,7 +49,6 @@ class KelpForestDataModule(pl.LightningDataModule):
         "B",
         "QA",
         "DEM",
-        "NDVI",
     ]
 
     def __init__(
@@ -80,8 +79,10 @@ class KelpForestDataModule(pl.LightningDataModule):
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
         assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
-        if band_order is not None and len(band_order) != 7:
-            raise ValueError(f"channel_order should have exactly 7 elements, you passed {len(band_order)}")
+        if band_order is not None and len(band_order) != len(self.base_bands):
+            raise ValueError(
+                f"channel_order should have exactly {len(self.base_bands)} elements, you passed {len(band_order)}"
+            )
         self.train_images = train_images or []
         self.train_masks = train_masks or []
         self.val_images = val_images or []
@@ -89,9 +90,10 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.test_images = test_images or []
         self.test_masks = test_masks or []
         self.predict_images = predict_images or []
-        self.spectral_indices = spectral_indices or []
-        self.band_order = band_order or list(range(7))
-        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"] + self.spectral_indices
+        self.spectral_indices = self.cleanup_spectral_indices(spectral_indices)
+        self.band_order = band_order or list(range(len(self.base_bands)))
+        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + self.spectral_indices
+        self.band_index_lookup = {band: idx for idx, band in enumerate(self.reordered_bands)}
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.normalization_strategy = normalization_strategy
@@ -263,19 +265,26 @@ class KelpForestDataModule(pl.LightningDataModule):
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
 
+    def cleanup_spectral_indices(self, spectral_indices: Optional[List[str]] = None) -> List[str]:
+        if not spectral_indices:
+            # Should never happen if the config validation worked, but alas here we are anyway...
+            return ["DEMWM", "NDVI"]
+        return spectral_indices
+
     def resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
         common_transforms = []
 
         for index_name in self.spectral_indices:
             common_transforms.append(
                 SPECTRAL_INDEX_LOOKUP[index_name](
-                    index_swir=self.reordered_bands.index("SWIR"),
-                    index_nir=self.reordered_bands.index("NIR"),
-                    index_red=self.reordered_bands.index("R"),
-                    index_green=self.reordered_bands.index("G"),
-                    index_blue=self.reordered_bands.index("B"),
-                    index_dem=self.reordered_bands.index("DEM"),
-                    index_qa=self.reordered_bands.index("QA"),
+                    index_swir=self.band_index_lookup["SWIR"],
+                    index_nir=self.band_index_lookup["NIR"],
+                    index_red=self.band_index_lookup["R"],
+                    index_green=self.band_index_lookup["G"],
+                    index_blue=self.band_index_lookup["B"],
+                    index_dem=self.band_index_lookup["DEM"],
+                    index_qa=self.band_index_lookup["QA"],
+                    index_water_mask=self.band_index_lookup["DEMWM"],
                 )
             )
 
@@ -296,8 +305,6 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
         band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
-        for index in self.spectral_indices:
-            band_stats[index] = DATASET_STATS[index]
         mean = [val["mean"] for val in band_stats.values()]
         std = [val["std"] for val in band_stats.values()]
         vmin = [val["min"] for val in band_stats.values()]
