@@ -81,12 +81,12 @@ def calculate_band_statistics(
             image_arr = src.read()
             # Convert image to PyTorch tensor and ensure non-negative values
             image: Tensor = torch.from_numpy(image_arr).float().nan_to_num(0).clamp(min=0).to(device)
-            sample = {"image": image.unsqueeze(0)}
+            sample = image.unsqueeze(0)
 
         for _, transform in INDICES.items():
             sample = transform(sample)
 
-        image = sample["image"].squeeze()
+        image = sample.squeeze()
 
         # Assuming the image has shape (num_bands, height, width)
         if image.shape[0] != num_bands:

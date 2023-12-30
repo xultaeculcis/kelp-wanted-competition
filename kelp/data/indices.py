@@ -12,6 +12,10 @@ from kelp import consts
 
 
 class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
+    """
+    Base class for appending spectral indices to the input Tensor.
+    """
+
     def __init__(
         self,
         index_qa: int = 5,
@@ -62,6 +66,12 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
 
 
 class AppendNDVI(AppendIndex):
+    """
+    Normalized Difference Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -82,6 +92,12 @@ class AppendNDVI(AppendIndex):
 
 
 class AppendNDWI(AppendIndex):
+    """
+    Normalized Difference Water Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -102,6 +118,12 @@ class AppendNDWI(AppendIndex):
 
 
 class AppendATSAVI(AppendIndex):
+    """
+    Adjusted transformed soil-adjusted VI
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -126,6 +148,12 @@ class AppendATSAVI(AppendIndex):
 
 
 class AppendAFRI1600(AppendIndex):
+    """
+    Aerosol free vegetation index 1600
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_swir: int,
@@ -146,6 +174,12 @@ class AppendAFRI1600(AppendIndex):
 
 
 class AppendAVI(AppendIndex):
+    """
+    Ashburn Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -166,6 +200,12 @@ class AppendAVI(AppendIndex):
 
 
 class AppendARVI(AppendIndex):
+    """
+    Atmospherically Resistant Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -186,6 +226,12 @@ class AppendARVI(AppendIndex):
 
 
 class AppendBWDRVI(AppendIndex):
+    """
+    Blue-wide dynamic range vegetation index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_swir: int,
@@ -206,6 +252,12 @@ class AppendBWDRVI(AppendIndex):
 
 
 class AppendBWDRV(AppendIndex):
+    """
+
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -226,6 +278,12 @@ class AppendBWDRV(AppendIndex):
 
 
 class AppendClGreen(AppendIndex):
+    """
+    Chlorophyll Index Green
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -246,6 +304,12 @@ class AppendClGreen(AppendIndex):
 
 
 class AppendCVI(AppendIndex):
+    """
+    Chlorophyll vegetation index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -268,6 +332,12 @@ class AppendCVI(AppendIndex):
 
 
 class AppendDEMWM(AppendIndex):
+    """
+    DEM Water Mask
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_dem: int,
@@ -286,6 +356,12 @@ class AppendDEMWM(AppendIndex):
 
 
 class AppendWDRVI(AppendIndex):
+    """
+    Wide Dynamic Range Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -306,6 +382,12 @@ class AppendWDRVI(AppendIndex):
 
 
 class AppendVARIGreen(AppendIndex):
+    """
+    Visible Atmospherically Resistant Index Green
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -328,6 +410,12 @@ class AppendVARIGreen(AppendIndex):
 
 
 class AppendTVI(AppendIndex):
+    """
+    Transformed Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -348,6 +436,12 @@ class AppendTVI(AppendIndex):
 
 
 class AppendTNDVI(AppendIndex):
+    """
+    Transformed NDVI
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -368,6 +462,12 @@ class AppendTNDVI(AppendIndex):
 
 
 class AppendSQRTNIRR(AppendIndex):
+    """
+    SQRT(IR/R)
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -388,6 +488,12 @@ class AppendSQRTNIRR(AppendIndex):
 
 
 class AppendRBNDVI(AppendIndex):
+    """
+    Red-Blue NDVI
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -410,6 +516,12 @@ class AppendRBNDVI(AppendIndex):
 
 
 class AppendSRSWIRNIR(AppendIndex):
+    """
+    Simple Ratio SWIR/NIR
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_swir: int,
@@ -430,6 +542,12 @@ class AppendSRSWIRNIR(AppendIndex):
 
 
 class AppendSRNIRSWIR(AppendIndex):
+    """
+    Simple Ratio NIR/SWIR
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_swir: int,
@@ -450,6 +568,12 @@ class AppendSRNIRSWIR(AppendIndex):
 
 
 class AppendSRNIRR(AppendIndex):
+    """
+    Simple Ratio NIR/Red
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -470,6 +594,12 @@ class AppendSRNIRR(AppendIndex):
 
 
 class AppendSRNIRG(AppendIndex):
+    """
+    Simple Ratio NIR/Green
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -490,6 +620,12 @@ class AppendSRNIRG(AppendIndex):
 
 
 class AppendSRGR(AppendIndex):
+    """
+    Simple Ratio NIR/Blue
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -510,6 +646,12 @@ class AppendSRGR(AppendIndex):
 
 
 class AppendPNDVI(AppendIndex):
+    """
+        Pan NDVI
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -534,6 +676,12 @@ class AppendPNDVI(AppendIndex):
 
 
 class AppendNormR(AppendIndex):
+    """
+    Norm R
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -556,6 +704,12 @@ class AppendNormR(AppendIndex):
 
 
 class AppendNormNIR(AppendIndex):
+    """
+    Norm NIR
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -578,6 +732,12 @@ class AppendNormNIR(AppendIndex):
 
 
 class AppendNormG(AppendIndex):
+    """
+    Norm Green
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -600,6 +760,12 @@ class AppendNormG(AppendIndex):
 
 
 class AppendNDWIWM(AppendIndex):
+    """
+    NDWI Water Mask
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -620,6 +786,12 @@ class AppendNDWIWM(AppendIndex):
 
 
 class AppendNDVIWM(AppendIndex):
+    """
+    NDVI Water Mask
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -640,6 +812,12 @@ class AppendNDVIWM(AppendIndex):
 
 
 class AppendNLI(AppendIndex):
+    """
+    Nonlinear vegetation index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -660,6 +838,12 @@ class AppendNLI(AppendIndex):
 
 
 class AppendMSAVI(AppendIndex):
+    """
+    Modified Soil Adjusted Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -680,6 +864,12 @@ class AppendMSAVI(AppendIndex):
 
 
 class AppendMSRNirRed(AppendIndex):
+    """
+    Modified Simple Ratio NIR/RED
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -700,6 +890,12 @@ class AppendMSRNirRed(AppendIndex):
 
 
 class AppendMCARI(AppendIndex):
+    """
+    Modified Chlorophyll Absorption in Reflectance Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -722,6 +918,12 @@ class AppendMCARI(AppendIndex):
 
 
 class AppendMVI(AppendIndex):
+    """
+    Mid-infrared vegetation index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_swir: int,
@@ -742,6 +944,12 @@ class AppendMVI(AppendIndex):
 
 
 class AppendMCRIG(AppendIndex):
+    """
+    mCRIG
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -764,6 +972,12 @@ class AppendMCRIG(AppendIndex):
 
 
 class AppendLogR(AppendIndex):
+    """
+    Log Ratio
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -784,6 +998,12 @@ class AppendLogR(AppendIndex):
 
 
 class AppendH(AppendIndex):
+    """
+    Hue
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -806,6 +1026,12 @@ class AppendH(AppendIndex):
 
 
 class AppendI(AppendIndex):
+    """
+    Intensity
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -828,6 +1054,12 @@ class AppendI(AppendIndex):
 
 
 class AppendIPVI(AppendIndex):
+    """
+    Infrared percentage vegetation index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -850,6 +1082,12 @@ class AppendIPVI(AppendIndex):
 
 
 class AppendGVMI(AppendIndex):
+    """
+    Global Vegetation Moisture Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_swir: int,
@@ -870,6 +1108,12 @@ class AppendGVMI(AppendIndex):
 
 
 class AppendGBNDVI(AppendIndex):
+    """
+    Green-Blue NDVI
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -892,6 +1136,12 @@ class AppendGBNDVI(AppendIndex):
 
 
 class AppendGRNDVI(AppendIndex):
+    """
+    Green-Red NDVI
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -914,6 +1164,12 @@ class AppendGRNDVI(AppendIndex):
 
 
 class AppendGNDVI(AppendIndex):
+    """
+    Green Normalized Difference Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -934,6 +1190,12 @@ class AppendGNDVI(AppendIndex):
 
 
 class AppendGARI(AppendIndex):
+    """
+    Green atmospherically resistant vegetation index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -958,6 +1220,12 @@ class AppendGARI(AppendIndex):
 
 
 class AppendEVI22(AppendIndex):
+    """
+    Enhanced Vegetation Index 2 -2
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -978,6 +1246,12 @@ class AppendEVI22(AppendIndex):
 
 
 class AppendEVI2(AppendIndex):
+    """
+    Enhanced Vegetation Index 2
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -998,6 +1272,12 @@ class AppendEVI2(AppendIndex):
 
 
 class AppendEVI(AppendIndex):
+    """
+    Enhanced Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -1024,6 +1304,12 @@ class AppendEVI(AppendIndex):
 
 
 class AppendDVIMSS(AppendIndex):
+    """
+    Differenced Vegetation Index MSS
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -1044,6 +1330,12 @@ class AppendDVIMSS(AppendIndex):
 
 
 class AppendGDVI(AppendIndex):
+    """
+    Difference NIR/Green Green Difference Vegetation Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_nir: int,
@@ -1064,6 +1356,12 @@ class AppendGDVI(AppendIndex):
 
 
 class AppendCI(AppendIndex):
+    """
+    Coloration Index
+
+    Source: https://www.indexdatabase.de/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -1084,6 +1382,12 @@ class AppendCI(AppendIndex):
 
 
 class AppendCHLA(AppendIndex):
+    """
+    Chlorophyll-a
+
+    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    """
+
     def __init__(
         self,
         index_green: int,
@@ -1101,10 +1405,18 @@ class AppendCHLA(AppendIndex):
 
     def _compute_index(self, blue: Tensor, green: Tensor) -> Tensor:
         # Yes, I know we should use coastal band here instead of blue, but we don't get to have coastal band
+        blue = blue / 65_535
+        green = green / 65_535
         return 4.23 * torch.pow((green / (blue + consts.data.EPS)), 3.94)
 
 
 class AppendCYA(AppendIndex):
+    """
+    Cyanobacteria density
+
+    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -1123,10 +1435,19 @@ class AppendCYA(AppendIndex):
         )
 
     def _compute_index(self, red: Tensor, green: Tensor, blue: Tensor) -> Tensor:
-        return 115_530.31 * torch.pow(((green * blue) / (red + consts.data.EPS)), 2.38)
+        red = red / 65_535
+        green = green / 65_535
+        blue = blue / 65_535
+        return torch.pow(((green * red) / (blue + consts.data.EPS)), 2.38)  # * 115_530.31
 
 
 class AppendTURB(AppendIndex):
+    """
+    Water Turbidity
+
+    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    """
+
     def __init__(
         self,
         index_green: int,
@@ -1142,11 +1463,17 @@ class AppendTURB(AppendIndex):
             index_blue=index_blue,
         )
 
-    def _compute_index(self, blue: Tensor, green: Tensor) -> Tensor:
+    def _compute_index(self, green: Tensor, blue: Tensor) -> Tensor:
         return 8.93 * (green / (blue + consts.data.EPS)) - 6.39
 
 
 class AppendCDOM(AppendIndex):
+    """
+    Colored Dissolved Organic Matter
+
+    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -1167,6 +1494,12 @@ class AppendCDOM(AppendIndex):
 
 
 class AppendDOC(AppendIndex):
+    """
+    Dissolved Organic Carbon index
+
+    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    """
+
     def __init__(
         self,
         index_red: int,
@@ -1187,6 +1520,12 @@ class AppendDOC(AppendIndex):
 
 
 class AppendWaterColor(AppendIndex):
+    """
+    Water color index
+
+    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    """
+
     def __init__(
         self,
         index_red: int,
