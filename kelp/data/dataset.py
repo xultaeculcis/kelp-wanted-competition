@@ -50,10 +50,12 @@ class KelpForestSegmentationDataset(Dataset):
         mask_fps: Optional[List[Path]] = None,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         band_order: Optional[List[int]] = None,
+        fill_value: float = 0.0,
     ) -> None:
         self.image_fps = image_fps
         self.mask_fps = mask_fps
         self.transforms = transforms
+        self.fill_value = fill_value
         self.band_order = [band_idx + 1 for band_idx in band_order] if band_order else list(range(1, 8))
 
     def __len__(self) -> int:
@@ -64,7 +66,7 @@ class KelpForestSegmentationDataset(Dataset):
         with rasterio.open(self.image_fps[index]) as src:
             # we need to clamp values to account for corrupted pixels
             img = torch.from_numpy(src.read(self.band_order)).float()
-            img = torch.where(img == -32768, torch.nan, img)
+            img = torch.where(img == -32768, self.fill_value, img)
 
         sample = {"image": img, "tile_id": self.image_fps[index].stem.split("_")[0]}
 

@@ -16,7 +16,6 @@ from torch import Tensor, nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from kelp import consts
-from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
 from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
 from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize, RemoveNaNs
@@ -53,6 +52,7 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
+        dataset_stats: Dict[str, Dict[str, float]],
         train_images: Optional[List[Path]] = None,
         train_masks: Optional[List[Path]] = None,
         val_images: Optional[List[Path]] = None,
@@ -85,6 +85,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             raise ValueError(
                 f"channel_order should have exactly {len(self.base_bands)} elements, you passed {len(band_order)}"
             )
+        self.dataset_stats = dataset_stats
         self.train_images = train_images or []
         self.train_masks = train_masks or []
         self.val_images = val_images or []
@@ -316,7 +317,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         )
 
     def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
-        band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
+        band_stats = {band: self.dataset_stats[band] for band in self.reordered_bands}
         mean = [val["mean"] for val in band_stats.values()]
         std = [val["std"] for val in band_stats.values()]
         vmin = [val["min"] for val in band_stats.values()]
@@ -423,6 +424,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         cls,
         data_dir: Path,
         metadata_fp: Path,
+        dataset_stats: Dict[str, Dict[str, float]],
         cv_split: int,
         has_kelp_importance_factor: float = 1.0,
         kelp_pixels_pct_importance_factor: float = 1.0,
@@ -462,12 +464,14 @@ class KelpForestDataModule(pl.LightningDataModule):
             test_masks=test_masks,
             predict_images=None,
             image_weights=image_weights,
+            dataset_stats=dataset_stats,
             **kwargs,
         )
 
     @classmethod
     def from_folders(
         cls,
+        dataset_stats: Dict[str, Dict[str, float]],
         train_data_folder: Optional[Path] = None,
         val_data_folder: Optional[Path] = None,
         test_data_folder: Optional[Path] = None,
@@ -496,12 +500,14 @@ class KelpForestDataModule(pl.LightningDataModule):
             predict_images=sorted(list(predict_data_folder.rglob("*.tif")))
             if predict_data_folder and predict_data_folder.exists()
             else None,
+            dataset_stats=dataset_stats,
             **kwargs,
         )
 
     @classmethod
     def from_file_paths(
         cls,
+        dataset_stats: Dict[str, Dict[str, float]],
         train_images: Optional[List[Path]] = None,
         train_masks: Optional[List[Path]] = None,
         val_images: Optional[List[Path]] = None,
@@ -523,6 +529,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             test_images=test_images,
             test_masks=test_masks,
             predict_images=predict_images,
+            dataset_stats=dataset_stats,
             spectral_indices=spectral_indices,
             batch_size=batch_size,
             image_size=image_size,
