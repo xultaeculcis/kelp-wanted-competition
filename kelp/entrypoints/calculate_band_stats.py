@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
@@ -33,10 +34,15 @@ class StatisticsCalculationConfig(ConfigBase):
     output_dir: Path
     mask_using_qa: bool = False
     mask_using_water_mask: bool = False
+    fill_missing_pixels_with_torch_nan: bool = False
 
     @property
     def file_paths(self) -> List[Path]:
         return sorted(list(self.data_dir.rglob("*_satellite.tif")))
+
+    @property
+    def fill_value(self) -> float:
+        return torch.nan if self.fill_missing_pixels_with_torch_nan else 0.0  # type: ignore[no-any-return]
 
 
 def parse_args() -> StatisticsCalculationConfig:
@@ -59,6 +65,10 @@ def parse_args() -> StatisticsCalculationConfig:
         "--mask_using_water_mask",
         action="store_true",
     )
+    parser.add_argument(
+        "--fill_missing_pixels_with_torch_nan",
+        action="store_true",
+    )
     args = parser.parse_args()
     cfg = StatisticsCalculationConfig(**vars(args))
     cfg.log_self()
@@ -71,6 +81,7 @@ def calculate_band_statistics(
     output_dir: Path,
     mask_using_qa: bool = False,
     mask_using_water_mask: bool = False,
+    fill_value: float = 0,
 ) -> Dict[str, Dict[str, float]]:
     # Move computations to GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -117,7 +128,8 @@ def calculate_band_statistics(
             image_arr = src.read()
             # Convert image to PyTorch tensor
             image = torch.from_numpy(image_arr).float().to(device).unsqueeze(0)
-            image = torch.where(image == -32768, torch.nan, image)
+            # Mask missing pixels
+            image = torch.where(image == -32768.0, fill_value, image)
 
         image = transform(image).squeeze()
 
@@ -177,7 +189,8 @@ def calculate_band_statistics(
     stats_str = json.dumps(stats, indent=4)
     _logger.info("Per band statistics calculated. Review and adjust!")
     _logger.info(stats_str)
-    (output_dir / "stats.json").write_text(stats_str)
+    now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    (output_dir / f"{now}-stats-{fill_value=}-{mask_using_qa=}-{mask_using_water_mask=}.json").write_text(stats_str)
 
     return stats
 
@@ -189,6 +202,7 @@ def main() -> None:
         output_dir=cfg.output_dir,
         mask_using_qa=cfg.mask_using_qa,
         mask_using_water_mask=cfg.mask_using_water_mask,
+        fill_value=cfg.fill_value,
     )
 
 
