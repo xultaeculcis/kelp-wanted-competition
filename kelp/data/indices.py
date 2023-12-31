@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-import kornia.augmentation as K
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
 from kelp import consts
 
 
-class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
+class AppendIndex(nn.Module, abc.ABC):
     """
     Base class for appending spectral indices to the input Tensor.
     """
@@ -25,7 +24,7 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
         fill_val: float = 0.0,
         **band_kwargs: Any,
     ) -> None:
-        super().__init__(p=1, same_on_batch=True)
+        super().__init__()
         assert all(k.startswith("index_") for k in band_kwargs), (
             "Passed keyword arguments must start with 'index_' followed by band name! "
             f"Found following keys: {list(band_kwargs.keys())}"
@@ -54,23 +53,17 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
     def _compute_index(self, **kwargs: Any) -> Tensor:
         pass
 
-    def apply_transform(
-        self,
-        input: Tensor,
-        params: Dict[str, Tensor],
-        flags: Dict[str, int],
-        transform: Optional[Tensor] = None,
-    ) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         # Compute the index
         compute_kwargs: Dict[str, Tensor] = {
-            k.replace("index_", ""): input[..., v, :, :] for k, v in self.band_kwargs.items()
+            k.replace("index_", ""): x[..., v, :, :] for k, v in self.band_kwargs.items()
         }
         index = self._compute_index(**compute_kwargs)
 
         # Mask using QA band if requested
         index = self._mask_index(
             index=index,
-            sample=input,
+            sample=x,
             masking_band_index=self.index_qa,
             apply_mask=self.mask_using_qa,
         )
@@ -78,15 +71,15 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
         # Mask using Water Mask if requested
         index = self._mask_index(
             index=index,
-            sample=input,
+            sample=x,
             masking_band_index=self.index_water_mask,
             apply_mask=self.mask_using_water_mask,
         )
 
         # Append to the input tensor
-        input = self._append_index(sample=input, index=index)
+        x = self._append_index(sample=x, index=index)
 
-        return input
+        return x
 
 
 class AppendNDVI(AppendIndex):
@@ -288,38 +281,6 @@ class AppendARVI(AppendIndex):
 class AppendBWDRVI(AppendIndex):
     """
     Blue-wide dynamic range vegetation index
-
-    Source: https://www.indexdatabase.de/
-    """
-
-    def __init__(
-        self,
-        index_swir: int,
-        index_nir: int,
-        index_qa: int = 5,
-        index_water_mask: int = 8,
-        mask_using_qa: bool = False,
-        mask_using_water_mask: bool = False,
-        fill_val: float = 0.0,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(
-            index_qa=index_qa,
-            index_water_mask=index_water_mask,
-            mask_using_qa=mask_using_qa,
-            mask_using_water_mask=mask_using_water_mask,
-            fill_val=fill_val,
-            index_swir=index_swir,
-            index_nir=index_nir,
-        )
-
-    def _compute_index(self, swir: Tensor, nir: Tensor) -> Tensor:
-        return nir - 0.66 * (swir / (nir + 0.66 * swir + consts.data.EPS))
-
-
-class AppendBWDRV(AppendIndex):
-    """
-
 
     Source: https://www.indexdatabase.de/
     """
@@ -2067,74 +2028,12 @@ class AppendWAVI(AppendIndex):
         return 1.5 * (nir - blue) / (nir + blue + 0.5 + consts.data.EPS)
 
 
-INDICES = {
-    "ATSAVI": AppendATSAVI(index_nir=1, index_red=2),
-    "AFRI1600": AppendAFRI1600(index_swir=0, index_nir=1),
-    "AVI": AppendAVI(index_nir=1, index_red=2),
-    "ARVI": AppendARVI(index_nir=1, index_red=2),
-    "BWDRVI": AppendBWDRV(index_nir=1, index_blue=4),
-    "ClGreen": AppendClGreen(index_nir=1, index_green=3),
-    "CVI": AppendCVI(index_nir=1, index_red=2, index_green=3),
-    "CI": AppendCI(index_red=2, index_blue=4),
-    "GDVI": AppendGDVI(index_nir=1, index_green=3),
-    "DVIMSS": AppendDVIMSS(index_nir=1, index_red=2),
-    "EVI": AppendEVI(index_nir=1, index_red=2, index_blue=4),
-    "EVI2": AppendEVI2(index_nir=1, index_red=2),
-    "EVI22": AppendEVI22(index_nir=1, index_red=2),
-    "GARI": AppendGARI(index_nir=1, index_red=2, index_green=3, index_blue=4),
-    "GNDVI": AppendGNDVI(index_nir=1, index_green=3),
-    "GRNDVI": AppendGRNDVI(index_nir=1, index_red=2, index_green=3),
-    "GBNDVI": AppendGBNDVI(index_nir=1, index_green=3, index_blue=4),
-    "GVMI": AppendGVMI(index_swir=0, index_nir=1),
-    "IPVI": AppendIPVI(index_nir=1, index_red=2, index_green=3),
-    "I": AppendI(index_red=2, index_green=3, index_blue=4),
-    "H": AppendH(index_red=2, index_green=3, index_blue=4),
-    "LogR": AppendLogR(index_nir=1, index_red=2),
-    # "mCRIG": AppendMCRIG(index_nir=1, index_green=3, index_blue=4),  # Do not use - produces nan and/or inf vals
-    "MVI": AppendMVI(index_swir=0, index_nir=1),
-    # "MCARI": AppendMCARI(index_nir=1, index_red=2, index_green=3),  # Do not use - produces nan and/or inf vals
-    # "MSRNirRed": AppendMSRNirRed(index_nir=1, index_red=2),  # Do not use - produces nan and/or inf vals
-    "MSAVI": AppendMSAVI(index_nir=1, index_red=2),
-    "NLI": AppendNLI(index_nir=1, index_red=2),
-    "NDVI": AppendNDVI(index_nir=1, index_red=2),
-    "NDVIWM": AppendNDVIWM(index_nir=1, index_red=2),
-    "NDWI": AppendNDWI(index_nir=1, index_green=3),
-    "NDWIWM": AppendNDWIWM(index_nir=1, index_green=3),
-    "NormG": AppendNormG(index_nir=1, index_red=2, index_green=3),
-    "NormNIR": AppendNormNIR(index_nir=1, index_red=2, index_green=3),
-    "NormR": AppendNormR(index_nir=1, index_red=2, index_green=3),
-    "PNDVI": AppendPNDVI(index_nir=1, index_red=2, index_green=3, index_blue=4),
-    "SRGR": AppendSRGR(index_red=2, index_green=3),
-    "SRNIRG": AppendSRNIRG(index_nir=1, index_green=3),
-    "SRNIRR": AppendSRNIRR(index_nir=1, index_red=2),
-    "SRNIRSWIR": AppendSRNIRSWIR(index_swir=0, index_nir=1),
-    "SRSWIRNIR": AppendSRSWIRNIR(index_swir=0, index_nir=1),
-    "RBNDVI": AppendRBNDVI(index_nir=1, index_red=2, index_blue=4),
-    "SQRTNIRR": AppendSQRTNIRR(index_nir=1, index_red=2),
-    "TNDVI": AppendTNDVI(index_nir=1, index_red=2),
-    "TVI": AppendTVI(index_red=2, index_green=3),
-    "VARIGreen": AppendVARIGreen(index_red=2, index_green=3, index_blue=4),
-    "WDRVI": AppendWDRVI(index_nir=1, index_red=2),
-    "DEMWM": AppendDEMWM(index_dem=7),
-    # "CHLA": AppendCHLA(index_green=3, index_blue=4),  # Do not use - produces nan and/or inf vals
-    "CYA": AppendCYA(index_red=2, index_green=3, index_blue=4),
-    "TURB": AppendTURB(index_green=3, index_blue=4),
-    "CDOM": AppendCDOM(index_red=2, index_green=3),
-    "DOC": AppendDOC(index_red=2, index_green=3),
-    "WATERCOLOR": AppendWaterColor(index_red=2, index_green=3),
-    "SABI": AppendSABI(index_nir=1, index_red=2, index_green=3, index_blue=4),
-    "KIVU": AppendKIVU(index_red=2, index_green=3, index_blue=4),
-    "Kab1": AppendKab1(index_green=3, index_blue=4),
-    "NDAVI": AppendNDAVI(index_nir=1, index_blue=4),
-    "WAVI": AppendWAVI(index_nir=1, index_blue=4),
-}
-
 SPECTRAL_INDEX_LOOKUP = {
     "ATSAVI": AppendATSAVI,
     "AFRI1600": AppendAFRI1600,
     "AVI": AppendAVI,
     "ARVI": AppendARVI,
-    "BWDRVI": AppendBWDRV,
+    "BWDRVI": AppendBWDRVI,
     "ClGreen": AppendClGreen,
     "CVI": AppendCVI,
     "CI": AppendCI,
@@ -2152,10 +2051,10 @@ SPECTRAL_INDEX_LOOKUP = {
     "I": AppendI,
     "H": AppendH,
     "LogR": AppendLogR,
-    # "mCRIG": AppendMCRIG,  # Do not use - produces nan and/or inf vals
+    "mCRIG": AppendMCRIG,  # Do not use - produces nan and/or inf vals
     "MVI": AppendMVI,
-    # "MCARI": AppendMCARI,  # Do not use - produces nan and/or inf vals
-    # "MSRNirRed": AppendMSRNirRed,  # Do not use - produces nan and/or inf vals
+    "MCARI": AppendMCARI,  # Do not use - produces nan and/or inf vals
+    "MSRNirRed": AppendMSRNirRed,  # Do not use - produces nan and/or inf vals
     "MSAVI": AppendMSAVI,
     "NLI": AppendNLI,
     "NDVI": AppendNDVI,
@@ -2178,8 +2077,8 @@ SPECTRAL_INDEX_LOOKUP = {
     "VARIGreen": AppendVARIGreen,
     "WDRVI": AppendWDRVI,
     "DEMWM": AppendDEMWM,
-    "CHLA": AppendCHLA,
-    "CYA": AppendCYA,
+    "CHLA": AppendCHLA,  # Do not use - produces nan and/or inf vals
+    "CYA": AppendCYA,  # Do not use - produces nan and/or inf vals
     "TURB": AppendTURB,
     "CDOM": AppendCDOM,
     "DOC": AppendDOC,
