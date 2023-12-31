@@ -395,3 +395,6 @@ Findings:
 ## 2023-12-31
 
 * Enabled training using on-the-fly masking of indices using QA and DEM Water Mask
+* Masking land and corrupted pixels in indices bumps the performance by over 1-2%
+* Zeroes in the main bands (the ones where -65k was ) make the indices incorrect - maybe use NaNs and substitute
+them with band min value instead?
