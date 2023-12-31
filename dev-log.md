@@ -403,3 +403,9 @@ them with band min value instead?
 * Added support for specifying fill value for "missing" pixels - either `torch.nan` or `0.0` for both stats calculation
 and model training
 * Load datasets stats from file instead of keeping them in the code
+* Best combination so far:
+  * CDOM,DOC,WATERCOLOR,SABI,KIVU,Kab1,NDAVI,WAVI
+  * WM masking
+  * without using `torch.nan` for missing pixels -> using 0.0 instead
+  * with `2023-12-31T20:37:17-stats-fill_value=0.0-mask_using_qa=False-mask_using_water_mask=False-modified.json` stats
+  * val/dice = 0.8477
