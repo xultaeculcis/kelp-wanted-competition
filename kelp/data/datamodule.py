@@ -110,7 +110,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.train_augmentations = self.resolve_transforms(stage="train")
         self.val_augmentations = self.resolve_transforms(stage="val")
         self.test_augmentations = self.resolve_transforms(stage="test")
-        self.predict_augmentations = self.resolve_transforms(stage="test")
+        self.predict_augmentations = self.resolve_transforms(stage="predict")
         self.pad = T.Pad(
             padding=[
                 (image_size - TILE_SIZE) // 2,
@@ -311,10 +311,11 @@ class KelpForestDataModule(pl.LightningDataModule):
                 K.RandomVerticalFlip(p=0.5),
                 data_keys=["input", "mask"],
             )
-        return K.AugmentationSequential(
-            *common_transforms,
-            data_keys=["input", "mask"],
-        )
+        else:
+            return K.AugmentationSequential(
+                *common_transforms,
+                data_keys=["input"] if stage == "predict" else ["input", "mask"],
+            )
 
     def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
         band_stats = {band: self.dataset_stats[band] for band in self.reordered_bands}
