@@ -398,3 +398,8 @@ Findings:
 * Masking land and corrupted pixels in indices bumps the performance by over 1-2%
 * Zeroes in the main bands (the ones where -65k was ) make the indices incorrect - maybe use NaNs and substitute
 them with band min value instead?
+* Changed indices back to inheriting from `torch.nn.Module` almost 1.6x speedup for stats calculation
+* Recalculate dataset stats
+* Added support for specifying fill value for "missing" pixels - either `torch.nan` or `0.0` for both stats calculation
+and model training
+* Load datasets stats from file instead of keeping them in the code
