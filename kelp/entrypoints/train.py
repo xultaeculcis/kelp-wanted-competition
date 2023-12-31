@@ -49,6 +49,8 @@ class TrainConfig(ConfigBase):
         "per-sample-quantile",
         "per-sample-min-max",
     ] = "quantile"
+    mask_using_qa: bool = False
+    mask_using_water_mask: bool = False
     use_weighted_sampler: bool = False
     samples_per_epoch: int = 9600
     has_kelp_importance_factor: float = 1.0
@@ -199,6 +201,8 @@ class TrainConfig(ConfigBase):
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
             "normalization_strategy": self.normalization_strategy,
+            "mask_using_qa": self.mask_using_qa,
+            "mask_using_water_mask": self.mask_using_water_mask,
             "use_weighted_sampler": self.use_weighted_sampler,
             "samples_per_epoch": self.samples_per_epoch,
             "has_kelp_importance_factor": self.has_kelp_importance_factor,
@@ -318,7 +322,18 @@ def parse_args() -> TrainConfig:
         type=int,
         default=42,
     )
-    parser.add_argument("--use_weighted_sampler", action="store_true")
+    parser.add_argument(
+        "--mask_using_qa",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--mask_using_water_mask",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--use_weighted_sampler",
+        action="store_true",
+    )
     parser.add_argument(
         "--samples_per_epoch",
         type=int,

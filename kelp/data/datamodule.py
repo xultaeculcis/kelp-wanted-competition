@@ -72,6 +72,8 @@ class KelpForestDataModule(pl.LightningDataModule):
             "per-sample-quantile",
             "z-score",
         ] = "quantile",
+        mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
         use_weighted_sampler: bool = False,
         samples_per_epoch: int = 230,
         image_weights: Optional[List[float]] = None,
@@ -97,6 +99,8 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.normalization_strategy = normalization_strategy
+        self.mask_using_qa = mask_using_qa
+        self.mask_using_water_mask = mask_using_water_mask
         self.use_weighted_sampler = use_weighted_sampler
         self.samples_per_epoch = samples_per_epoch
         self.image_weights = image_weights or [1.0 for _ in self.train_images]
@@ -285,6 +289,9 @@ class KelpForestDataModule(pl.LightningDataModule):
                     index_dem=self.band_index_lookup["DEM"],
                     index_qa=self.band_index_lookup["QA"],
                     index_water_mask=self.band_index_lookup["DEMWM"],
+                    mask_using_qa=False if index_name.endswith("WM") else self.mask_using_qa,
+                    mask_using_water_mask=False if index_name.endswith("WM") else self.mask_using_water_mask,
+                    fill_val=self.band_stats.min[self.band_index_lookup[index_name]],
                 )
             )
 

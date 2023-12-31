@@ -391,3 +391,7 @@ Findings:
 * Tried again to add `decoder_attention_type="scse"` but it gives worse performance
 * DEMWM and NDVI are now always appended to the spectral_indices list
 * Added option to mask spectral indices using DEMWM - needs testing
+
+## 2023-12-31
+
+* Enabled training using on-the-fly masking of indices using QA and DEM Water Mask

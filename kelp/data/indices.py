@@ -19,7 +19,7 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
     def __init__(
         self,
         index_qa: int = 5,
-        index_water_mask: int = 8,
+        index_water_mask: int = 7,
         mask_using_qa: bool = False,
         mask_using_water_mask: bool = False,
         fill_val: float = 0.0,
@@ -30,9 +30,9 @@ class AppendIndex(K.IntensityAugmentationBase2D, abc.ABC):
             "Passed keyword arguments must start with 'index_' followed by band name! "
             f"Found following keys: {list(band_kwargs.keys())}"
         )
+        self.dim = -3
         self.index_qa = index_qa
         self.index_water_mask = index_water_mask
-        self.dim = -3
         self.mask_using_qa = mask_using_qa
         self.mask_using_water_mask = mask_using_water_mask
         self.fill_val = fill_val
