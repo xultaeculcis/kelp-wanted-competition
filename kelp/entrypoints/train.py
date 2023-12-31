@@ -22,7 +22,7 @@ from pytorch_lightning.loggers import Logger, MLFlowLogger  # noqa: E402
 from kelp import consts  # noqa: E402
 from kelp.core.configs import ConfigBase  # noqa: E402
 from kelp.data.datamodule import KelpForestDataModule  # noqa: E402
-from kelp.data.indices import INDICES  # noqa: E402
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP  # noqa: E402
 from kelp.models.segmentation import KelpForestSegmentationTask  # noqa: E402
 from kelp.utils.gpu import set_gpu_power_limit_if_needed  # noqa: E402
 from kelp.utils.logging import get_logger  # noqa: E402
@@ -150,11 +150,11 @@ class TrainConfig(ConfigBase):
             _logger.warning("NDVI is automatically added during training. No need to add it twice.")
             indices.remove("NDVI")
 
-        unknown_indices = set(indices).difference(list(INDICES.keys()))
+        unknown_indices = set(indices).difference(list(SPECTRAL_INDEX_LOOKUP.keys()))
         if unknown_indices:
             raise ValueError(
                 f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
-                f"Please provide at most 5 comma separated indices: {', '.join(INDICES.keys())}."
+                f"Please provide at most 5 comma separated indices: {', '.join(SPECTRAL_INDEX_LOOKUP.keys())}."
             )
 
         if len(indices) > 8:
