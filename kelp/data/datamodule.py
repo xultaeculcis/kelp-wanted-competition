@@ -12,14 +12,14 @@ import torch
 import torchvision.transforms as T
 from kornia.augmentation.base import _AugmentationBase
 from matplotlib import pyplot as plt
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from kelp import consts
 from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
 from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
-from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize
+from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize, RemoveNaNs
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
 warnings.filterwarnings(
@@ -291,11 +291,16 @@ class KelpForestDataModule(pl.LightningDataModule):
                     index_water_mask=self.band_index_lookup["DEMWM"],
                     mask_using_qa=False if index_name.endswith("WM") else self.mask_using_qa,
                     mask_using_water_mask=False if index_name.endswith("WM") else self.mask_using_water_mask,
-                    fill_val=self.band_stats.min[self.band_index_lookup[index_name]],
+                    fill_val=torch.nan,
                 )
             )
 
-        common_transforms.append(self.normalization_transform)
+        common_transforms.extend(
+            [
+                RemoveNaNs(min_vals=self.band_stats.min, max_vals=self.band_stats.max),
+                self.normalization_transform,
+            ]
+        )
 
         if stage == "train":
             return K.AugmentationSequential(
@@ -328,7 +333,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         )
         return stats, len(band_stats)
 
-    def resolve_normalization_transform(self) -> _AugmentationBase:
+    def resolve_normalization_transform(self) -> _AugmentationBase | nn.Module:
         if self.normalization_strategy == "z-score":
             return K.Normalize(self.band_stats.mean, self.band_stats.std)  # type: ignore[no-any-return]
         elif self.normalization_strategy == "min-max":

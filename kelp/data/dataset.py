@@ -63,7 +63,8 @@ class KelpForestSegmentationDataset(Dataset):
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
             # we need to clamp values to account for corrupted pixels
-            img = torch.from_numpy(src.read(self.band_order)).clamp(min=0).float()
+            img = torch.from_numpy(src.read(self.band_order)).float()
+            img = torch.where(img == -32768, torch.nan, img)
 
         sample = {"image": img, "tile_id": self.image_fps[index].stem.split("_")[0]}
 
