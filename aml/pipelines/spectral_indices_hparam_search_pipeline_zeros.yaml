@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-description: Hyperparameter search for sampler weights
-experiment_name: sampler-weights-hparam-search
+description: Hyperparameter search for spectral indices (no nan masking)
+experiment_name: spectral-idx-hparam-search-zeros
 
 settings:
   default_compute: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
@@ -10,9 +10,6 @@ settings:
 jobs:
   sweep_step:
     type: sweep
-
-    resources:
-      shm_size: "12g"
 
     inputs:
       data_dir:
@@ -26,20 +23,21 @@ jobs:
       dataset_stats_file:
         type: uri_file
         mode: download
-        path: azureml:dataset_stats_file@latest
+        path: azureml:dataset_stats_file@1
 
     outputs:
       output_dir:
 
     sampling_algorithm: random
 
-    trial: file:../components/train_spectral_indices.yaml
+    trial: file:../components/train_spectral_indices_zeros.yaml
 
     search_space:
       spectral_indices:
         type: choice
         values:
-          ARVI,CI,ClGreen,GNDVI,H,NDWI,PNDVI,SABI
+          - CDOM,DOC,KIVU,Kab1,NDAVI,SABI,WATERCOLOR,WAVI
+          - ARVI,CI,ClGreen,GNDVI,H,NDWI,PNDVI,SABI
           - GARI,H,MVI,SABI,SRSWIRNIR,WATERCOLOR,WDRVI,mCRIG
           - ARVI,AVI,GBNDVI,GRNDVI,GVMI,NDVIWM,NLI,TURB
           - CHLA,CI,CYA,DOC,EVI2,GRNDVI,NDAVI,TURB
@@ -1040,14 +1038,12 @@ jobs:
           - ARVI,EVI,GNDVI,IPVI,NormNIR,PNDVI,WATERCOLOR,WDRVI
           - CHLA,GNDVI,I,Kab1,NLI,NormG,SRNIRR,WAVI
 
-
-
     objective:
       goal: maximize
       primary_metric: hp_metric
 
     limits:
-      max_total_trials: 1000
+      max_total_trials: 1001
       max_concurrent_trials: 100
       trial_timeout: 3600  # 1 hour
       timeout: 259200  # 3 days

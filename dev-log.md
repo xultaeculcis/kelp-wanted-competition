@@ -409,3 +409,8 @@ and model training
   * without using `torch.nan` for missing pixels -> using 0.0 instead
   * with `2023-12-31T20:37:17-stats-fill_value=0.0-mask_using_qa=False-mask_using_water_mask=False-modified.json` stats
   * val/dice = 0.8477
+* WIP. Azure ML hparam search pipeline for best combination of spectral indices
+
+## 2024-01-01
+
+* WIP. Azure ML hparam search pipeline for best combination of spectral indices
