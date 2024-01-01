@@ -29,7 +29,7 @@ outputs:
 environment: azureml:acpt-train-env@latest
 
 resources:
-  shm_size: "12g"
+  shm_size: "14g"
 
 code: ../..
 command: >-
