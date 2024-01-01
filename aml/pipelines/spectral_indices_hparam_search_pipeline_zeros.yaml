@@ -11,6 +11,9 @@ jobs:
   sweep_step:
     type: sweep
 
+    resources:
+      shm_size: "12g"
+
     inputs:
       data_dir:
         type: uri_folder
