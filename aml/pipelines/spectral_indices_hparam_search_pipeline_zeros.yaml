@@ -23,7 +23,7 @@ jobs:
       dataset_stats_file:
         type: uri_file
         mode: download
-        path: azureml:dataset_stats_file@1
+        path: azureml:dataset_stats_file:1
 
     outputs:
       output_dir:
