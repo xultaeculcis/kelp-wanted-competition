@@ -414,3 +414,5 @@ and model training
 ## 2024-01-01
 
 * WIP. Azure ML hparam search pipeline for best combination of spectral indices
+* Removing `resources:shm_size` section from the pipeline spec results in workers dying from OOM errors
+* Running 1k experiments with different spectral index combinations using zeros to mask missing pixels
