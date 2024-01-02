@@ -146,21 +146,26 @@ train-single-split:
  		--data_dir data/raw \
 		--output_dir mlruns \
 		--metadata_fp data/processed/train_val_test_dataset.parquet \
+		--dataset_stats_fp data/processed/2023-12-31T20:30:39-stats-fill_value=nan-mask_using_qa=True-mask_using_water_mask=True.json \
 		--cv_split $(SPLIT) \
 		--batch_size 32 \
 		--num_workers 6 \
 		--band_order 2,3,4,0,1,5,6 \
-		--spectral_indices CVI,EVI,SRNIRR,TNDVI,TVI \
+		--spectral_indices CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG \
 		--image_size 352 \
+		--normalization_strategy quantile \
+		--fill_missing_pixels_with_torch_nan \
+		--mask_using_qa \
+		--mask_using_water_mask \
 		--use_weighted_sampler \
-		--samples_per_epoch 5120 \
-		--has_kelp_importance_factor 0.2 \
-		--kelp_pixels_pct_importance_factor 0 \
-		--qa_ok_importance_factor -0.5 \
-		--qa_corrupted_pixels_pct_importance_factor -0.5 \
-		--almost_all_water_importance_factor -0.5 \
+		--samples_per_epoch 10240 \
+		--has_kelp_importance_factor 3.0 \
+		--kelp_pixels_pct_importance_factor 0.2 \
+		--qa_ok_importance_factor 0 \
+		--qa_corrupted_pixels_pct_importance_factor -1 \
+		--almost_all_water_importance_factor 0.5 \
 		--dem_nan_pixels_pct_importance_factor 0.25 \
-		--dem_zero_pixels_pct_importance_factor 0.5 \
+		--dem_zero_pixels_pct_importance_factor -1 \
 		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder resnet50 \
@@ -174,11 +179,13 @@ train-single-split:
 		--div_factor 2 \
 		--final_div_factor 1e2 \
 		--loss dice \
+		--ce_smooth_factor 0.1 \
+		--ce_class_weights 0.4,0.6 \
 		--strategy no-freeze \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
 		--early_stopping_patience 7 \
-		--precision 16-mixed \
+		--precision bf16-mixed \
 		--epochs 10
 
 .PHONY: train-all-splits  ## Trains on all splits
