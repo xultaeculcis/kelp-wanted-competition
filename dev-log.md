@@ -25,6 +25,7 @@ Checklist:
 - [x] Weighted sampler
 - [x] Azure ML Hparam Search
 - [x] Add extra spectral indices combinations
+- [ ] Eval script
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -43,7 +44,7 @@ Checklist:
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
-## What seams to work
+## What worked
 
 * Pre-trained weights
 * Appending NDVI
@@ -73,6 +74,7 @@ Checklist:
 * Losses other than dice (CE with weighting was close)
 * Compiling the model and `torch-ort`
 * Normalization strategies other than `quantile` / `z-score`
+* Bunch of different index combinations
 
 ## 2023-12-02
 
@@ -398,7 +400,7 @@ Findings:
 
 * Enabled training using on-the-fly masking of indices using QA and DEM Water Mask
 * Masking land and corrupted pixels in indices bumps the performance by over 1-2%
-* Zeroes in the main bands (the ones where -65k was ) make the indices incorrect - maybe use NaNs and substitute
+* Zeroes in the main bands (the ones with -32k pixel values) make the indices incorrect - maybe use NaNs and substitute
   them with band min value instead?
 * Changed indices back to inheriting from `torch.nn.Module` almost 1.6x speedup for stats calculation
 * Recalculate dataset stats
