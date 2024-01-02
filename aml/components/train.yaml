@@ -160,6 +160,8 @@ command: >-
   --num_workers ${{inputs.num_workers}}
   --band_order ${{inputs.band_order}}
   --image_size ${{inputs.image_size}}
+  --mask_using_qa
+  --mask_using_water_mask
   --use_weighted_sampler
   --samples_per_epoch ${{inputs.samples_per_epoch}}
   --has_kelp_importance_factor ${{inputs.has_kelp_importance_factor}}

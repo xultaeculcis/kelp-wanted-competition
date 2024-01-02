@@ -19,7 +19,6 @@ from torch.utils.data import Dataset
 from torchvision.utils import make_grid
 
 from kelp import consts
-from kelp.data.indices import INDICES
 from kelp.data.plotting import plot_sample
 
 warnings.filterwarnings(
@@ -38,6 +37,7 @@ class FigureGrids:
     qa: Optional[plt.Figure] = None
     dem: Optional[plt.Figure] = None
     ndvi: Optional[plt.Figure] = None
+    spectral_indices: Optional[Dict[str, plt.Figure]] = None
 
 
 class KelpForestSegmentationDataset(Dataset):
@@ -50,12 +50,13 @@ class KelpForestSegmentationDataset(Dataset):
         mask_fps: Optional[List[Path]] = None,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         band_order: Optional[List[int]] = None,
+        fill_value: float = 0.0,
     ) -> None:
         self.image_fps = image_fps
         self.mask_fps = mask_fps
         self.transforms = transforms
+        self.fill_value = fill_value
         self.band_order = [band_idx + 1 for band_idx in band_order] if band_order else list(range(1, 8))
-        self.append_ndvi = INDICES["NDVI"]
 
     def __len__(self) -> int:
         return len(self.image_fps)
@@ -63,8 +64,9 @@ class KelpForestSegmentationDataset(Dataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
-            # we need to clamp values to account for corrupted pixels
-            img = torch.from_numpy(src.read(self.band_order)).clamp(min=0)
+            # we need to replace values to account for corrupted pixels
+            img = torch.from_numpy(src.read(self.band_order)).float()
+            img = torch.where(img == -32768, self.fill_value, img)
 
         sample = {"image": img, "tile_id": self.image_fps[index].stem.split("_")[0]}
 
@@ -72,9 +74,6 @@ class KelpForestSegmentationDataset(Dataset):
             with rasterio.open(self.mask_fps[index]) as src:
                 target = torch.from_numpy(src.read(1))
                 sample["mask"] = target
-
-        # Always append NDVI index
-        sample = self.append_ndvi(sample)
 
         if self.transforms:
             sample = self.transforms(sample)
@@ -157,6 +156,7 @@ class KelpForestSegmentationDataset(Dataset):
         plot_true_color: bool = False,
         plot_color_infrared_grid: bool = False,
         plot_short_wave_infrared_grid: bool = False,
+        plot_spectral_indices: bool = False,
         plot_qa_grid: bool = False,
         plot_dem_grid: bool = False,
         plot_ndvi_grid: bool = False,
@@ -164,6 +164,7 @@ class KelpForestSegmentationDataset(Dataset):
         plot_prediction_grid: bool = False,
         ndvi_cmap: str = "RdYlGn",
         dem_cmap: str = "viridis",
+        spectral_indices_cmap: str = "viridis",
         qa_mask_cmap: str = "gray",
         mask_cmap: str = consts.data.CMAP,
     ) -> FigureGrids:
@@ -250,5 +251,16 @@ class KelpForestSegmentationDataset(Dataset):
                 cmap=ndvi_cmap,
             )
             if plot_ndvi_grid
+            else None,
+            spectral_indices={
+                band_name: KelpForestSegmentationDataset._plot_tensor(
+                    tensor=image_grid[band_index_lookup[band_name], :, :],
+                    interpolation="none" if band_name.endswith("WM") else "antialiased",
+                    cmap=qa_mask_cmap if band_name.endswith("WM") else spectral_indices_cmap,
+                )
+                for band_name, band_number in band_index_lookup.items()
+                if band_name not in ["SWIR", "NIR", "R", "G", "B", "QA", "DEM"]
+            }
+            if plot_spectral_indices
             else None,
         )

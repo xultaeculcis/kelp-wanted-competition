@@ -12,13 +12,13 @@ import torch
 import torchvision.transforms as T
 from kornia.augmentation.base import _AugmentationBase
 from matplotlib import pyplot as plt
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from kelp import consts
-from kelp.consts.data import DATASET_STATS
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
-from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
+from kelp.data.transforms import MinMaxNormalize, PerSampleMinMaxNormalize, PerSampleQuantileNormalize, RemoveNaNs
 
 # Filter warning from Kornia's `RandomRotation` as we have no control over it
 warnings.filterwarnings(
@@ -48,11 +48,11 @@ class KelpForestDataModule(pl.LightningDataModule):
         "B",
         "QA",
         "DEM",
-        "NDVI",
     ]
 
     def __init__(
         self,
+        dataset_stats: Dict[str, Dict[str, float]],
         train_images: Optional[List[Path]] = None,
         train_masks: Optional[List[Path]] = None,
         val_images: Optional[List[Path]] = None,
@@ -62,6 +62,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         predict_images: Optional[List[Path]] = None,
         spectral_indices: Optional[List[str]] = None,
         band_order: Optional[List[int]] = None,
+        missing_pixels_fill_value: float = 0.0,
         batch_size: int = 32,
         num_workers: int = 0,
         image_size: int = 352,
@@ -72,6 +73,8 @@ class KelpForestDataModule(pl.LightningDataModule):
             "per-sample-quantile",
             "z-score",
         ] = "quantile",
+        mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
         use_weighted_sampler: bool = False,
         samples_per_epoch: int = 230,
         image_weights: Optional[List[float]] = None,
@@ -79,8 +82,11 @@ class KelpForestDataModule(pl.LightningDataModule):
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
         assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
-        if band_order is not None and len(band_order) != 7:
-            raise ValueError(f"channel_order should have exactly 7 elements, you passed {len(band_order)}")
+        if band_order is not None and len(band_order) != len(self.base_bands):
+            raise ValueError(
+                f"channel_order should have exactly {len(self.base_bands)} elements, you passed {len(band_order)}"
+            )
+        self.dataset_stats = dataset_stats
         self.train_images = train_images or []
         self.train_masks = train_masks or []
         self.val_images = val_images or []
@@ -88,32 +94,25 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.test_images = test_images or []
         self.test_masks = test_masks or []
         self.predict_images = predict_images or []
-        self.spectral_indices = spectral_indices or []
-        self.band_order = band_order or list(range(7))
-        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + ["NDVI"]
+        self.spectral_indices = self.cleanup_spectral_indices(spectral_indices)
+        self.band_order = band_order or list(range(len(self.base_bands)))
+        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + self.spectral_indices
+        self.band_index_lookup = {band: idx for idx, band in enumerate(self.reordered_bands)}
+        self.missing_pixels_fill_value = missing_pixels_fill_value
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.normalization_strategy = normalization_strategy
+        self.mask_using_qa = mask_using_qa
+        self.mask_using_water_mask = mask_using_water_mask
         self.use_weighted_sampler = use_weighted_sampler
         self.samples_per_epoch = samples_per_epoch
         self.image_weights = image_weights or [1.0 for _ in self.train_images]
         self.band_stats, self.in_channels = self.resolve_normalization_stats()
         self.normalization_transform = self.resolve_normalization_transform()
-        self.train_augmentations = K.AugmentationSequential(
-            self.normalization_transform,
-            K.RandomRotation(p=0.5, degrees=90),
-            K.RandomHorizontalFlip(p=0.5),
-            K.RandomVerticalFlip(p=0.5),
-            data_keys=["input", "mask"],
-        )
-        self.val_augmentations = K.AugmentationSequential(
-            self.normalization_transform,
-            data_keys=["input", "mask"],
-        )
-        self.predict_augmentations = K.AugmentationSequential(
-            self.normalization_transform,
-            data_keys=["input"],
-        )
+        self.train_augmentations = self.resolve_transforms(stage="train")
+        self.val_augmentations = self.resolve_transforms(stage="val")
+        self.test_augmentations = self.resolve_transforms(stage="test")
+        self.predict_augmentations = self.resolve_transforms(stage="predict")
         self.pad = T.Pad(
             padding=[
                 (image_size - TILE_SIZE) // 2,
@@ -128,6 +127,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             mask_fps=masks,
             transforms=self.common_transforms,
             band_order=self.band_order,
+            fill_value=self.missing_pixels_fill_value,
         )
         return ds
 
@@ -273,10 +273,55 @@ class KelpForestDataModule(pl.LightningDataModule):
         """Run :meth:`kelp.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
 
+    def cleanup_spectral_indices(self, spectral_indices: Optional[List[str]] = None) -> List[str]:
+        if not spectral_indices:
+            # Should never happen if the config validation worked, but alas here we are anyway...
+            return ["DEMWM", "NDVI"]
+        return spectral_indices
+
+    def resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
+        common_transforms = []
+
+        for index_name in self.spectral_indices:
+            common_transforms.append(
+                SPECTRAL_INDEX_LOOKUP[index_name](
+                    index_swir=self.band_index_lookup["SWIR"],
+                    index_nir=self.band_index_lookup["NIR"],
+                    index_red=self.band_index_lookup["R"],
+                    index_green=self.band_index_lookup["G"],
+                    index_blue=self.band_index_lookup["B"],
+                    index_dem=self.band_index_lookup["DEM"],
+                    index_qa=self.band_index_lookup["QA"],
+                    index_water_mask=self.band_index_lookup["DEMWM"],
+                    mask_using_qa=False if index_name.endswith("WM") else self.mask_using_qa,
+                    mask_using_water_mask=False if index_name.endswith("WM") else self.mask_using_water_mask,
+                    fill_val=torch.nan,
+                )
+            )
+
+        common_transforms.extend(
+            [
+                RemoveNaNs(min_vals=self.band_stats.min, max_vals=self.band_stats.max),
+                self.normalization_transform,
+            ]
+        )
+
+        if stage == "train":
+            return K.AugmentationSequential(
+                *common_transforms,
+                K.RandomRotation(p=0.5, degrees=90),
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomVerticalFlip(p=0.5),
+                data_keys=["input", "mask"],
+            )
+        else:
+            return K.AugmentationSequential(
+                *common_transforms,
+                data_keys=["input"] if stage == "predict" else ["input", "mask"],
+            )
+
     def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
-        band_stats = {band: DATASET_STATS[band] for band in self.reordered_bands}
-        for index in self.spectral_indices:
-            band_stats[index] = DATASET_STATS[index]
+        band_stats = {band: self.dataset_stats[band] for band in self.reordered_bands}
         mean = [val["mean"] for val in band_stats.values()]
         std = [val["std"] for val in band_stats.values()]
         vmin = [val["min"] for val in band_stats.values()]
@@ -293,7 +338,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         )
         return stats, len(band_stats)
 
-    def resolve_normalization_transform(self) -> _AugmentationBase:
+    def resolve_normalization_transform(self) -> _AugmentationBase | nn.Module:
         if self.normalization_strategy == "z-score":
             return K.Normalize(self.band_stats.mean, self.band_stats.std)  # type: ignore[no-any-return]
         elif self.normalization_strategy == "min-max":
@@ -383,6 +428,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         cls,
         data_dir: Path,
         metadata_fp: Path,
+        dataset_stats: Dict[str, Dict[str, float]],
         cv_split: int,
         has_kelp_importance_factor: float = 1.0,
         kelp_pixels_pct_importance_factor: float = 1.0,
@@ -422,12 +468,14 @@ class KelpForestDataModule(pl.LightningDataModule):
             test_masks=test_masks,
             predict_images=None,
             image_weights=image_weights,
+            dataset_stats=dataset_stats,
             **kwargs,
         )
 
     @classmethod
     def from_folders(
         cls,
+        dataset_stats: Dict[str, Dict[str, float]],
         train_data_folder: Optional[Path] = None,
         val_data_folder: Optional[Path] = None,
         test_data_folder: Optional[Path] = None,
@@ -456,12 +504,14 @@ class KelpForestDataModule(pl.LightningDataModule):
             predict_images=sorted(list(predict_data_folder.rglob("*.tif")))
             if predict_data_folder and predict_data_folder.exists()
             else None,
+            dataset_stats=dataset_stats,
             **kwargs,
         )
 
     @classmethod
     def from_file_paths(
         cls,
+        dataset_stats: Dict[str, Dict[str, float]],
         train_images: Optional[List[Path]] = None,
         train_masks: Optional[List[Path]] = None,
         val_images: Optional[List[Path]] = None,
@@ -483,6 +533,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             test_images=test_images,
             test_masks=test_masks,
             predict_images=predict_images,
+            dataset_stats=dataset_stats,
             spectral_indices=spectral_indices,
             batch_size=batch_size,
             image_size=image_size,

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import argparse
+import json
 import logging
+import os
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 logging.basicConfig(level=logging.WARNING)
-
-import argparse  # noqa: E402
-import os  # noqa: E402
-from datetime import datetime  # noqa: E402
-from pathlib import Path  # noqa: E402
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union  # noqa: E402
 
 import mlflow  # noqa: E402
 import pytorch_lightning as pl  # noqa: E402
@@ -22,13 +22,14 @@ from pytorch_lightning.loggers import Logger, MLFlowLogger  # noqa: E402
 from kelp import consts  # noqa: E402
 from kelp.core.configs import ConfigBase  # noqa: E402
 from kelp.data.datamodule import KelpForestDataModule  # noqa: E402
-from kelp.data.indices import INDICES  # noqa: E402
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP  # noqa: E402
 from kelp.models.segmentation import KelpForestSegmentationTask  # noqa: E402
 from kelp.utils.gpu import set_gpu_power_limit_if_needed  # noqa: E402
 from kelp.utils.logging import get_logger  # noqa: E402
 
 # Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
+MAX_INDICES = 8
 _logger = get_logger(__name__)
 
 
@@ -36,6 +37,7 @@ class TrainConfig(ConfigBase):
     # data params
     data_dir: Path
     metadata_fp: Path
+    dataset_stats_fp: Path
     cv_split: int = 0
     spectral_indices: List[str]
     band_order: Optional[List[int]] = None
@@ -49,6 +51,9 @@ class TrainConfig(ConfigBase):
         "per-sample-quantile",
         "per-sample-min-max",
     ] = "quantile"
+    fill_missing_pixels_with_torch_nan: bool = False
+    mask_using_qa: bool = False
+    mask_using_water_mask: bool = False
     use_weighted_sampler: bool = False
     samples_per_epoch: int = 9600
     has_kelp_importance_factor: float = 1.0
@@ -100,7 +105,13 @@ class TrainConfig(ConfigBase):
     early_stopping_patience: int = 1
 
     # trainer params
-    precision: str = "16-mixed"
+    precision: Literal[
+        "16-true",
+        "16-mixed",
+        "bf16-true",
+        "bf16-mixed",
+        "32-true",
+    ] = "bf16-mixed"
     fast_dev_run: bool = False
     epochs: int = 1
     limit_train_batches: Optional[Union[int, float]] = None
@@ -122,7 +133,7 @@ class TrainConfig(ConfigBase):
 
         order = value if isinstance(value, list) else [int(band_idx.strip()) for band_idx in value.split(",")]
 
-        if (split_size := len(order)) != 7:
+        if (split_size := len(order)) != len(consts.data.ORIGINAL_BANDS):
             raise ValueError(f"band_order should have exactly 7 values, you provided {split_size}")
 
         return order
@@ -130,25 +141,29 @@ class TrainConfig(ConfigBase):
     @field_validator("spectral_indices", mode="before")
     def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
         if not value:
-            return []
+            return ["DEMWM", "NDVI"]
 
         indices = value if isinstance(value, list) else [index.strip() for index in value.split(",")]
+
+        if "DEMWM" in indices:
+            _logger.warning("DEMWM is automatically added during training. No need to add it twice.")
+            indices.remove("DEMWM")
 
         if "NDVI" in indices:
             _logger.warning("NDVI is automatically added during training. No need to add it twice.")
             indices.remove("NDVI")
 
-        unknown_indices = set(indices).difference(list(INDICES.keys()))
+        unknown_indices = set(indices).difference(list(SPECTRAL_INDEX_LOOKUP.keys()))
         if unknown_indices:
             raise ValueError(
                 f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
-                f"Please provide at most 5 comma separated indices: {', '.join(INDICES.keys())}."
+                f"Please provide at most 5 comma separated indices: {', '.join(SPECTRAL_INDEX_LOOKUP.keys())}."
             )
 
-        if len(indices) > 5:
-            raise ValueError(f"Please provide at most 5 spectral indices. You provided: {len(indices)}")
+        if len(indices) > MAX_INDICES:
+            raise ValueError(f"Please provide at most {MAX_INDICES} spectral indices. You provided: {len(indices)}")
 
-        return indices
+        return ["DEMWM", "NDVI"] + indices
 
     @field_validator("ce_class_weights", mode="before")
     def validate_ce_class_weights(cls, value: Union[str, Optional[List[float]]] = None) -> Optional[List[float]]:
@@ -178,10 +193,19 @@ class TrainConfig(ConfigBase):
         return {"trained_at": datetime.utcnow().isoformat()}
 
     @property
+    def fill_value(self) -> float:
+        return torch.nan if self.fill_missing_pixels_with_torch_nan else 0.0  # type: ignore[no-any-return]
+
+    @property
+    def dataset_stats(self) -> Dict[str, Dict[str, float]]:
+        return json.loads(self.dataset_stats_fp.read_text())  # type: ignore[no-any-return]
+
+    @property
     def data_module_kwargs(self) -> Dict[str, Any]:
         return {
             "data_dir": self.data_dir,
             "metadata_fp": self.metadata_fp,
+            "dataset_stats": self.dataset_stats,
             "cv_split": self.cv_split,
             "spectral_indices": self.spectral_indices,
             "band_order": self.band_order,
@@ -189,6 +213,9 @@ class TrainConfig(ConfigBase):
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
             "normalization_strategy": self.normalization_strategy,
+            "missing_pixels_fill_value": self.fill_value,
+            "mask_using_qa": self.mask_using_qa,
+            "mask_using_water_mask": self.mask_using_water_mask,
             "use_weighted_sampler": self.use_weighted_sampler,
             "samples_per_epoch": self.samples_per_epoch,
             "has_kelp_importance_factor": self.has_kelp_importance_factor,
@@ -267,6 +294,11 @@ def parse_args() -> TrainConfig:
         required=True,
     )
     parser.add_argument(
+        "--dataset_stats_fp",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
         "--experiment",
         type=str,
         default="kelp-seg-training-exp",
@@ -308,7 +340,22 @@ def parse_args() -> TrainConfig:
         type=int,
         default=42,
     )
-    parser.add_argument("--use_weighted_sampler", action="store_true")
+    parser.add_argument(
+        "--fill_missing_pixels_with_torch_nan",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--mask_using_qa",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--mask_using_water_mask",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--use_weighted_sampler",
+        action="store_true",
+    )
     parser.add_argument(
         "--samples_per_epoch",
         type=int,
@@ -358,7 +405,7 @@ def parse_args() -> TrainConfig:
         "--band_order",
         type=str,
         help="A comma separated list of band indices to reorder. Use it to shift input data channels. "
-        "Must have length of 7 if specified.",
+        f"Must have length of {len(consts.data.ORIGINAL_BANDS)} if specified.",
     )
     parser.add_argument(
         "--output_dir",

@@ -21,6 +21,8 @@ parameters:
     type: string
     values:
       - aml/pipelines/sampler_hparam_search_pipeline.yaml
+      - aml/pipelines/spectral_indices_hparam_search_pipeline_zeros.yaml
+      - aml/pipelines/spectral_indices_hparam_search_pipeline_nan.yaml
     default: aml/pipelines/sampler_hparam_search_pipeline.yaml
   - name: trials
     displayName: Trials

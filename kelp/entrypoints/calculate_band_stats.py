@@ -3,37 +3,46 @@ from __future__ import annotations
 import argparse
 import json
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
+import kornia.augmentation as K
 import rasterio
 import torch
 from dask.diagnostics import ProgressBar
 from rasterio.errors import NotGeoreferencedWarning
-from torch import Tensor
 from tqdm import tqdm
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
-from kelp.data import indices
-from kelp.data.indices import INDICES
-from kelp.utils.logging import get_logger, timed
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP, AppendDEMWM
+from kelp.utils.logging import get_logger
 
 warnings.filterwarnings(
     action="ignore",
     category=NotGeoreferencedWarning,
 )
 ProgressBar().register()
+BASE_BANDS = consts.data.ORIGINAL_BANDS + ["DEMWM"]
+BAND_INDEX_LOOKUP = {band_name: index for index, band_name in enumerate(BASE_BANDS)}
 _logger = get_logger(__name__)
 
 
 class StatisticsCalculationConfig(ConfigBase):
     data_dir: Path
     output_dir: Path
+    mask_using_qa: bool = False
+    mask_using_water_mask: bool = False
+    fill_missing_pixels_with_torch_nan: bool = False
 
     @property
     def file_paths(self) -> List[Path]:
         return sorted(list(self.data_dir.rglob("*_satellite.tif")))
+
+    @property
+    def fill_value(self) -> float:
+        return torch.nan if self.fill_missing_pixels_with_torch_nan else 0.0  # type: ignore[no-any-return]
 
 
 def parse_args() -> StatisticsCalculationConfig:
@@ -48,23 +57,61 @@ def parse_args() -> StatisticsCalculationConfig:
         type=str,
         required=True,
     )
+    parser.add_argument(
+        "--mask_using_qa",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--mask_using_water_mask",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--fill_missing_pixels_with_torch_nan",
+        action="store_true",
+    )
     args = parser.parse_args()
     cfg = StatisticsCalculationConfig(**vars(args))
     cfg.log_self()
     return cfg
 
 
-@timed
 @torch.inference_mode()
 def calculate_band_statistics(
     image_paths: List[Path],
-    band_names: List[str],
     output_dir: Path,
+    mask_using_qa: bool = False,
+    mask_using_water_mask: bool = False,
+    fill_value: float = 0,
 ) -> Dict[str, Dict[str, float]]:
     # Move computations to GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    transform = K.AugmentationSequential(
+        AppendDEMWM(  # type: ignore
+            index_dem=BAND_INDEX_LOOKUP["DEM"],
+            index_qa=BAND_INDEX_LOOKUP["QA"],
+        ),
+        *[
+            append_index_transform(
+                index_swir=BAND_INDEX_LOOKUP["SWIR"],
+                index_nir=BAND_INDEX_LOOKUP["NIR"],
+                index_red=BAND_INDEX_LOOKUP["R"],
+                index_green=BAND_INDEX_LOOKUP["G"],
+                index_blue=BAND_INDEX_LOOKUP["B"],
+                index_dem=BAND_INDEX_LOOKUP["DEM"],
+                index_qa=BAND_INDEX_LOOKUP["QA"],
+                index_water_mask=BAND_INDEX_LOOKUP["DEMWM"],
+                mask_using_qa=False if index_name.endswith("WM") else mask_using_qa,
+                mask_using_water_mask=False if index_name.endswith("WM") else mask_using_water_mask,
+                fill_val=torch.nan,
+            )
+            for index_name, append_index_transform in SPECTRAL_INDEX_LOOKUP.items()
+            if index_name != "DEMWM"
+        ],
+        data_keys=["input"],
+    ).to(device)
 
     # Initialize statistics arrays
+    band_names = BASE_BANDS + [index_name for index_name in SPECTRAL_INDEX_LOOKUP.keys() if index_name != "DEMWM"]
     num_bands = len(band_names)
     min_per_band = torch.full((num_bands,), float("inf")).to(device)
     max_per_band = torch.full((num_bands,), float("-inf")).to(device)
@@ -79,14 +126,12 @@ def calculate_band_statistics(
         src: rasterio.DatasetReader
         with rasterio.open(image_path) as src:
             image_arr = src.read()
-            # Convert image to PyTorch tensor and ensure non-negative values
-            image: Tensor = torch.from_numpy(image_arr).float().nan_to_num(0).clamp(min=0).to(device)
-            sample = {"image": image.unsqueeze(0)}
+            # Convert image to PyTorch tensor
+            image = torch.from_numpy(image_arr).float().to(device).unsqueeze(0)
+            # Mask missing pixels
+            image = torch.where(image == -32768.0, fill_value, image)
 
-        for _, transform in INDICES.items():
-            sample = transform(sample)
-
-        image = sample["image"].squeeze()
+        image = transform(image).squeeze()
 
         # Assuming the image has shape (num_bands, height, width)
         if image.shape[0] != num_bands:
@@ -116,8 +161,8 @@ def calculate_band_statistics(
     # Calculate mean and standard deviation
     mean_per_band = sum_per_band / total_pixels
     std_per_band = torch.sqrt(sum_sq_per_band / total_pixels - mean_per_band**2)
-    mean_q01_per_band = torch.mean(torch.stack(q01_items), dim=0)
-    mean_q99_per_band = torch.mean(torch.stack(q99_items), dim=0)
+    mean_q01_per_band = torch.nanmean(torch.stack(q01_items), dim=0)
+    mean_q99_per_band = torch.nanmean(torch.stack(q99_items), dim=0)
 
     stats = {
         band_name: {
@@ -144,7 +189,8 @@ def calculate_band_statistics(
     stats_str = json.dumps(stats, indent=4)
     _logger.info("Per band statistics calculated. Review and adjust!")
     _logger.info(stats_str)
-    (output_dir / "stats.json").write_text(stats_str)
+    now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    (output_dir / f"{now}-stats-{fill_value=}-{mask_using_qa=}-{mask_using_water_mask=}.json").write_text(stats_str)
 
     return stats
 
@@ -153,8 +199,10 @@ def main() -> None:
     cfg = parse_args()
     calculate_band_statistics(
         image_paths=cfg.file_paths,
-        band_names=consts.data.ORIGINAL_BANDS + list(indices.INDICES.keys()),
         output_dir=cfg.output_dir,
+        mask_using_qa=cfg.mask_using_qa,
+        mask_using_water_mask=cfg.mask_using_water_mask,
+        fill_value=cfg.fill_value,
     )
 
 

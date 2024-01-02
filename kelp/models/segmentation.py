@@ -121,6 +121,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
                 plot_true_color=epoch == 0,
                 plot_color_infrared_grid=epoch == 0,
                 plot_short_wave_infrared_grid=epoch == 0,
+                plot_spectral_indices=epoch == 0,
                 plot_qa_grid=epoch == 0,
                 plot_dem_grid=epoch == 0,
                 plot_mask_grid=epoch == 0,
@@ -129,11 +130,21 @@ class KelpForestSegmentationTask(pl.LightningModule):
             for key, fig in dataclasses.asdict(fig_grids).items():
                 if fig is None:
                     continue
-                self.logger.experiment.log_figure(  # type: ignore[attr-defined]
-                    run_id=self.logger.run_id,  # type: ignore[attr-defined]
-                    figure=fig,
-                    artifact_file=f"images/{key}/{key}_{epoch=:02d}_{batch_idx=}.jpg",
-                )
+
+                if isinstance(fig, dict):
+                    for nested_key, nested_figure in fig.items():
+                        self.logger.experiment.log_figure(  # type: ignore[attr-defined]
+                            run_id=self.logger.run_id,  # type: ignore[attr-defined]
+                            figure=nested_figure,
+                            artifact_file=f"images/{key}/{nested_key}_{epoch=:02d}_{batch_idx=}.jpg",
+                        )
+                        plt.close(nested_figure)
+                else:
+                    self.logger.experiment.log_figure(  # type: ignore[attr-defined]
+                        run_id=self.logger.run_id,  # type: ignore[attr-defined]
+                        figure=fig,
+                        artifact_file=f"images/{key}/{key}_{epoch=:02d}_{batch_idx=}.jpg",
+                    )
             plt.close()
 
     def _log_confusion_matrices(self, metrics: Dict[str, Tensor], cmap: str = "Blues") -> None:
