@@ -64,7 +64,7 @@ class KelpForestSegmentationDataset(Dataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
-            # we need to clamp values to account for corrupted pixels
+            # we need to replace values to account for corrupted pixels
             img = torch.from_numpy(src.read(self.band_order)).float()
             img = torch.where(img == -32768, self.fill_value, img)
 

@@ -24,7 +24,7 @@ Checklist:
 - [x] Different loss functions
 - [x] Weighted sampler
 - [x] Azure ML Hparam Search
-- [ ] Add extra spectral indices combinations
+- [x] Add extra spectral indices combinations
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -55,13 +55,14 @@ Checklist:
 * Quantile normalization
 * Dice Loss
 * Weighted sampler
-  * `has_kelp_importance_factor=3.0`
-  * `kelp_pixels_pct_importance_factor=0.2`
-  * `qa_ok_importance_factor=0.0`
-  * `qa_corrupted_pixels_pct_importance_factor=-1.0`
-  * `almost_all_water_importance_factor=0.5`
-  * `dem_nan_pixels_pct_importance_factor=0.25`
-  * `dem_zero_pixels_pct_importance_factor=-1.0`
+    * `has_kelp_importance_factor=3.0`
+    * `kelp_pixels_pct_importance_factor=0.2`
+    * `qa_ok_importance_factor=0.0`
+    * `qa_corrupted_pixels_pct_importance_factor=-1.0`
+    * `almost_all_water_importance_factor=0.5`
+    * `dem_nan_pixels_pct_importance_factor=0.25`
+    * `dem_zero_pixels_pct_importance_factor=-1.0`
+* Masking indices with QA and DEM Water Mask
 
 ## What did not work
 
@@ -375,7 +376,8 @@ Findings:
 | 10240             | 0.2      | 0               | 0     | 0.25                    | -1               | 0.25               | 0.5                 | 0.84522  |
 | 10240             | 2        | 0.5             | 0.25  | -0.5                    | 0.25             | 0.5                | -0.5                | 0.84538  |
 
-* Using more samples over the basic configuration yields very small increase 0.84405 vs 0.84801. But will use those weights for the future.
+* Using more samples over the basic configuration yields very small increase 0.84405 vs 0.84801. But will use those
+  weights for the future.
 
 ## 2023-12-29
 
@@ -397,18 +399,19 @@ Findings:
 * Enabled training using on-the-fly masking of indices using QA and DEM Water Mask
 * Masking land and corrupted pixels in indices bumps the performance by over 1-2%
 * Zeroes in the main bands (the ones where -65k was ) make the indices incorrect - maybe use NaNs and substitute
-them with band min value instead?
+  them with band min value instead?
 * Changed indices back to inheriting from `torch.nn.Module` almost 1.6x speedup for stats calculation
 * Recalculate dataset stats
 * Added support for specifying fill value for "missing" pixels - either `torch.nan` or `0.0` for both stats calculation
-and model training
+  and model training
 * Load datasets stats from file instead of keeping them in the code
 * Best combination so far:
-  * CDOM,DOC,WATERCOLOR,SABI,KIVU,Kab1,NDAVI,WAVI
-  * WM masking
-  * without using `torch.nan` for missing pixels -> using 0.0 instead
-  * with `2023-12-31T20:37:17-stats-fill_value=0.0-mask_using_qa=False-mask_using_water_mask=False-modified.json` stats
-  * val/dice = 0.8477
+    * CDOM,DOC,WATERCOLOR,SABI,KIVU,Kab1,NDAVI,WAVI
+    * WM masking
+    * without using `torch.nan` for missing pixels -> using 0.0 instead
+    * with `2023-12-31T20:37:17-stats-fill_value=0.0-mask_using_qa=False-mask_using_water_mask=False-modified.json`
+      stats
+    * val/dice = 0.8477
 * WIP. Azure ML hparam search pipeline for best combination of spectral indices
 
 ## 2024-01-01
@@ -416,3 +419,30 @@ and model training
 * WIP. Azure ML hparam search pipeline for best combination of spectral indices
 * Removing `resources:shm_size` section from the pipeline spec results in workers dying from OOM errors
 * Running 1k experiments with different spectral index combinations using zeros to mask missing pixels
+
+## 2024-01-02
+
+* Fixed issue with missing pixels not being filled
+* Re-trained locally best models from Azure ML hparam search runs:
+
+| run_id                           | stats_fp      | fill_val | steps_per_epoch | spectral_indices                                | val/dice |
+|----------------------------------|---------------|----------|-----------------|-------------------------------------------------|----------|
+| ff896e93496344c2903a69fbf94f14fa | nan-adjusted  | nan      | 10240           | CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG     | 0.85234  |
+| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211  |
+| 072d8f5e55e941ea82242301a1c3a1d5 | nan-adjusted  | nan      | 10240           | BWDRVI,CI,ClGreen,GVMI,I,MCARI,SRNIRSWIR,WAVI   | 0.85199  |
+| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191  |
+| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133  |
+| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131  |
+| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115  |
+| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094  |
+| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85468  |
+| 394f92d5ccd742709339b87d5ffc5e72 | nan-adjusted  | nan      | 5120            | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85034  |
+
+* Need to add eval script for those AML models, cannot re-train them each time or waste submissions...
+* Best models from AML were not better than what I had trained locally - best model had dice=0.7019
+* Will resubmit locally trained models tomorrow
+* It seems that pixel masking with nans and using adjusted quantile normalization is going to work best
+
+## 2024-01-03
+
+* New submissions: TODO

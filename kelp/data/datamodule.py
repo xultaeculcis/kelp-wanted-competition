@@ -62,6 +62,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         predict_images: Optional[List[Path]] = None,
         spectral_indices: Optional[List[str]] = None,
         band_order: Optional[List[int]] = None,
+        missing_pixels_fill_value: float = 0.0,
         batch_size: int = 32,
         num_workers: int = 0,
         image_size: int = 352,
@@ -97,6 +98,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.band_order = band_order or list(range(len(self.base_bands)))
         self.reordered_bands = [self.base_bands[i] for i in self.band_order] + self.spectral_indices
         self.band_index_lookup = {band: idx for idx, band in enumerate(self.reordered_bands)}
+        self.missing_pixels_fill_value = missing_pixels_fill_value
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.normalization_strategy = normalization_strategy
@@ -125,6 +127,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             mask_fps=masks,
             transforms=self.common_transforms,
             band_order=self.band_order,
+            fill_value=self.missing_pixels_fill_value,
         )
         return ds
 

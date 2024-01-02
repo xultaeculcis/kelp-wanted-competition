@@ -213,7 +213,7 @@ class TrainConfig(ConfigBase):
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
             "normalization_strategy": self.normalization_strategy,
-            "fill_value": self.fill_value,
+            "missing_pixels_fill_value": self.fill_value,
             "mask_using_qa": self.mask_using_qa,
             "mask_using_water_mask": self.mask_using_water_mask,
             "use_weighted_sampler": self.use_weighted_sampler,
