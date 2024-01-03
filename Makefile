@@ -151,7 +151,7 @@ train-single-split:
 		--batch_size 32 \
 		--num_workers 6 \
 		--band_order 2,3,4,0,1,5,6 \
-		--spectral_indices CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG \
+		--spectral_indices AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR \
 		--image_size 352 \
 		--normalization_strategy quantile \
 		--fill_missing_pixels_with_torch_nan \
@@ -221,3 +221,13 @@ predict-and-submit:
 		--data_dir data/raw/test/images \
 		--output_dir data/submissions \
 		--run_dir $(RUN_DIR)
+
+.PHONY: eval  ## Runs evaluation for selected run
+eval:
+	python ./kelp/entrypoints/eval.py \
+		--data_dir data/raw \
+		--metadata_dir data/processed \
+		--dataset_stats_dir data/processed \
+		--run_dir $(RUN_DIR)\
+		--output_dir mlruns \
+		--experiment_name model-eval-exp
