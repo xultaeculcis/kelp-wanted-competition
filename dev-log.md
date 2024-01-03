@@ -64,6 +64,7 @@ Checklist:
     * `dem_nan_pixels_pct_importance_factor=0.25`
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
+* AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR
 
 ## What did not work
 
@@ -427,18 +428,18 @@ Findings:
 * Fixed issue with missing pixels not being filled
 * Re-trained locally best models from Azure ML hparam search runs:
 
-| run_id                           | stats_fp      | fill_val | steps_per_epoch | spectral_indices                                | val/dice |
-|----------------------------------|---------------|----------|-----------------|-------------------------------------------------|----------|
-| ff896e93496344c2903a69fbf94f14fa | nan-adjusted  | nan      | 10240           | CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG     | 0.85234  |
-| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211  |
-| 072d8f5e55e941ea82242301a1c3a1d5 | nan-adjusted  | nan      | 10240           | BWDRVI,CI,ClGreen,GVMI,I,MCARI,SRNIRSWIR,WAVI   | 0.85199  |
-| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191  |
-| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133  |
-| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131  |
-| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115  |
-| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094  |
-| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85468  |
-| 394f92d5ccd742709339b87d5ffc5e72 | nan-adjusted  | nan      | 5120            | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85034  |
+| run_id                           | stats_fp      | fill_val | steps_per_epoch | spectral_indices                                | val/dice    | leaderboard |
+|----------------------------------|---------------|----------|-----------------|-------------------------------------------------|-------------|-------------|
+| ff896e93496344c2903a69fbf94f14fa | nan-adjusted  | nan      | 10240           | CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG     | **0.85234** | 0.7034      |
+| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211     | **0.7045**  |
+| 072d8f5e55e941ea82242301a1c3a1d5 | nan-adjusted  | nan      | 10240           | BWDRVI,CI,ClGreen,GVMI,I,MCARI,SRNIRSWIR,WAVI   | 0.85199     | 0.7044      |
+| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191     |             |
+| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133     |             |
+| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131     |             |
+| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115     |             |
+| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094     |             |
+| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85468     |             |
+| 394f92d5ccd742709339b87d5ffc5e72 | nan-adjusted  | nan      | 5120            | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85034     |             |
 
 * Need to add eval script for those AML models, cannot re-train them each time or waste submissions...
 * Best models from AML were not better than what I had trained locally - best model had dice=0.7019
@@ -447,4 +448,7 @@ Findings:
 
 ## 2024-01-03
 
-* New submissions: TODO
+* New submissions (see table above)
+* Will submit a few more runs tomorrow, but it looks like I'm going to use AFRI1600, ATSAVI, AVI, CHLA, GDVI, LogR,
+  NormR, SRNIRR index combination for the future.
+* WIP. evaluation script for AML models
