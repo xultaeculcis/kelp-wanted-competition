@@ -451,4 +451,5 @@ Findings:
 * New submissions (see table above)
 * Will submit a few more runs tomorrow, but it looks like I'm going to use AFRI1600, ATSAVI, AVI, CHLA, GDVI, LogR,
   NormR, SRNIRR index combination for the future.
-* WIP. evaluation script for AML models
+* Added evaluation script for AML models
+* Evaluated all top models trained on Azure ML - best one had dice=0.85015

@@ -221,3 +221,13 @@ predict-and-submit:
 		--data_dir data/raw/test/images \
 		--output_dir data/submissions \
 		--run_dir $(RUN_DIR)
+
+.PHONY: eval  ## Runs evaluation for selected run
+eval:
+	python ./kelp/entrypoints/eval.py \
+		--data_dir data/raw \
+		--metadata_dir data/processed \
+		--dataset_stats_dir data/processed \
+		--run_dir $(RUN_DIR)\
+		--output_dir mlruns \
+		--experiment_name model-eval-exp
