@@ -49,6 +49,7 @@ class EvalConfig(ConfigBase):
         cfg.data_dir = self.data_dir
         cfg.metadata_fp = self.metadata_dir / cfg.metadata_fp.name
         cfg.dataset_stats_fp = self.dataset_stats_dir / cfg.dataset_stats_fp.name
+        cfg.output_dir = self.output_dir
         return cfg
 
     @property
