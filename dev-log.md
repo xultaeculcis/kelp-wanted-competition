@@ -25,7 +25,7 @@ Checklist:
 - [x] Weighted sampler
 - [x] Azure ML Hparam Search
 - [x] Add extra spectral indices combinations
-- [ ] Eval script
+- [x] Eval script
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -35,7 +35,6 @@ Checklist:
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
 - [ ] TTA
-- [ ] Cross-Validation
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
@@ -431,11 +430,11 @@ Findings:
 | run_id                           | stats_fp      | fill_val | steps_per_epoch | spectral_indices                                | val/dice    | leaderboard |
 |----------------------------------|---------------|----------|-----------------|-------------------------------------------------|-------------|-------------|
 | ff896e93496344c2903a69fbf94f14fa | nan-adjusted  | nan      | 10240           | CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG     | **0.85234** | 0.7034      |
-| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211     | **0.7045**  |
+| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211     | 0.7045      |
 | 072d8f5e55e941ea82242301a1c3a1d5 | nan-adjusted  | nan      | 10240           | BWDRVI,CI,ClGreen,GVMI,I,MCARI,SRNIRSWIR,WAVI   | 0.85199     | 0.7044      |
-| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191     |             |
-| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133     |             |
-| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131     |             |
+| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191     | 0.7049      |
+| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133     | 0.7011      |
+| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131     | **0.7062**  |
 | 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115     |             |
 | cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094     |             |
 | 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85468     |             |
@@ -453,3 +452,8 @@ Findings:
   NormR, SRNIRR index combination for the future.
 * Added evaluation script for AML models
 * Evaluated all top models trained on Azure ML - best one had dice=0.85015
+
+## 2024-01-04
+
+* Added a few more submissions - best score **0.7062**
+* Working on Test Time Augmentations
