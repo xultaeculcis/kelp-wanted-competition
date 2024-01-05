@@ -33,7 +33,7 @@ jobs:
 
     sampling_algorithm: random
 
-    trial: file:../components/train_spectral_indices_nan.yaml
+    trial: file:../components/train_spectral_indices_nan_15.yaml
 
     search_space:
       spectral_indices:
