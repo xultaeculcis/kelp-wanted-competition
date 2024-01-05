@@ -29,7 +29,7 @@ from kelp.utils.logging import get_logger  # noqa: E402
 
 # Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
-MAX_INDICES = 8
+MAX_INDICES = 15
 _logger = get_logger(__name__)
 
 
@@ -97,6 +97,7 @@ class TrainConfig(ConfigBase):
     compile_dynamic: Optional[bool] = None
     ort: bool = False
     plot_n_batches: int = 3
+    tta: bool = False
 
     # callbacks
     save_top_k: int = 1
@@ -264,6 +265,7 @@ class TrainConfig(ConfigBase):
             "compile_dynamic": self.compile_dynamic,
             "ort": self.ort,
             "plot_n_batches": self.plot_n_batches,
+            "tta": self.tta,
         }
 
     @property
@@ -479,6 +481,10 @@ def parse_args() -> TrainConfig:
         "--final_div_factor",
         type=float,
         default=1e2,
+    )
+    parser.add_argument(
+        "--tta",
+        action="store_true",
     )
     parser.add_argument(
         "--strategy",
