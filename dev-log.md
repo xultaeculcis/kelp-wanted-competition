@@ -435,10 +435,9 @@ Findings:
 | 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191     | 0.7049      |
 | f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133     | 0.7011      |
 | faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131     | **0.7062**  |
-| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115     |             |
-| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094     |             |
-| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85468     |             |
-| 394f92d5ccd742709339b87d5ffc5e72 | nan-adjusted  | nan      | 5120            | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85034     |             |
+| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115     | 0.7033      |
+| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094     | 0.7025      |
+| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85051     | 0.7060      |
 
 * Need to add eval script for those AML models, cannot re-train them each time or waste submissions...
 * Best models from AML were not better than what I had trained locally - best model had dice=0.7019
@@ -457,3 +456,7 @@ Findings:
 
 * Added a few more submissions - best score **0.7062**
 * Working on Test Time Augmentations
+
+## 2024-01-05
+
+* Added a few more submissions - best score **0.7060** -
