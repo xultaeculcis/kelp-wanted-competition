@@ -460,3 +460,4 @@ Findings:
 ## 2024-01-05
 
 * Added a few more submissions - best score **0.7060** -
+* Run another hparam search using 15 indices at once (previous was using max 8 indices)
