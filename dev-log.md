@@ -26,6 +26,7 @@ Checklist:
 - [x] Azure ML Hparam Search
 - [x] Add extra spectral indices combinations
 - [x] Eval script
+- [ ] TTA
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -34,7 +35,6 @@ Checklist:
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
-- [ ] TTA
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
@@ -63,7 +63,7 @@ Checklist:
     * `dem_nan_pixels_pct_importance_factor=0.25`
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
-* AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR
+* Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
 
 ## What did not work
 
@@ -461,3 +461,14 @@ Findings:
 
 * Added a few more submissions - best score **0.7060** -
 * Run another hparam search using 15 indices at once (previous was using max 8 indices)
+
+## 2024-01-06
+
+| run_id                           | stats_fp     | fill_val | steps_per_epoch | spectral_indices                                                                               | val/dice (AML) | val/dice (local) | leaderboard |
+|----------------------------------|--------------|----------|-----------------|------------------------------------------------------------------------------------------------|----------------|------------------|-------------|
+| a9ea38cb5cf144c28b85cef99fbf0fc3 | nan-adjusted | nan      | 10240           | ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG           | N/A            | **0.85339**      | **0.7083**  |
+| e5560bce41ac48eaa9bdd5ea4fbb5ab5 | nan-adjusted | nan      | 10240           | BWDRVI,GARI,H,I,MVI,NDAVI,NDWI,NLI,NormG,SRGR,SRNIRR,SRSWIRNIR,VARIGreen,WATERCOLOR,mCRIG      | 0.85303        | 0.85304          | 0.7064      |
+| 3ab0ade31670498bbf2dd2368b485b60 | nan-adjusted | nan      | 10240           | ARVI,BWDRVI,CYA,DVIMSS,EVI,GNDVI,H,I,KIVU,MCARI,MVI,NormG,NormNIR,SRNIRSWIR,TVI                | 0.85298        | 0.85123          | 0.7048      |
+| 2654497d84bf466cb5508369bd83ce24 | nan-adjusted | nan      | 10240           | AFRI1600,AVI,CHLA,ClGreen,H,IPVI,LogR,MVI,PNDVI,SQRTNIRR,SRGR,SRNIRG,SRNIRSWIR,WATERCOLOR,WAVI | 0.85316        | 0.85316          | 0.7072      |
+| ec3d3613a9d04b1b81b934231360aebe | nan-adjusted | nan      | 10240           | ARVI,AVI,CDOM,CI,CYA,EVI22,GBNDVI,GRNDVI,H,I,LogR,NormG,NormNIR,NormR,WDRVI                    | 0.85299        | 0.85120          | 0.7028      |
+| 834d204b70c645c2949b01adb1cdffef | nan-adjusted | nan      | 10240           | ATSAVI,CHLA,CI,CVI,EVI2,GDVI,GRNDVI,H,I,NDWI,NormNIR,PNDVI,SABI,TURB,WATERCOLOR                | 0.85300        | 0.85300          |             |
