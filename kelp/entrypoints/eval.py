@@ -35,8 +35,14 @@ class EvalConfig(ConfigBase):
     @model_validator(mode="before")
     def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
         run_dir = Path(data["run_dir"])
-        model_checkpoint = run_dir / "artifacts" / "model"
-        config_fp = run_dir / "artifacts" / "config.yaml"
+        if (run_dir / "model").exists():
+            artifacts_dir = run_dir
+        elif (run_dir / "artifacts").exists():
+            artifacts_dir = run_dir / "artifacts"
+        else:
+            raise ValueError("Could not find nor model dir nor artifacts folder in the specified run_dir")
+        model_checkpoint = artifacts_dir / "model"
+        config_fp = artifacts_dir / "config.yaml"
         data["model_checkpoint"] = model_checkpoint
         data["original_training_config_fp"] = config_fp
         return data
@@ -45,10 +51,9 @@ class EvalConfig(ConfigBase):
     def training_config(self) -> TrainConfig:
         with open(self.original_training_config_fp, "r") as f:
             cfg = TrainConfig(**yaml.safe_load(f))
-
         cfg.data_dir = self.data_dir
         cfg.metadata_fp = self.metadata_dir / cfg.metadata_fp.name
-        cfg.dataset_stats_fp = self.dataset_stats_dir / cfg.dataset_stats_fp.name
+        cfg.dataset_stats_fp = self.dataset_stats_dir / cfg.dataset_stats_fp.name.replace("%3A", ":")
         cfg.output_dir = self.output_dir
         return cfg
 
@@ -119,7 +124,8 @@ def run_eval(
             ),
             **train_cfg.trainer_kwargs,
         )
-        trainer.validate(model, datamodule=dm)
+        trainer.test(model, datamodule=dm)
+        mlflow.pytorch.log_model(model, "model")
 
 
 def main() -> None:
