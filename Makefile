@@ -179,6 +179,8 @@ train-single-split:
 		--loss dice \
 		--ce_smooth_factor 0.1 \
 		--ce_class_weights 0.4,0.6 \
+		--tta \
+		--tta_merge_mode max \
 		--strategy no-freeze \
 		--monitor_metric val/dice \
 		--save_top_k 1 \

@@ -23,5 +23,6 @@ seaborn
 segmentation-models-pytorch
 timm
 tqdm
+ttach
 urllib3
 xarray

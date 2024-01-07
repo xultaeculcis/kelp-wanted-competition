@@ -26,7 +26,7 @@ Checklist:
 - [x] Azure ML Hparam Search
 - [x] Add extra spectral indices combinations
 - [x] Eval script
-- [ ] TTA
+- [x] TTA
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -64,6 +64,7 @@ Checklist:
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
 * Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+* Test Time Augmentations
 
 ## What did not work
 
@@ -472,3 +473,16 @@ Findings:
 | 2654497d84bf466cb5508369bd83ce24 | nan-adjusted | nan      | 10240           | AFRI1600,AVI,CHLA,ClGreen,H,IPVI,LogR,MVI,PNDVI,SQRTNIRR,SRGR,SRNIRG,SRNIRSWIR,WATERCOLOR,WAVI | 0.85316        | 0.85316          | 0.7072      |
 | ec3d3613a9d04b1b81b934231360aebe | nan-adjusted | nan      | 10240           | ARVI,AVI,CDOM,CI,CYA,EVI22,GBNDVI,GRNDVI,H,I,LogR,NormG,NormNIR,NormR,WDRVI                    | 0.85299        | 0.85120          | 0.7028      |
 | 834d204b70c645c2949b01adb1cdffef | nan-adjusted | nan      | 10240           | ATSAVI,CHLA,CI,CVI,EVI2,GDVI,GRNDVI,H,I,NDWI,NormNIR,PNDVI,SABI,TURB,WATERCOLOR                | 0.85300        | 0.85300          |             |
+
+## 2024-01-07
+
+* Added submissions log to the repo
+* Resolve artifacts dir dynamically - allow raw AML export as input to eval script, log model after eval
+* Updated Makefile to include the best combination of spectral indices
+* Added TTA (baseline val/dice=0.85339):
+  * max: **0.85490**
+  * mean: 0.85458
+  * sum: 0.85458
+  * min: 0.85403
+  * gmean: 0.15955
+  * tsharpen: 0.00468 - loss was nan

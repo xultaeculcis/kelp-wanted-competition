@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Dict, cast
+from typing import Any, Dict, Literal, cast
 
 import pytorch_lightning as pl
+import ttach as tta
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch import Tensor
@@ -13,6 +14,14 @@ from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex,
 
 from kelp import consts
 from kelp.models.factories import resolve_loss, resolve_model
+
+_test_time_transforms = tta.Compose(
+    [
+        tta.HorizontalFlip(),
+        tta.VerticalFlip(),
+        tta.Rotate90(angles=[0, 90, 180, 270]),
+    ]
+)
 
 
 class KelpForestSegmentationTask(pl.LightningModule):
@@ -147,9 +156,11 @@ class KelpForestSegmentationTask(pl.LightningModule):
                     )
             plt.close()
 
-    def _log_confusion_matrices(self, metrics: Dict[str, Tensor], cmap: str = "Blues") -> None:
+    def _log_confusion_matrices(
+        self, metrics: Dict[str, Tensor], stage: Literal["val", "test"], cmap: str = "Blues"
+    ) -> None:
         for metric_key, title, matrix_kind in zip(
-            ["val/conf_mtrx", "val/norm_conf_mtrx"],
+            [f"{stage}/conf_mtrx", f"{stage}/norm_conf_mtrx"],
             ["Confusion matrix", "Normalized confusion matrix"],
             ["confusion_matrix", "confusion_matrix_normalized"],
         ):
@@ -170,9 +181,17 @@ class KelpForestSegmentationTask(pl.LightningModule):
             self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                 run_id=self.logger.run_id,  # type: ignore[attr-defined]
                 figure=fig,
-                artifact_file=f"images/{matrix_kind}/{matrix_kind}_{self.current_epoch:02d}.jpg",
+                artifact_file=f"images/{stage}_{matrix_kind}/{matrix_kind}_{self.current_epoch:02d}.jpg",
             )
             plt.close(fig)
+
+    def forward_tta(self, x: Tensor) -> Tensor:
+        tta_model = tta.SegmentationTTAWrapper(
+            model=self.model,
+            transforms=_test_time_transforms,
+            merge_mode=self.hyperparams.get("tta_merge_mode", "mean"),
+        )
+        return tta_model(x)
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         return self.model(*args, **kwargs)
@@ -207,7 +226,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
     def on_validation_epoch_end(self) -> None:
         metrics = self.val_metrics.compute()
         per_class_iou = metrics.pop("val/per_class_iou")
-        self._log_confusion_matrices(metrics)
+        self._log_confusion_matrices(metrics, stage="val")
         per_class_iou_score_dict = {
             f"val/iou_{consts.data.CLASSES[idx]}": iou_score for idx, iou_score in enumerate(per_class_iou)
         }
@@ -219,24 +238,27 @@ class KelpForestSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self.forward_tta(x) if self.hyperparams["tta"] else self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.loss(y_hat, y)
-        self.log("test_loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
+        self.log("test/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.test_metrics(y_hat_hard, y)
 
     def on_test_epoch_end(self) -> None:
         metrics = self.test_metrics.compute()
-        metrics.pop("test/per_class_iou")
-        metrics.pop("test/norm_conf_mtrx")
-        metrics.pop("test/conf_mtrx")
+        per_class_iou = metrics.pop("test/per_class_iou")
+        self._log_confusion_matrices(metrics, stage="test")
+        per_class_iou_score_dict = {
+            f"test/iou_{consts.data.CLASSES[idx]}": iou_score for idx, iou_score in enumerate(per_class_iou)
+        }
+        metrics.update(per_class_iou_score_dict)
         self.log_dict(metrics, on_step=False, on_epoch=True)
         self.test_metrics.reset()
 
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
         batch = args[0]
         x = batch.pop("image")
-        y_hat = self.forward(x)
+        y_hat = self.forward_tta(x) if self.hyperparams.get("tta", False) else self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
         batch["prediction"] = y_hat_hard
         return batch

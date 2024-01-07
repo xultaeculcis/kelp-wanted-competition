@@ -31,6 +31,8 @@ class EvalConfig(ConfigBase):
     run_dir: Path
     experiment_name: str = "model-eval-exp"
     output_dir: Path
+    tta: bool = False
+    tta_merge_mode: str = "mean"
 
     @model_validator(mode="before")
     def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -70,6 +72,8 @@ def parse_args() -> EvalConfig:
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--run_dir", type=str)
     parser.add_argument("--experiment_name", type=str, default="model-eval-exp")
+    parser.add_argument("--tta", action="store_true")
+    parser.add_argument("--tta_merge_mode", type=str, default="mean")
     args = parser.parse_args()
     cfg = EvalConfig(**vars(args))
     cfg.log_self()
@@ -77,11 +81,29 @@ def parse_args() -> EvalConfig:
     return cfg
 
 
-def load_model(model_path: Path, use_mlflow: bool) -> pl.LightningModule:
+def load_model(
+    model_path: Path,
+    use_mlflow: bool,
+    tta: bool = False,
+    tta_merge_mode: str = "mean",
+) -> pl.LightningModule:
     if use_mlflow:
         model = mlflow.pytorch.load_model(model_path)
+        model.hparams["tta"] = tta
+        model.hparams_initial["tta"] = tta
+        model.hyperparams["tta"] = tta
+        model.hparams["tta_merge_mode"] = tta_merge_mode
+        model.hparams_initial["tta"] = tta_merge_mode
+        model.hyperparams["tta"] = tta_merge_mode
     else:
-        model = KelpForestSegmentationTask.load_from_checkpoint(model_path)
+        model = KelpForestSegmentationTask.load_from_checkpoint(model_path, tta=tta)
+        model.hparams["tta"] = tta
+        model.hparams_initial["tta"] = tta
+        model.hyperparams["tta"] = tta
+        model.hparams["tta_merge_mode"] = tta_merge_mode
+        model.hparams_initial["tta"] = tta_merge_mode
+        model.hyperparams["tta"] = tta_merge_mode
+
         model.eval()
     return model
 
@@ -93,6 +115,8 @@ def run_eval(
     use_mlflow: bool,
     train_cfg: TrainConfig,
     experiment_name: str,
+    tta: bool,
+    tta_merge_mode: str,
 ) -> None:
     set_gpu_power_limit_if_needed()
     mlflow.set_experiment(experiment_name)
@@ -103,6 +127,12 @@ def run_eval(
         pl.seed_everything(train_cfg.seed, workers=True)
         mlflow.log_dict(train_cfg.model_dump(mode="json"), artifact_file="config.yaml")
         mlflow.log_params(train_cfg.model_dump())
+        mlflow.log_params(
+            {
+                "actual_tta": tta,
+                "actual_tta_merge_mode": tta_merge_mode,
+            }
+        )
         mlflow.set_tags(
             {
                 "evaluated_at": datetime.utcnow().isoformat(),
@@ -112,7 +142,7 @@ def run_eval(
         )
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=output_dir)
         dm = KelpForestDataModule.from_metadata_file(**train_cfg.data_module_kwargs)
-        model = load_model(model_path=model_checkpoint, use_mlflow=use_mlflow)
+        model = load_model(model_path=model_checkpoint, use_mlflow=use_mlflow, tta=tta, tta_merge_mode=tta_merge_mode)
         trainer = pl.Trainer(
             logger=make_loggers(
                 experiment=train_cfg.resolved_experiment_name,
@@ -137,6 +167,8 @@ def main() -> None:
         use_mlflow=cfg.use_mlflow,
         train_cfg=cfg.training_config,
         experiment_name=cfg.experiment_name,
+        tta=cfg.tta,
+        tta_merge_mode=cfg.tta_merge_mode,
     )
 
 

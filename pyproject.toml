@@ -122,6 +122,7 @@ module = [
     "affine.*",
     "matplotlib.*",
     "seaborn.*",
+    "ttach.*",
     "mkdocs_gen_files.*",
 ]
 ignore_missing_imports = true
