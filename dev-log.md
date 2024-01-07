@@ -25,7 +25,8 @@ Checklist:
 - [x] Weighted sampler
 - [x] Azure ML Hparam Search
 - [x] Add extra spectral indices combinations
-- [ ] Eval script
+- [x] Eval script
+- [x] TTA
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -34,8 +35,6 @@ Checklist:
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
-- [ ] TTA
-- [ ] Cross-Validation
 - [ ] Decision threshold optimization
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
@@ -64,7 +63,8 @@ Checklist:
     * `dem_nan_pixels_pct_importance_factor=0.25`
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
-* AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR
+* Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+* Test Time Augmentations
 
 ## What did not work
 
@@ -431,15 +431,14 @@ Findings:
 | run_id                           | stats_fp      | fill_val | steps_per_epoch | spectral_indices                                | val/dice    | leaderboard |
 |----------------------------------|---------------|----------|-----------------|-------------------------------------------------|-------------|-------------|
 | ff896e93496344c2903a69fbf94f14fa | nan-adjusted  | nan      | 10240           | CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG     | **0.85234** | 0.7034      |
-| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211     | **0.7045**  |
+| 3298cf9aad3845a1ad0517e6bcca2c85 | nan-adjusted  | nan      | 10240           | AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR | 0.85211     | 0.7045      |
 | 072d8f5e55e941ea82242301a1c3a1d5 | nan-adjusted  | nan      | 10240           | BWDRVI,CI,ClGreen,GVMI,I,MCARI,SRNIRSWIR,WAVI   | 0.85199     | 0.7044      |
-| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191     |             |
-| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133     |             |
-| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131     |             |
-| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115     |             |
-| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094     |             |
-| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85468     |             |
-| 394f92d5ccd742709339b87d5ffc5e72 | nan-adjusted  | nan      | 5120            | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85034     |             |
+| 9b98c0ecd4554947bb23341cd4ae0191 | nan-adjusted  | nan      | 10240           | ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG         | 0.85191     | 0.7049      |
+| f67b7cfc2faa449c9cef2d3ace98a15c | nan-adjusted  | nan      | 10240           | AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR        | 0.85133     | 0.7011      |
+| faf96942e21f4fa9b11b55287f4fb575 | zero-adjusted | 0.0      | 10240           | AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI       | 0.85131     | **0.7062**  |
+| 4ccf406b8fec4793aabfd986fd417d26 | nan-adjusted  | nan      | 10240           | AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG    | 0.85115     | 0.7033      |
+| cc8d8af285474a9899e38f17f7397603 | nan-adjusted  | nan      | 10240           | AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB | 0.85094     | 0.7025      |
+| 7063fb98bc4e4cb1bfb33e67e1ee10de | nan-adjusted  | nan      | 10240           | ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI         | 0.85051     | 0.7060      |
 
 * Need to add eval script for those AML models, cannot re-train them each time or waste submissions...
 * Best models from AML were not better than what I had trained locally - best model had dice=0.7019
@@ -453,3 +452,37 @@ Findings:
   NormR, SRNIRR index combination for the future.
 * Added evaluation script for AML models
 * Evaluated all top models trained on Azure ML - best one had dice=0.85015
+
+## 2024-01-04
+
+* Added a few more submissions - best score **0.7062**
+* Working on Test Time Augmentations
+
+## 2024-01-05
+
+* Added a few more submissions - best score **0.7060** -
+* Run another hparam search using 15 indices at once (previous was using max 8 indices)
+
+## 2024-01-06
+
+| run_id                           | stats_fp     | fill_val | steps_per_epoch | spectral_indices                                                                               | val/dice (AML) | val/dice (local) | leaderboard |
+|----------------------------------|--------------|----------|-----------------|------------------------------------------------------------------------------------------------|----------------|------------------|-------------|
+| a9ea38cb5cf144c28b85cef99fbf0fc3 | nan-adjusted | nan      | 10240           | ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG           | N/A            | **0.85339**      | **0.7083**  |
+| e5560bce41ac48eaa9bdd5ea4fbb5ab5 | nan-adjusted | nan      | 10240           | BWDRVI,GARI,H,I,MVI,NDAVI,NDWI,NLI,NormG,SRGR,SRNIRR,SRSWIRNIR,VARIGreen,WATERCOLOR,mCRIG      | 0.85303        | 0.85304          | 0.7064      |
+| 3ab0ade31670498bbf2dd2368b485b60 | nan-adjusted | nan      | 10240           | ARVI,BWDRVI,CYA,DVIMSS,EVI,GNDVI,H,I,KIVU,MCARI,MVI,NormG,NormNIR,SRNIRSWIR,TVI                | 0.85298        | 0.85123          | 0.7048      |
+| 2654497d84bf466cb5508369bd83ce24 | nan-adjusted | nan      | 10240           | AFRI1600,AVI,CHLA,ClGreen,H,IPVI,LogR,MVI,PNDVI,SQRTNIRR,SRGR,SRNIRG,SRNIRSWIR,WATERCOLOR,WAVI | 0.85316        | 0.85316          | 0.7072      |
+| ec3d3613a9d04b1b81b934231360aebe | nan-adjusted | nan      | 10240           | ARVI,AVI,CDOM,CI,CYA,EVI22,GBNDVI,GRNDVI,H,I,LogR,NormG,NormNIR,NormR,WDRVI                    | 0.85299        | 0.85120          | 0.7028      |
+| 834d204b70c645c2949b01adb1cdffef | nan-adjusted | nan      | 10240           | ATSAVI,CHLA,CI,CVI,EVI2,GDVI,GRNDVI,H,I,NDWI,NormNIR,PNDVI,SABI,TURB,WATERCOLOR                | 0.85300        | 0.85300          |             |
+
+## 2024-01-07
+
+* Added submissions log to the repo
+* Resolve artifacts dir dynamically - allow raw AML export as input to eval script, log model after eval
+* Updated Makefile to include the best combination of spectral indices
+* Added TTA (baseline val/dice=0.85339):
+  * max: **0.85490**
+  * mean: 0.85458
+  * sum: 0.85458
+  * min: 0.85403
+  * gmean: 0.15955
+  * tsharpen: 0.00468 - loss was nan

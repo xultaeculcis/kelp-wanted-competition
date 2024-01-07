@@ -456,7 +456,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL
         )
         test_images, test_masks = cls.resolve_file_paths(
-            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.TEST
+            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL
         )
         image_weights = cls.resolve_image_weights(df=metadata, image_paths=train_images)
         return cls(

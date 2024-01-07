@@ -8,7 +8,6 @@ pre-commit = pre-commit run --all-files
 
 DATA_DIR=data
 SHELL=/bin/bash
-SPLIT=6
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
@@ -140,20 +139,19 @@ train-val-test-split:
 		--splits 10 \
 		--output_dir data/processed
 
-.PHONY: train-single-split  ## Trains single CV split
+.PHONY: train  ## Trains single CV split
 train-single-split:
 	python ./kelp/entrypoints/train.py \
  		--data_dir data/raw \
 		--output_dir mlruns \
 		--metadata_fp data/processed/train_val_test_dataset.parquet \
 		--dataset_stats_fp data/processed/2023-12-31T20:30:39-stats-fill_value=nan-mask_using_qa=True-mask_using_water_mask=True.json \
-		--cv_split $(SPLIT) \
+		--cv_split 6 \
 		--batch_size 32 \
 		--num_workers 6 \
 		--band_order 2,3,4,0,1,5,6 \
-		--spectral_indices AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR \
+		--spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG \
 		--image_size 352 \
-		--normalization_strategy quantile \
 		--fill_missing_pixels_with_torch_nan \
 		--mask_using_qa \
 		--mask_using_water_mask \
@@ -175,31 +173,20 @@ train-single-split:
 		--optimizer adamw \
 		--weight_decay 1e-4 \
 		--lr_scheduler onecycle \
-		--pct_start 0.3 \
+		--pct_start 0.1 \
 		--div_factor 2 \
 		--final_div_factor 1e2 \
 		--loss dice \
 		--ce_smooth_factor 0.1 \
 		--ce_class_weights 0.4,0.6 \
+		--tta \
+		--tta_merge_mode max \
 		--strategy no-freeze \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
 		--early_stopping_patience 7 \
 		--precision bf16-mixed \
 		--epochs 10
-
-.PHONY: train-all-splits  ## Trains on all splits
-train-all-splits:
-	make train-single-split SPLIT=0
-	make train-single-split SPLIT=1
-	make train-single-split SPLIT=2
-	make train-single-split SPLIT=3
-	make train-single-split SPLIT=4
-	make train-single-split SPLIT=5
-	make train-single-split SPLIT=6
-	make train-single-split SPLIT=7
-	make train-single-split SPLIT=8
-	make train-single-split SPLIT=9
 
 .PHONY: predict  ## Runs prediction
 predict:
@@ -228,6 +215,6 @@ eval:
 		--data_dir data/raw \
 		--metadata_dir data/processed \
 		--dataset_stats_dir data/processed \
-		--run_dir $(RUN_DIR)\
+		--run_dir $(RUN_DIR) \
 		--output_dir mlruns \
 		--experiment_name model-eval-exp

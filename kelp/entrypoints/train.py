@@ -29,7 +29,7 @@ from kelp.utils.logging import get_logger  # noqa: E402
 
 # Set precision for Tensor Cores, to properly utilize them
 torch.set_float32_matmul_precision("medium")
-MAX_INDICES = 8
+MAX_INDICES = 15
 _logger = get_logger(__name__)
 
 
@@ -97,6 +97,8 @@ class TrainConfig(ConfigBase):
     compile_dynamic: Optional[bool] = None
     ort: bool = False
     plot_n_batches: int = 3
+    tta: bool = False
+    tta_merge_mode: str = "mean"
 
     # callbacks
     save_top_k: int = 1
@@ -264,6 +266,8 @@ class TrainConfig(ConfigBase):
             "compile_dynamic": self.compile_dynamic,
             "ort": self.ort,
             "plot_n_batches": self.plot_n_batches,
+            "tta": self.tta,
+            "tta_merge_mode": self.tta_merge_mode,
         }
 
     @property
@@ -481,6 +485,15 @@ def parse_args() -> TrainConfig:
         default=1e2,
     )
     parser.add_argument(
+        "--tta",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--tta_merge_mode",
+        type=str,
+        default="mean",
+    )
+    parser.add_argument(
         "--strategy",
         type=str,
         choices=["freeze", "no-freeze", "freeze-unfreeze"],
@@ -667,11 +680,13 @@ def main() -> None:
         trainer.fit(model=segmentation_task, datamodule=datamodule)
 
         # Don't log hp_metric if debugging
-        if cfg.fast_dev_run:
-            return
+        if not cfg.fast_dev_run:
+            best_score = (
+                trainer.checkpoint_callback.best_model_score.detach().cpu().item()  # type: ignore[attr-defined]
+            )
+            trainer.logger.log_metrics(metrics={"hp_metric": best_score})
 
-        best_score = trainer.checkpoint_callback.best_model_score.detach().cpu().item()  # type: ignore[attr-defined]
-        trainer.logger.log_metrics(metrics={"hp_metric": best_score})
+        trainer.test(model=segmentation_task, datamodule=datamodule)
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ parameters:
       - aml/pipelines/sampler_hparam_search_pipeline.yaml
       - aml/pipelines/spectral_indices_hparam_search_pipeline_zeros.yaml
       - aml/pipelines/spectral_indices_hparam_search_pipeline_nan.yaml
+      - aml/pipelines/spectral_indices_hparam_search_pipeline_nan_15.yaml
     default: aml/pipelines/sampler_hparam_search_pipeline.yaml
   - name: trials
     displayName: Trials
@@ -31,11 +32,11 @@ parameters:
   - name: max_concurrent_trials
     displayName: Concurrent trials
     type: number
-    default: 10
+    default: 50
   - name: trial_timeout
     displayName: Trial timeout
     type: number
-    default: 3600
+    default: 7200
   - name: job_timeout
     displayName: Job timeout
     type: number
