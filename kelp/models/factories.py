@@ -1,14 +1,33 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, List, Optional, Type
 
 import segmentation_models_pytorch as smp
 import torch
 from lightning_fabric.utilities.exceptions import MisconfigurationException
 from lightning_utilities import module_available
+from segmentation_models_pytorch.base import SegmentationModel
 from torch import nn
 
 from kelp import consts
+from kelp.models.efficientunetplusplus.model import EfficientUnetPlusPlus
+from kelp.models.resunet.model import ResUnet
+from kelp.models.resunetplusplus.model import ResUnetPlusPlus
+
+_MODEL_LOOKUP: Dict[str, Type[SegmentationModel]] = {
+    "deeplabv3": smp.DeepLabV3,
+    "deeplabv3+": smp.DeepLabV3Plus,
+    "efficientunet++": EfficientUnetPlusPlus,
+    "fpn": smp.FPN,
+    "linknet": smp.Linknet,
+    "manet": smp.MAnet,
+    "pan": smp.PAN,
+    "pspnet": smp.PSPNet,
+    "resunet": ResUnet,
+    "resunet++": ResUnetPlusPlus,
+    "unet": smp.Unet,
+    "unet++": smp.UnetPlusPlus,
+}
 
 
 def resolve_loss(
@@ -71,14 +90,17 @@ def resolve_model(
     compile_dynamic: Optional[bool] = None,
     ort: bool = False,
 ) -> nn.Module:
-    if architecture == "unet":
-        model = smp.Unet(
-            encoder_name=encoder,
-            encoder_weights=encoder_weights if pretrained else None,
-            in_channels=in_channels,
-            classes=classes,
-            decoder_attention_type=decoder_attention_type,
-        )
+    if architecture in _MODEL_LOOKUP:
+        model_kwargs = {
+            "encoder_name": encoder,
+            "encoder_weights": encoder_weights if pretrained else None,
+            "in_channels": in_channels,
+            "classes": classes,
+            "decoder_attention_type": decoder_attention_type,
+        }
+        if "unet" not in architecture:
+            model_kwargs.pop("decoder_attention_type")
+        model = _MODEL_LOOKUP[architecture](**model_kwargs)
     else:
         raise ValueError(f"{architecture=} is not supported.")
 
