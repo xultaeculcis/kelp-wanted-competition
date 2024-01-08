@@ -24,6 +24,7 @@ def main() -> None:
         train_cfg=cfg.training_config,
         tta=cfg.tta,
         tta_merge_mode=cfg.tta_merge_mode,
+        decision_threshold=cfg.decision_threshold,
     )
     create_submission_tar(
         preds_dir=preds_dir,

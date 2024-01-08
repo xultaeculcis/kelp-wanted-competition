@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import mlflow
 import pytorch_lightning as pl
@@ -31,8 +31,10 @@ class EvalConfig(ConfigBase):
     run_dir: Path
     experiment_name: str = "model-eval-exp"
     output_dir: Path
+    log_model: bool = False
     tta: bool = False
     tta_merge_mode: str = "mean"
+    decision_threshold: Optional[float] = None
 
     @model_validator(mode="before")
     def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -72,8 +74,10 @@ def parse_args() -> EvalConfig:
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--run_dir", type=str)
     parser.add_argument("--experiment_name", type=str, default="model-eval-exp")
+    parser.add_argument("--log_model", action="store_true")
     parser.add_argument("--tta", action="store_true")
     parser.add_argument("--tta_merge_mode", type=str, default="mean")
+    parser.add_argument("--decision_threshold", type=float)
     args = parser.parse_args()
     cfg = EvalConfig(**vars(args))
     cfg.log_self()
@@ -86,18 +90,17 @@ def load_model(
     use_mlflow: bool,
     tta: bool = False,
     tta_merge_mode: str = "mean",
+    decision_threshold: Optional[float] = None,
 ) -> pl.LightningModule:
     if use_mlflow:
         model = mlflow.pytorch.load_model(model_path)
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path, tta=tta)
         model.eval()
-    model.hparams["tta"] = tta
-    model.hparams_initial["tta"] = tta
-    model.hyperparams["tta"] = tta
-    model.hparams["tta_merge_mode"] = tta_merge_mode
-    model.hparams_initial["tta_merge_mode"] = tta_merge_mode
-    model.hyperparams["tta_merge_mode"] = tta_merge_mode
+    for hp_dict in [model.hparams, model.hparams_initial, model.hyperparams]:
+        hp_dict["tta"] = tta
+        hp_dict["tta_merge_mode"] = tta_merge_mode
+        hp_dict["decision_threshold"] = decision_threshold
     return model
 
 
@@ -108,8 +111,10 @@ def run_eval(
     use_mlflow: bool,
     train_cfg: TrainConfig,
     experiment_name: str,
-    tta: bool,
-    tta_merge_mode: str,
+    log_model: bool = False,
+    tta: bool = False,
+    tta_merge_mode: str = "max",
+    decision_threshold: Optional[float] = None,
 ) -> None:
     set_gpu_power_limit_if_needed()
     mlflow.set_experiment(experiment_name)
@@ -124,6 +129,7 @@ def run_eval(
             {
                 "actual_tta": tta,
                 "actual_tta_merge_mode": tta_merge_mode,
+                "decision_threshold": decision_threshold,
             }
         )
         mlflow.set_tags(
@@ -135,7 +141,13 @@ def run_eval(
         )
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=output_dir)
         dm = KelpForestDataModule.from_metadata_file(**train_cfg.data_module_kwargs)
-        model = load_model(model_path=model_checkpoint, use_mlflow=use_mlflow, tta=tta, tta_merge_mode=tta_merge_mode)
+        model = load_model(
+            model_path=model_checkpoint,
+            use_mlflow=use_mlflow,
+            tta=tta,
+            tta_merge_mode=tta_merge_mode,
+            decision_threshold=decision_threshold,
+        )
         trainer = pl.Trainer(
             logger=make_loggers(
                 experiment=train_cfg.resolved_experiment_name,
@@ -148,7 +160,8 @@ def run_eval(
             **train_cfg.trainer_kwargs,
         )
         trainer.test(model, datamodule=dm)
-        mlflow.pytorch.log_model(model, "model")
+        if log_model:
+            mlflow.pytorch.log_model(model, "model")
 
 
 def main() -> None:
@@ -162,6 +175,8 @@ def main() -> None:
         experiment_name=cfg.experiment_name,
         tta=cfg.tta,
         tta_merge_mode=cfg.tta_merge_mode,
+        decision_threshold=cfg.decision_threshold,
+        log_model=cfg.log_model,
     )
 
 
