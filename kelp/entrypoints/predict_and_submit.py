@@ -22,6 +22,8 @@ def main() -> None:
         model_checkpoint=cfg.model_checkpoint,
         use_mlflow=cfg.use_mlflow,
         train_cfg=cfg.training_config,
+        tta=cfg.tta,
+        tta_merge_mode=cfg.tta_merge_mode,
     )
     create_submission_tar(
         preds_dir=preds_dir,

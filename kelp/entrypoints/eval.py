@@ -89,22 +89,15 @@ def load_model(
 ) -> pl.LightningModule:
     if use_mlflow:
         model = mlflow.pytorch.load_model(model_path)
-        model.hparams["tta"] = tta
-        model.hparams_initial["tta"] = tta
-        model.hyperparams["tta"] = tta
-        model.hparams["tta_merge_mode"] = tta_merge_mode
-        model.hparams_initial["tta"] = tta_merge_mode
-        model.hyperparams["tta"] = tta_merge_mode
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path, tta=tta)
-        model.hparams["tta"] = tta
-        model.hparams_initial["tta"] = tta
-        model.hyperparams["tta"] = tta
-        model.hparams["tta_merge_mode"] = tta_merge_mode
-        model.hparams_initial["tta"] = tta_merge_mode
-        model.hyperparams["tta"] = tta_merge_mode
-
         model.eval()
+    model.hparams["tta"] = tta
+    model.hparams_initial["tta"] = tta
+    model.hyperparams["tta"] = tta
+    model.hparams["tta_merge_mode"] = tta_merge_mode
+    model.hparams_initial["tta_merge_mode"] = tta_merge_mode
+    model.hyperparams["tta_merge_mode"] = tta_merge_mode
     return model
 
 

@@ -27,6 +27,7 @@ Checklist:
 - [x] Add extra spectral indices combinations
 - [x] Eval script
 - [x] TTA
+- [ ] Decision threshold optimization
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -35,7 +36,6 @@ Checklist:
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
-- [ ] Decision threshold optimization
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
@@ -486,3 +486,12 @@ Findings:
   * min: 0.85403
   * gmean: 0.15955
   * tsharpen: 0.00468 - loss was nan
+
+## 2024-01-08
+
+* Submitted new preds with TTA:
+  * no-tta: 0.7083
+  * max: 0.7076
+  * mean: 0.7073
+* So... that was a waste of time...
+* WIP. Prediction threshold optimization

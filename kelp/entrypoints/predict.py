@@ -44,6 +44,8 @@ class PredictConfig(ConfigBase):
     model_checkpoint: Path
     run_dir: Optional[Path]
     output_dir: Path
+    tta: bool = False
+    tta_merge_mode: str = "max"
 
     @model_validator(mode="before")
     def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -80,6 +82,8 @@ def parse_args() -> PredictConfig:
     parser.add_argument("--run_dir", type=str)
     parser.add_argument("--original_training_config_fp", type=str)
     parser.add_argument("--model_checkpoint", type=str)
+    parser.add_argument("--tta", action="store_true")
+    parser.add_argument("--tta_merge_mode", type=str, default="max")
     args = parser.parse_args()
     cfg = PredictConfig(**vars(args))
     cfg.log_self()
@@ -87,12 +91,23 @@ def parse_args() -> PredictConfig:
     return cfg
 
 
-def load_model(model_path: Path, use_mlflow: bool) -> pl.LightningModule:
+def load_model(
+    model_path: Path,
+    use_mlflow: bool,
+    tta: bool = False,
+    tta_merge_mode: str = "mean",
+) -> pl.LightningModule:
     if use_mlflow:
         model = mlflow.pytorch.load_model(model_path)
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path)
         model.eval()
+    model.hparams["tta"] = tta
+    model.hparams_initial["tta"] = tta
+    model.hyperparams["tta"] = tta
+    model.hparams["tta_merge_mode"] = tta_merge_mode
+    model.hparams_initial["tta_merge_mode"] = tta_merge_mode
+    model.hyperparams["tta_merge_mode"] = tta_merge_mode
     return model
 
 
@@ -123,9 +138,11 @@ def run_prediction(
     model_checkpoint: Path,
     use_mlflow: bool,
     train_cfg: TrainConfig,
+    tta: bool,
+    tta_merge_mode: str,
 ) -> None:
     dm = KelpForestDataModule.from_folders(predict_data_folder=data_dir, **train_cfg.data_module_kwargs)
-    model = load_model(model_path=model_checkpoint, use_mlflow=use_mlflow)
+    model = load_model(model_path=model_checkpoint, use_mlflow=use_mlflow, tta=tta, tta_merge_mode=tta_merge_mode)
     predict(dm=dm, model=model, train_cfg=train_cfg, output_dir=output_dir)
 
 
@@ -137,6 +154,8 @@ def main() -> None:
         model_checkpoint=cfg.model_checkpoint,
         use_mlflow=cfg.use_mlflow,
         train_cfg=cfg.training_config,
+        tta=cfg.tta,
+        tta_merge_mode=cfg.tta_merge_mode,
     )
 
 
