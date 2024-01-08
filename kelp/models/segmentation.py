@@ -239,7 +239,12 @@ class KelpForestSegmentationTask(pl.LightningModule):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward_tta(x) if self.hyperparams["tta"] else self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
+        if self.hyperparams.get("decision_threshold", None):
+            y_hat_hard = (  # type: ignore[attr-defined]
+                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
+            ).long()
+        else:
+            y_hat_hard = y_hat.argmax(dim=1)
         loss = self.loss(y_hat, y)
         self.log("test/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.test_metrics(y_hat_hard, y)
@@ -259,7 +264,12 @@ class KelpForestSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch.pop("image")
         y_hat = self.forward_tta(x) if self.hyperparams.get("tta", False) else self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
+        if "decision_threshold" in self.hyperparams:
+            y_hat_hard = (  # type: ignore[attr-defined]
+                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
+            ).long()
+        else:
+            y_hat_hard = y_hat.argmax(dim=1)
         batch["prediction"] = y_hat_hard
         return batch
 

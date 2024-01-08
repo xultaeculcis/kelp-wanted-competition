@@ -27,6 +27,7 @@ Checklist:
 - [x] Add extra spectral indices combinations
 - [x] Eval script
 - [x] TTA
+- [x] Decision threshold optimization
 - [ ] ConvNeXt v1/v2
 - [ ] EfficientNet v1/v2
 - [ ] ResNeXt
@@ -35,7 +36,6 @@ Checklist:
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
-- [ ] Decision threshold optimization
 - [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
@@ -64,7 +64,7 @@ Checklist:
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
 * Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
-* Test Time Augmentations
+* Test Time Augmentations (only local runs)
 
 ## What did not work
 
@@ -76,6 +76,7 @@ Checklist:
 * Compiling the model and `torch-ort`
 * Normalization strategies other than `quantile` / `z-score`
 * Bunch of different index combinations
+* TTA (for leaderboard)
 
 ## 2023-12-02
 
@@ -480,9 +481,64 @@ Findings:
 * Resolve artifacts dir dynamically - allow raw AML export as input to eval script, log model after eval
 * Updated Makefile to include the best combination of spectral indices
 * Added TTA (baseline val/dice=0.85339):
-  * max: **0.85490**
-  * mean: 0.85458
-  * sum: 0.85458
-  * min: 0.85403
-  * gmean: 0.15955
-  * tsharpen: 0.00468 - loss was nan
+    * max: **0.85490**
+    * mean: 0.85458
+    * sum: 0.85458
+    * min: 0.85403
+    * gmean: 0.15955
+    * tsharpen: 0.00468 - loss was nan
+
+## 2024-01-08
+
+* Submitted new preds with TTA:
+    * no-tta: 0.7083
+    * max: 0.7076
+    * mean: 0.7073
+* So... that was a waste of time...
+* Prediction threshold optimization
+
+| threshold | test/dice   |
+|-----------|-------------|
+| 0.3       | 0.85301     |
+| 0.31      | 0.85305     |
+| 0.32      | 0.85306     |
+| 0.33      | 0.85307     |
+| 0.34      | 0.85309     |
+| 0.35      | 0.85314     |
+| 0.36      | 0.85314     |
+| 0.37      | 0.85313     |
+| 0.38      | 0.85315     |
+| 0.39      | 0.85317     |
+| 0.4       | 0.85316     |
+| 0.41      | 0.85317     |
+| 0.42      | 0.85317     |
+| 0.43      | 0.85320     |
+| 0.44      | 0.85319     |
+| 0.45      | **0.85320** |
+| 0.46      | 0.85318     |
+| 0.47      | 0.85314     |
+| 0.48      | 0.85316     |
+| 0.49      | 0.85317     |
+| 0.5       | 0.85316     |
+| 0.51      | 0.85315     |
+| 0.52      | 0.85314     |
+| 0.53      | 0.85313     |
+| 0.54      | 0.85311     |
+| 0.55      | 0.85309     |
+| 0.56      | 0.85305     |
+| 0.57      | 0.85303     |
+| 0.58      | 0.85300     |
+| 0.59      | 0.85300     |
+| 0.6       | 0.85296     |
+| 0.61      | 0.85296     |
+| 0.62      | 0.85290     |
+| 0.63      | 0.85287     |
+| 0.64      | 0.85285     |
+| 0.65      | 0.85281     |
+| 0.66      | 0.85278     |
+| 0.67      | 0.85274     |
+| 0.68      | 0.85267     |
+| 0.69      | 0.85259     |
+| 0.7       | 0.85253     |
+
+* Leaderboard: TODO

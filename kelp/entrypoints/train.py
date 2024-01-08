@@ -99,6 +99,7 @@ class TrainConfig(ConfigBase):
     plot_n_batches: int = 3
     tta: bool = False
     tta_merge_mode: str = "mean"
+    decision_threshold: Optional[float] = None
 
     # callbacks
     save_top_k: int = 1
@@ -268,6 +269,7 @@ class TrainConfig(ConfigBase):
             "plot_n_batches": self.plot_n_batches,
             "tta": self.tta,
             "tta_merge_mode": self.tta_merge_mode,
+            "decision_threshold": self.decision_threshold,
         }
 
     @property
@@ -492,6 +494,10 @@ def parse_args() -> TrainConfig:
         "--tta_merge_mode",
         type=str,
         default="mean",
+    )
+    parser.add_argument(
+        "--decision_threshold",
+        type=float,
     )
     parser.add_argument(
         "--strategy",

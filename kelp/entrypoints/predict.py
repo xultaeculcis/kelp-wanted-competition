@@ -44,6 +44,9 @@ class PredictConfig(ConfigBase):
     model_checkpoint: Path
     run_dir: Optional[Path]
     output_dir: Path
+    tta: bool = False
+    tta_merge_mode: str = "max"
+    decision_threshold: Optional[float] = None
 
     @model_validator(mode="before")
     def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -80,6 +83,9 @@ def parse_args() -> PredictConfig:
     parser.add_argument("--run_dir", type=str)
     parser.add_argument("--original_training_config_fp", type=str)
     parser.add_argument("--model_checkpoint", type=str)
+    parser.add_argument("--tta", action="store_true")
+    parser.add_argument("--tta_merge_mode", type=str, default="max")
+    parser.add_argument("--decision_threshold", type=float)
     args = parser.parse_args()
     cfg = PredictConfig(**vars(args))
     cfg.log_self()
@@ -87,12 +93,22 @@ def parse_args() -> PredictConfig:
     return cfg
 
 
-def load_model(model_path: Path, use_mlflow: bool) -> pl.LightningModule:
+def load_model(
+    model_path: Path,
+    use_mlflow: bool,
+    tta: bool = False,
+    tta_merge_mode: str = "mean",
+    decision_threshold: Optional[float] = None,
+) -> pl.LightningModule:
     if use_mlflow:
         model = mlflow.pytorch.load_model(model_path)
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path)
         model.eval()
+    for hp_dict in [model.hparams, model.hparams_initial, model.hyperparams]:
+        hp_dict["tta"] = tta
+        hp_dict["tta_merge_mode"] = tta_merge_mode
+        hp_dict["decision_threshold"] = decision_threshold
     return model
 
 
@@ -123,9 +139,18 @@ def run_prediction(
     model_checkpoint: Path,
     use_mlflow: bool,
     train_cfg: TrainConfig,
+    tta: bool = False,
+    tta_merge_mode: str = "max",
+    decision_threshold: Optional[float] = None,
 ) -> None:
     dm = KelpForestDataModule.from_folders(predict_data_folder=data_dir, **train_cfg.data_module_kwargs)
-    model = load_model(model_path=model_checkpoint, use_mlflow=use_mlflow)
+    model = load_model(
+        model_path=model_checkpoint,
+        use_mlflow=use_mlflow,
+        tta=tta,
+        tta_merge_mode=tta_merge_mode,
+        decision_threshold=decision_threshold,
+    )
     predict(dm=dm, model=model, train_cfg=train_cfg, output_dir=output_dir)
 
 
@@ -137,6 +162,9 @@ def main() -> None:
         model_checkpoint=cfg.model_checkpoint,
         use_mlflow=cfg.use_mlflow,
         train_cfg=cfg.training_config,
+        tta=cfg.tta,
+        tta_merge_mode=cfg.tta_merge_mode,
+        decision_threshold=cfg.decision_threshold,
     )
 
 
