@@ -98,7 +98,7 @@ def resolve_model(
             "classes": classes,
             "decoder_attention_type": decoder_attention_type,
         }
-        if "unet" not in architecture:
+        if "unet" not in architecture or architecture == "efficientunet++":
             model_kwargs.pop("decoder_attention_type")
         model = _MODEL_LOOKUP[architecture](**model_kwargs)
     else:

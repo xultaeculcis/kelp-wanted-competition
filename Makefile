@@ -140,7 +140,7 @@ train-val-test-split:
 		--output_dir data/processed
 
 .PHONY: train  ## Trains single CV split
-train-single-split:
+train:
 	python ./kelp/entrypoints/train.py \
  		--data_dir data/raw \
 		--output_dir mlruns \
