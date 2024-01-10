@@ -541,4 +541,12 @@ Findings:
 | 0.69      | 0.85259     |
 | 0.7       | 0.85253     |
 
-* Leaderboard: TODO
+* Leaderboard: 0.7077
+
+# 2024-01-09
+
+* Added new model architectures based on https://github.com/jlcsilva/segmentation_models.pytorch
+
+# 2024-01-10
+
+* WIP model hparam search AML pipeline
