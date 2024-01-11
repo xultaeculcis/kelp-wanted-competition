@@ -549,4 +549,33 @@ Findings:
 
 # 2024-01-10
 
-* WIP model hparam search AML pipeline
+* Added hparam search AML pipeline
+* Running a few runs overnight
+
+# 2024-01-11
+
+* Results after overnight training (Top 5 runs only):
+
+| encoder               | architecture | val/dice |
+|-----------------------|--------------|----------|
+| tu-efficientnet_b5    | unet         | 0.85854  |
+| tu-seresnext101_32x4d | unet         | 0.85807  |
+| tu-resnest50d_4s2x40d | unet         | 0.85787  |
+| tu-rexnetr_300        | unet         | 0.85749  |
+| tu-seresnext26d_32x4d | unet         | 0.85728  |
+
+* Observation: bigger models = better
+* TTA on test set worked for some models and failed for the others
+* A lot of models failed due to lack of pre-trained weight - need to investigate more... are the docs lying?
+* Very large models failed with OOM errors - neet to retrain with lower batch size + gradient accumulation
+* Some model failed because of bad tensor shapes - probably those models require inputs to be divisible
+by 128 or something
+* Looks like checkpoint saving using MLFlow is broken and instead of saving the best model the latest one is saved...
+* Added a workaround for this - always load model from checkpoints dir if exists
+* New submissions:
+
+| encoder            | architecture | val/dice | leaderboard | notes                                                            |
+|--------------------|--------------|----------|-------------|------------------------------------------------------------------|
+| tu-efficientnet_b5 | unet         | 0.85920  | 0.7119      | trained on AML + bf16-mixed + dt=0.45 + fixed checkpoint restore |
+| tu-efficientnet_b5 | unet         | 0.85854  | 0.7105      | trained on AML + fp32-true                                       |
+| tu-efficientnet_b5 | unet         | 0.85817  | 0.7101      | trained locally                                                  |

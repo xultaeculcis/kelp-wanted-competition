@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Dict, Literal, cast
+from typing import Any, Dict, Literal, Tuple, cast
 
 import pytorch_lightning as pl
 import ttach as tta
@@ -185,13 +185,25 @@ class KelpForestSegmentationTask(pl.LightningModule):
             )
             plt.close(fig)
 
-    def forward_tta(self, x: Tensor) -> Tensor:
-        tta_model = tta.SegmentationTTAWrapper(
-            model=self.model,
-            transforms=_test_time_transforms,
-            merge_mode=self.hyperparams.get("tta_merge_mode", "mean"),
-        )
-        return tta_model(x)
+    def _predict_with_tta_if_necessary(self, x: Tensor) -> Tuple[Tensor, Tensor]:
+        if self.hyperparams.get("tta", False):
+            tta_model = tta.SegmentationTTAWrapper(
+                model=self.model,
+                transforms=_test_time_transforms,
+                merge_mode=self.hyperparams.get("tta_merge_mode", "mean"),
+            )
+            y_hat = tta_model(x)
+        else:
+            y_hat = self.forward(x)
+
+        if self.hyperparams.get("decision_threshold", None):
+            y_hat_hard = (  # type: ignore[attr-defined]
+                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
+            ).long()
+        else:
+            y_hat_hard = y_hat.argmax(dim=1)
+
+        return y_hat, y_hat_hard
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         return self.model(*args, **kwargs)
@@ -238,13 +250,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward_tta(x) if self.hyperparams["tta"] else self.forward(x)
-        if self.hyperparams.get("decision_threshold", None):
-            y_hat_hard = (  # type: ignore[attr-defined]
-                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
-            ).long()
-        else:
-            y_hat_hard = y_hat.argmax(dim=1)
+        y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
         loss = self.loss(y_hat, y)
         self.log("test/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.test_metrics(y_hat_hard, y)
@@ -263,13 +269,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
         batch = args[0]
         x = batch.pop("image")
-        y_hat = self.forward_tta(x) if self.hyperparams.get("tta", False) else self.forward(x)
-        if "decision_threshold" in self.hyperparams:
-            y_hat_hard = (  # type: ignore[attr-defined]
-                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
-            ).long()
-        else:
-            y_hat_hard = y_hat.argmax(dim=1)
+        y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
         batch["prediction"] = y_hat_hard
         return batch
 

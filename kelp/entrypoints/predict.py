@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import mlflow
 import pytorch_lightning as pl
@@ -40,35 +40,57 @@ class PredictConfig(ConfigBase):
     model_config = ConfigDict(protected_namespaces=())
 
     data_dir: Path
+    dataset_stats_dir: Path
     original_training_config_fp: Path
     model_checkpoint: Path
-    run_dir: Optional[Path]
+    run_dir: Path
     output_dir: Path
     tta: bool = False
     tta_merge_mode: str = "max"
     decision_threshold: Optional[float] = None
+    precision: Optional[
+        Literal[
+            "16-true",
+            "16-mixed",
+            "bf16-true",
+            "bf16-mixed",
+            "32-true",
+        ]
+    ] = None
 
     @model_validator(mode="before")
     def validate_inputs(cls, data: Dict[str, Any]) -> Dict[str, Any]:
-        if data.get("run_dir", None) and (
-            data.get("model_checkpoint", None) or data.get("original_training_config_fp", None)
-        ):
-            raise ValueError(
-                "You cannot pass both `run_dir` and `model_checkpoint` or `original_training_config_fp`. "
-                "Please provide either `run_dir` alone or direct paths to checkpoint and config."
-            )
-        if data.get("run_dir", None):
-            run_dir = Path(data["run_dir"])
-            model_checkpoint = run_dir / "artifacts" / "model"
-            config_fp = run_dir / "artifacts" / "config.yaml"
-            data["model_checkpoint"] = model_checkpoint
-            data["original_training_config_fp"] = config_fp
+        run_dir = Path(data["run_dir"])
+        if (run_dir / "model").exists():
+            artifacts_dir = run_dir
+        elif (run_dir / "artifacts").exists():
+            artifacts_dir = run_dir / "artifacts"
+        else:
+            raise ValueError("Could not find nor model dir nor artifacts folder in the specified run_dir")
+
+        model_checkpoint = artifacts_dir / "model"
+
+        if (checkpoints_root := (artifacts_dir / "model" / "checkpoints")).exists():
+            for checkpoint_dir in checkpoints_root.iterdir():
+                aliases = (checkpoint_dir / "aliases.txt").read_text()
+                if "'best'" in aliases:
+                    model_checkpoint = checkpoints_root / checkpoint_dir.name / f"{checkpoint_dir.name}.ckpt"
+                    break
+
+        config_fp = artifacts_dir / "config.yaml"
+        data["model_checkpoint"] = model_checkpoint
+        data["original_training_config_fp"] = config_fp
         return data
 
     @property
     def training_config(self) -> TrainConfig:
         with open(self.original_training_config_fp, "r") as f:
             cfg = TrainConfig(**yaml.safe_load(f))
+        cfg.data_dir = self.data_dir
+        cfg.dataset_stats_fp = self.dataset_stats_dir / cfg.dataset_stats_fp.name.replace("%3A", ":")
+        cfg.output_dir = self.output_dir
+        if self.precision is not None:
+            cfg.precision = self.precision
         return cfg
 
     @property
@@ -76,16 +98,31 @@ class PredictConfig(ConfigBase):
         return self.model_checkpoint.is_dir()
 
 
-def parse_args() -> PredictConfig:
+def build_prediction_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
-    parser.add_argument("--run_dir", type=str)
-    parser.add_argument("--original_training_config_fp", type=str)
-    parser.add_argument("--model_checkpoint", type=str)
+    parser.add_argument("--dataset_stats_dir", type=str, required=True)
+    parser.add_argument("--run_dir", type=str, required=True)
     parser.add_argument("--tta", action="store_true")
     parser.add_argument("--tta_merge_mode", type=str, default="max")
     parser.add_argument("--decision_threshold", type=float)
+    parser.add_argument(
+        "--precision",
+        type=str,
+        choices=[
+            "16-true",
+            "16-mixed",
+            "bf16-true",
+            "bf16-mixed",
+            "32-true",
+        ],
+    )
+    return parser
+
+
+def parse_args() -> PredictConfig:
+    parser = build_prediction_arg_parser()
     args = parser.parse_args()
     cfg = PredictConfig(**vars(args))
     cfg.log_self()
@@ -105,10 +142,9 @@ def load_model(
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path)
         model.eval()
-    for hp_dict in [model.hparams, model.hparams_initial, model.hyperparams]:
-        hp_dict["tta"] = tta
-        hp_dict["tta_merge_mode"] = tta_merge_mode
-        hp_dict["decision_threshold"] = decision_threshold
+    model.hyperparams["tta"] = tta
+    model.hyperparams["tta_merge_mode"] = tta_merge_mode
+    model.hyperparams["decision_threshold"] = decision_threshold
     return model
 
 
