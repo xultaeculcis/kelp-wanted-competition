@@ -122,6 +122,7 @@ class TrainConfig(ConfigBase):
     limit_test_batches: Optional[Union[int, float]] = None
     log_every_n_steps: int = 50
     accumulate_grad_batches: int = 1
+    val_check_interval: Optional[float] = None
     benchmark: bool = False
 
     # misc
@@ -283,6 +284,7 @@ class TrainConfig(ConfigBase):
             "limit_test_batches": self.limit_test_batches,
             "log_every_n_steps": self.log_every_n_steps,
             "accumulate_grad_batches": self.accumulate_grad_batches,
+            "val_check_interval": self.val_check_interval,
             "benchmark": self.benchmark,
         }
 
@@ -599,6 +601,10 @@ def parse_args() -> TrainConfig:
         "--accumulate_grad_batches",
         type=int,
         default=1,
+    )
+    parser.add_argument(
+        "--val_check_interval",
+        type=float,
     )
     parser.add_argument(
         "--benchmark",
