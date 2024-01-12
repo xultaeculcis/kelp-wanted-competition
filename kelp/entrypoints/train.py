@@ -14,7 +14,7 @@ import mlflow  # noqa: E402
 import pytorch_lightning as pl  # noqa: E402
 import torch  # noqa: E402
 from mlflow import ActiveRun  # noqa: E402
-from pydantic import field_validator  # noqa: E402
+from pydantic import field_validator, model_validator  # noqa: E402
 from pytorch_lightning import Callback  # noqa: E402
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint  # noqa: E402
 from pytorch_lightning.loggers import Logger, MLFlowLogger  # noqa: E402
@@ -129,6 +129,18 @@ class TrainConfig(ConfigBase):
     experiment: str = "kelp-seg-training-exp"
     output_dir: Path
     seed: int = 42
+
+    @model_validator(mode="before")
+    def validate_pretrained_weights_exist(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if values["pretrained"] and values["encoder"].startswith("tu-"):
+            import timm
+
+            encoder = values["encoder"].replace("tu-", "")
+            if not any(e.startswith(encoder) for e in timm.list_pretrained()):
+                _logger.warning(f"No pretrained weights exist for tu-{encoder}. Forcing training with random init.")
+                values["pretrained"] = False
+                values["encoder_weights"] = None
+        return values
 
     @field_validator("band_order", mode="before")
     def validate_channel_order(cls, value: Optional[Union[str, List[int]]] = None) -> Optional[List[int]]:

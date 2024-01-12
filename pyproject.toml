@@ -114,6 +114,7 @@ module = [
     "torchvision.*",
     "pytorch_lightning.*",
     "segmentation_models_pytorch.*",
+    "timm.*",
     "torchmetrics.*",
     "kornia.*",
     "dask.*",
