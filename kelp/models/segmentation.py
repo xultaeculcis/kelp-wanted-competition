@@ -118,7 +118,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
     def _log_predictions_batch(self, batch: Dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
         epoch = self.current_epoch
-        if batch_idx < self.hyperparams["plot_n_batches"] and self.global_step:
+        step = self.global_step
+        if batch_idx < self.hyperparams["plot_n_batches"] and step:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
             band_index_lookup = {band: idx for idx, band in enumerate(datamodule.reordered_bands)}
             batch["prediction"] = y_hat_hard
@@ -145,20 +146,22 @@ class KelpForestSegmentationTask(pl.LightningModule):
                         self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                             run_id=self.logger.run_id,  # type: ignore[attr-defined]
                             figure=nested_figure,
-                            artifact_file=f"images/{key}/{nested_key}_{epoch=:02d}_{batch_idx=}.jpg",
+                            artifact_file=f"images/{key}/{nested_key}_{batch_idx=}_{epoch=:02d}_{step=:04d}.jpg",
                         )
                         plt.close(nested_figure)
                 else:
                     self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                         run_id=self.logger.run_id,  # type: ignore[attr-defined]
                         figure=fig,
-                        artifact_file=f"images/{key}/{key}_{epoch=:02d}_{batch_idx=}.jpg",
+                        artifact_file=f"images/{key}/{key}_{batch_idx=}_{epoch=:02d}_{step=:04d}.jpg",
                     )
             plt.close()
 
     def _log_confusion_matrices(
         self, metrics: Dict[str, Tensor], stage: Literal["val", "test"], cmap: str = "Blues"
     ) -> None:
+        epoch = self.current_epoch
+        step = self.global_step
         for metric_key, title, matrix_kind in zip(
             [f"{stage}/conf_mtrx", f"{stage}/norm_conf_mtrx"],
             ["Confusion matrix", "Normalized confusion matrix"],
@@ -166,7 +169,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         ):
             conf_matrix = metrics.pop(metric_key)
             # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
-            if self.global_step == 0:
+            if step == 0:
                 continue
             fig, axes = plt.subplots(1, 1, figsize=(7, 5))
             ConfusionMatrixDisplay(
@@ -181,7 +184,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                 run_id=self.logger.run_id,  # type: ignore[attr-defined]
                 figure=fig,
-                artifact_file=f"images/{stage}_{matrix_kind}/{matrix_kind}_{self.current_epoch:02d}.jpg",
+                artifact_file=f"images/{stage}_{matrix_kind}/{matrix_kind}_{epoch=:02d}_{step=:04d}.jpg",
             )
             plt.close(fig)
 

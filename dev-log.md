@@ -579,3 +579,10 @@ by 128 or something
 | tu-efficientnet_b5 | unet         | 0.85920  | 0.7119      | trained on AML + bf16-mixed + dt=0.45 + fixed checkpoint restore |
 | tu-efficientnet_b5 | unet         | 0.85854  | 0.7105      | trained on AML + fp32-true                                       |
 | tu-efficientnet_b5 | unet         | 0.85817  | 0.7101      | trained locally                                                  |
+
+## 2024-01-12
+
+* Update encoder list in hparam search pipeline
+* Add option to pass `val_check_interval`
+* `image_size=384` + `batch_size=16` + `accumulate_grad_batches=2`
+* Force training with random init when no weights exist
