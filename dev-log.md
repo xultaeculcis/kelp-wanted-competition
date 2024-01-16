@@ -28,15 +28,15 @@ Checklist:
 - [x] Eval script
 - [x] TTA
 - [x] Decision threshold optimization
-- [ ] ConvNeXt v1/v2
-- [ ] EfficientNet v1/v2
-- [ ] ResNeXt
-- [ ] SwinV2-B
+- [x] ConvNeXt v1/v2 - not supported by `segmentation-models-pytorch`
+- [x] EfficientNet v1/v2
+- [x] ResNeXt
+- [x] SwinV2-B
+- [ ] Model Ensemble
 - [ ] Freeze strategy
 - [ ] Freeze-unfreeze strategy
 - [ ] No-freeze strategy
 - [ ] Mask post-processing
-- [ ] Model Ensemble
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
 - [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data

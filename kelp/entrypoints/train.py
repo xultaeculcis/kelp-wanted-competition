@@ -42,6 +42,7 @@ class TrainConfig(ConfigBase):
     spectral_indices: List[str]
     band_order: Optional[List[int]] = None
     image_size: int = 352
+    resize_strategy: Literal["pad", "resize"] = "pad"
     batch_size: int = 32
     num_workers: int = 4
     normalization_strategy: Literal[
@@ -226,6 +227,7 @@ class TrainConfig(ConfigBase):
             "spectral_indices": self.spectral_indices,
             "band_order": self.band_order,
             "image_size": self.image_size,
+            "resize_strategy": self.resize_strategy,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
             "normalization_strategy": self.normalization_strategy,
@@ -337,6 +339,12 @@ def parse_args() -> TrainConfig:
         "--image_size",
         type=int,
         default=352,
+    )
+    parser.add_argument(
+        "--resize_strategy",
+        type=str,
+        choices=["pad", "resize"],
+        default="pad",
     )
     parser.add_argument(
         "--num_workers",
