@@ -83,7 +83,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
-        assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
+        assert image_size >= TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
         if band_order is not None and len(band_order) != len(self.base_bands):
             raise ValueError(
                 f"channel_order should have exactly {len(self.base_bands)} elements, you passed {len(band_order)}"

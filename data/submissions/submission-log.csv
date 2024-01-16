@@ -56,3 +56,6 @@ mlruns/125701342133334851/a9ea38cb5cf144c28b85cef99fbf0fc3;6;0.85320;0.7077;DEMW
 mlruns/992153174516526782/f7f77cec28b84d3fbf02718622d2dea2;6;0.85825;0.7101;effnet-b5
 data/aml/Job_epic_rain_k18c71rd_OutputsAndLogs;6;0.85848;0.7105;effnet-b5 + fp32
 data/aml/Job_epic_rain_k18c71rd_OutputsAndLogs;6;0.85920;0.7119;effnet-b5 + bf16-mixed + dt=0.45 + fixed checkpoint restore
+mlruns/992153174516526782/8ee860bfdc5b44458419dcf45a9e8303;6;0.85928;0.7113;effnet-b5 + 16-mixed + dt=0.48 + grad_acc=4 + bs=8 + padding + 352
+mlruns/992153174516526782/8ee860bfdc5b44458419dcf45a9e8303;6;0.85924;0.7113;effnet-b5 + 16-mixed + dt=0.45 + grad_acc=4 + bs=8 + padding + 352
+mlruns/992153174516526782/8ee860bfdc5b44458419dcf45a9e8303;6;0.85899;0.7112;effnet-b5 + grad_acc=4 + bs=8 + padding + 352

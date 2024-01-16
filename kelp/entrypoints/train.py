@@ -56,31 +56,45 @@ class TrainConfig(ConfigBase):
     mask_using_qa: bool = False
     mask_using_water_mask: bool = False
     use_weighted_sampler: bool = False
-    samples_per_epoch: int = 9600
-    has_kelp_importance_factor: float = 1.0
-    kelp_pixels_pct_importance_factor: float = 1.0
-    qa_ok_importance_factor: float = 1.0
-    qa_corrupted_pixels_pct_importance_factor: float = 1.0
-    almost_all_water_importance_factor: float = -1.0
-    dem_nan_pixels_pct_importance_factor: float = -1.0
+    samples_per_epoch: int = 10240
+    has_kelp_importance_factor: float = 3.0
+    kelp_pixels_pct_importance_factor: float = 0.2
+    qa_ok_importance_factor: float = 0.0
+    qa_corrupted_pixels_pct_importance_factor: float = -1.0
+    almost_all_water_importance_factor: float = 0.5
+    dem_nan_pixels_pct_importance_factor: float = 0.25
     dem_zero_pixels_pct_importance_factor: float = -1.0
 
     # model params
-    architecture: str
-    encoder: str
+    architecture: str = "unet"
+    encoder: str = "tu-efficientnet_b5"
     encoder_weights: Optional[str] = None
     decoder_attention_type: Optional[str] = None
+    pretrained: bool = False
     num_classes: int = 2
     ignore_index: Optional[int] = None
-    optimizer: Literal["adam", "adamw"] = "adamw"
-    weight_decay: float = 1e-4
-    lr_scheduler: Optional[Literal["onecycle", "cosine", "reduce_lr_on_plateau"]] = None
-    lr: float = 3e-4
-    pct_start: float = 0.3
-    div_factor: float = 2
-    final_div_factor: float = 1e2
     strategy: Literal["freeze", "no-freeze", "freeze-unfreeze"] = "no-freeze"
-    pretrained: bool = False
+
+    # optimizer params
+    optimizer: Literal["adam", "adamw", "sgd"] = "adamw"
+    weight_decay: float = 1e-4
+
+    # lr scheduler params
+    lr_scheduler: Optional[Literal["onecycle", "cosine", "cyclic", "reduce_lr_on_plateau"]] = None
+    lr: float = 3e-4
+    oneycle_pct_start: float = 0.1
+    oneycle_div_factor: float = 2
+    oneycle_final_div_factor: float = 1e2
+    cyclic_base_lr: float = 1e-5
+    cyclic_mode: Literal["triangular", "triangular2", "exp_range"] = "exp_range"
+    cosine_eta_min: float = 1e-7
+    cosine_T_mult: int = 2
+    reduce_lr_on_plateau_factor: float = 0.95
+    reduce_lr_on_plateau_patience: int = 3
+    reduce_lr_on_plateau_threshold: float = 1e-4
+    reduce_lr_on_plateau_min_lr: float = 1e-6
+
+    # loss params
     objective: Literal["binary", "multiclass"] = "binary"
     loss: Literal[
         "ce",
@@ -93,20 +107,24 @@ class TrainConfig(ConfigBase):
     ] = "dice"
     ce_smooth_factor: float = 0.0
     ce_class_weights: Optional[Tuple[float, float]] = None
+
+    # compile/ort params
     compile: bool = False
     compile_mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = "default"
     compile_dynamic: Optional[bool] = None
     ort: bool = False
+
+    # eval loop extra params
     plot_n_batches: int = 3
     tta: bool = False
-    tta_merge_mode: str = "mean"
+    tta_merge_mode: Literal["min", "max", "mean", "gmean", "sum", "tsharpen"] = "max"
     decision_threshold: Optional[float] = None
 
-    # callbacks
+    # callback params
     save_top_k: int = 1
     monitor_metric: str = "val/dice"
     monitor_mode: Literal["min", "max"] = "max"
-    early_stopping_patience: int = 1
+    early_stopping_patience: int = 10
 
     # trainer params
     precision: Literal[
@@ -269,9 +287,17 @@ class TrainConfig(ConfigBase):
             "lr_scheduler": self.lr_scheduler,
             "lr": self.lr,
             "epochs": self.epochs,
-            "pct_start": self.pct_start,
-            "div_factor": self.div_factor,
-            "final_div_factor": self.final_div_factor,
+            "onecycle_pct_start": self.onecycle_pct_start,
+            "onecycle_div_factor": self.onecycle_div_factor,
+            "onecycle_final_div_factor": self.onecycle_final_div_factor,
+            "cyclic_base_lr": self.cyclic_base_lr,
+            "cyclic_mode": self.cyclic_mode,
+            "cosine_eta_min": self.cosine_eta_min,
+            "cosine_T_mult": self.cosine_T_mult,
+            "reduce_lr_on_plateau_factor": self.reduce_lr_on_plateau_factor,
+            "reduce_lr_on_plateau_patience": self.reduce_lr_on_plateau_patience,
+            "reduce_lr_on_plateau_threshold": self.reduce_lr_on_plateau_threshold,
+            "reduce_lr_on_plateau_min_lr": self.reduce_lr_on_plateau_min_lr,
             "strategy": self.strategy,
             "objective": self.objective,
             "loss": self.loss,
@@ -336,6 +362,11 @@ def parse_args() -> TrainConfig:
         default=32,
     )
     parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=4,
+    )
+    parser.add_argument(
         "--image_size",
         type=int,
         default=352,
@@ -345,11 +376,6 @@ def parse_args() -> TrainConfig:
         type=str,
         choices=["pad", "resize"],
         default="pad",
-    )
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        default=4,
     )
     parser.add_argument(
         "--normalization_strategy",
@@ -387,12 +413,12 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--samples_per_epoch",
         type=int,
-        default=9600,
+        default=10240,
     )
     parser.add_argument(
         "--has_kelp_importance_factor",
         type=float,
-        default=1.0,
+        default=3.0,
     )
     parser.add_argument(
         "--kelp_pixels_pct_importance_factor",
@@ -402,22 +428,22 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--qa_ok_importance_factor",
         type=float,
-        default=1.0,
+        default=0.2,
     )
     parser.add_argument(
         "--qa_corrupted_pixels_pct_importance_factor",
         type=float,
-        default=1.0,
+        default=0.0,
     )
     parser.add_argument(
         "--almost_all_water_importance_factor",
         type=float,
-        default=-1.0,
+        default=0.5,
     )
     parser.add_argument(
         "--dem_nan_pixels_pct_importance_factor",
         type=float,
-        default=-1.0,
+        default=0.25,
     )
     parser.add_argument(
         "--dem_zero_pixels_pct_importance_factor",
@@ -476,17 +502,14 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--optimizer",
         type=str,
-        choices=["adam", "adamw"],
+        choices=["adam", "adamw", "sgd"],
         default="adamw",
     )
-    parser.add_argument(
-        "--weight_decay",
-        type=float,
-    )
+    parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument(
         "--lr_scheduler",
         type=str,
-        choices=["onecycle", "cosine", "reduce_lr_on_plateau"],
+        choices=["onecycle", "cosine", "cyclic", "reduce_lr_on_plateau"],
     )
     parser.add_argument(
         "--lr",
@@ -494,19 +517,60 @@ def parse_args() -> TrainConfig:
         default=3e-4,
     )
     parser.add_argument(
-        "--pct_start",
+        "--oneycle_pct_start",
         type=float,
-        default=0.3,
+        default=0.1,
     )
     parser.add_argument(
-        "--div_factor",
+        "--oneycle_div_factor",
         type=float,
         default=2,
     )
     parser.add_argument(
-        "--final_div_factor",
+        "--oneycle_final_div_factor",
         type=float,
         default=1e2,
+    )
+    parser.add_argument(
+        "--cyclic_base_lr",
+        type=float,
+        default=1e-5,
+    )
+    parser.add_argument(
+        "--cyclic_mode",
+        type=str,
+        choices=["triangular", "triangular2", "exp_range"],
+        default="exp_range",
+    )
+    parser.add_argument(
+        "--cosine_eta_min",
+        type=float,
+        default=1e-7,
+    )
+    parser.add_argument(
+        "--cosine_T_mult",
+        type=int,
+        default=2,
+    )
+    parser.add_argument(
+        "--reduce_lr_on_plateau_factor",
+        type=float,
+        default=0.95,
+    )
+    parser.add_argument(
+        "--reduce_lr_on_plateau_patience",
+        type=float,
+        default=3,
+    )
+    parser.add_argument(
+        "--reduce_lr_on_plateau_threshold",
+        type=float,
+        default=1e-4,
+    )
+    parser.add_argument(
+        "--reduce_lr_on_plateau_min_lr",
+        type=float,
+        default=1e-6,
     )
     parser.add_argument(
         "--tta",
@@ -515,7 +579,8 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--tta_merge_mode",
         type=str,
-        default="mean",
+        choices=["min", "max", "mean", "gmean", "sum", "tsharpen"],
+        default="max",
     )
     parser.add_argument(
         "--decision_threshold",
@@ -577,7 +642,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--early_stopping_patience",
         type=int,
-        default=3,
+        default=10,
     )
     parser.add_argument(
         "--precision",
@@ -598,7 +663,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--epochs",
         type=int,
-        default=1,
+        default=10,
     )
     parser.add_argument(
         "--limit_train_batches",

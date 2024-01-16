@@ -586,3 +586,17 @@ by 128 or something
 * Add option to pass `val_check_interval`
 * `image_size=384` + `batch_size=16` + `accumulate_grad_batches=2`
 * Force training with random init when no weights exist
+
+## 2024-01-13
+
+* Fixed issue with logging images with the same key twice when using sub-1 `val_check_interval`
+
+## 2024-01-16
+
+* Added support for different LR Schedulers
+* New submissions - no breakthroughs
+* Training with `batch_size=8` and `accumulate_grad_batches=4` resulted in better local eval scores,
+but did not improve leaderboard scores
+* Tried out different resize strategies - padding works best so far
+* Some encoder models require input to be both divisible by 32, 7, 8 etc. - I cannot use the same image size
+* ConvNext not supported

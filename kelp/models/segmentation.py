@@ -8,12 +8,10 @@ import ttach as tta
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch import Tensor
-from torch.optim import Adam, AdamW
-from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
 from kelp import consts
-from kelp.models.factories import resolve_loss, resolve_model
+from kelp.models.factories import resolve_loss, resolve_lr_scheduler, resolve_model, resolve_optimizer
 
 _test_time_transforms = tta.Compose(
     [
@@ -277,36 +275,24 @@ class KelpForestSegmentationTask(pl.LightningModule):
         return batch
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        if (optimizer := self.hyperparams["optimizer"]) == "adam":
-            optimizer = Adam(
-                self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
-            )
-        elif optimizer == "adamw":
-            optimizer = AdamW(
-                self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
-            )
-        else:
-            raise ValueError(f"Optimizer: {optimizer} is not supported.")
-
-        if (lr_scheduler := self.hyperparams["lr_scheduler"]) == "onecycle":
-            scheduler = OneCycleLR(
-                optimizer,
-                max_lr=self.hyperparams["lr"],
-                steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),  # type: ignore[attr-defined]
-                epochs=self.hyperparams["epochs"],
-                pct_start=self.hyperparams["pct_start"],
-                div_factor=self.hyperparams["div_factor"],
-                final_div_factor=self.hyperparams["final_div_factor"],
-            )
-        elif lr_scheduler is None:
+        optimizer = resolve_optimizer(
+            params=self.model.parameters(),
+            hyperparams=self.hyperparams,
+        )
+        scheduler = resolve_lr_scheduler(
+            optimizer=optimizer,
+            steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),  # type: ignore[attr-defined]
+            hyperparams=self.hyperparams,
+        )
+        if scheduler is None:
             return {"optimizer": optimizer}
-        else:
-            raise ValueError(f"LR Scheduler: {lr_scheduler} is not supported.")
-
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "interval": "step",
+                "interval": "step"
+                if self.hyperparams["lr_scheduler"] in ["onecycle", "cyclic", "cosine_with_warm_restarts"]
+                else "epoch",
+                "monitor": "val/loss",
             },
         }
