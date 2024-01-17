@@ -111,7 +111,7 @@ class TrainConfig(ConfigBase):
     cosine_eta_min: float = 1e-7
     cosine_T_mult: int = 2
     reduce_lr_on_plateau_factor: float = 0.95
-    reduce_lr_on_plateau_patience: int = 3
+    reduce_lr_on_plateau_patience: int = 2
     reduce_lr_on_plateau_threshold: float = 1e-4
     reduce_lr_on_plateau_min_lr: float = 1e-6
 

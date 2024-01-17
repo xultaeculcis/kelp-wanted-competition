@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 from kelp.models.efficientunetplusplus.model import EfficientUnetPlusPlus
@@ -7,6 +8,7 @@ from kelp.models.resunetplusplus.model import ResUnetPlusPlus
 _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+@pytest.mark.requires_gpu
 def test_efficientunet_plus_plus() -> None:
     # Arrange
     model = EfficientUnetPlusPlus().to(device=_device)
@@ -21,6 +23,7 @@ def test_efficientunet_plus_plus() -> None:
     assert out.shape == (32, 1, 256, 256)
 
 
+@pytest.mark.requires_gpu
 def test_resunet() -> None:
     # Arrange
     model = ResUnet().to(device=_device)
@@ -35,6 +38,7 @@ def test_resunet() -> None:
     assert out.shape == (32, 1, 256, 256)
 
 
+@pytest.mark.requires_gpu
 def test_resunet_plus_plus() -> None:
     # Arrange
     model = ResUnetPlusPlus().to(device=_device)
