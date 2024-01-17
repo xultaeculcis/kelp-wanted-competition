@@ -103,9 +103,9 @@ class TrainConfig(ConfigBase):
         ]
     ] = None
     lr: float = 3e-4
-    oneycle_pct_start: float = 0.1
-    oneycle_div_factor: float = 2
-    oneycle_final_div_factor: float = 1e2
+    onecycle_pct_start: float = 0.1
+    onecycle_div_factor: float = 2
+    onecycle_final_div_factor: float = 1e2
     cyclic_base_lr: float = 1e-5
     cyclic_mode: Literal["triangular", "triangular2", "exp_range"] = "exp_range"
     cosine_eta_min: float = 1e-7
