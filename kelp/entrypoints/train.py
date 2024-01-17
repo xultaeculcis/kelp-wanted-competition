@@ -66,7 +66,20 @@ class TrainConfig(ConfigBase):
     dem_zero_pixels_pct_importance_factor: float = -1.0
 
     # model params
-    architecture: str = "unet"
+    architecture: Literal[
+        "deeplabv3",
+        "deeplabv3+",
+        "efficientunet++",
+        "fpn",
+        "linknet",
+        "manet",
+        "pan",
+        "pspnet",
+        "resunet",
+        "resunet++",
+        "unet",
+        "unet++",
+    ] = "unet"
     encoder: str = "tu-efficientnet_b5"
     encoder_weights: Optional[str] = None
     decoder_attention_type: Optional[str] = None
