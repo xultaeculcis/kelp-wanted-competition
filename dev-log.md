@@ -600,3 +600,9 @@ but did not improve leaderboard scores
 * Tried out different resize strategies - padding works best so far
 * Some encoder models require input to be both divisible by 32, 7, 8 etc. - I cannot use the same image size
 * ConvNext not supported
+
+## 2024-01-17
+
+* Added new params to AML Model training pipeline
+* Added CV split training pipeline
+* Fix with param names
