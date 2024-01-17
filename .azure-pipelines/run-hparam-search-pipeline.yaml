@@ -25,6 +25,7 @@ parameters:
       - aml/pipelines/spectral_indices_hparam_search_pipeline_nan.yaml
       - aml/pipelines/spectral_indices_hparam_search_pipeline_nan_15.yaml
       - aml/pipelines/model_hparam_search_pipeline.yaml
+      - aml/pipelines/cv_split_hparam_search_pipeline.yaml
     default: aml/pipelines/model_hparam_search_pipeline.yaml
   - name: trials
     displayName: Trials

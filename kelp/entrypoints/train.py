@@ -93,7 +93,15 @@ class TrainConfig(ConfigBase):
     weight_decay: float = 1e-4
 
     # lr scheduler params
-    lr_scheduler: Optional[Literal["onecycle", "cosine", "cyclic", "reduce_lr_on_plateau"]] = None
+    lr_scheduler: Optional[
+        Literal[
+            "onecycle",
+            "cosine",
+            "cosine_with_warm_restarts",
+            "cyclic",
+            "reduce_lr_on_plateau",
+        ]
+    ] = None
     lr: float = 3e-4
     oneycle_pct_start: float = 0.1
     oneycle_div_factor: float = 2
@@ -522,7 +530,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--lr_scheduler",
         type=str,
-        choices=["onecycle", "cosine", "cyclic", "reduce_lr_on_plateau"],
+        choices=["onecycle", "cosine", "cosine_with_warm_restarts", "cyclic", "reduce_lr_on_plateau"],
     )
     parser.add_argument(
         "--lr",
