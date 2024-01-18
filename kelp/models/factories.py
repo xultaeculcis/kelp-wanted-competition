@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import segmentation_models_pytorch as smp
 import torch
 from lightning_fabric.utilities.exceptions import MisconfigurationException
 from lightning_utilities import module_available
 from segmentation_models_pytorch.base import SegmentationModel
-from timm.optim import AdamW
 from torch import nn
-from torch.nn.parameter import Parameter
-from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     CosineAnnealingWarmRestarts,
@@ -132,18 +129,6 @@ def resolve_model(
             )
 
     return model
-
-
-def resolve_optimizer(params: Iterator[Parameter], hyperparams: Dict[str, Any]) -> torch.optim.Optimizer:
-    if (optimizer := hyperparams["optimizer"]) == "adam":
-        optimizer = Adam(params, lr=hyperparams["lr"], weight_decay=hyperparams["weight_decay"])
-    elif optimizer == "adamw":
-        optimizer = AdamW(params, lr=hyperparams["lr"], weight_decay=hyperparams["weight_decay"])
-    elif optimizer == "sgd":
-        optimizer = SGD(params, lr=hyperparams["lr"], weight_decay=hyperparams["weight_decay"])
-    else:
-        raise ValueError(f"Optimizer: {optimizer} is not supported.")
-    return optimizer
 
 
 def resolve_lr_scheduler(

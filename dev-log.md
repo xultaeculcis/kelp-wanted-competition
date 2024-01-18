@@ -606,3 +606,9 @@ but did not improve leaderboard scores
 * Added new params to AML Model training pipeline
 * Added CV split training pipeline
 * Fix with param names
+
+## 2024-01-18
+
+* Resolve issue where sending over model.parameters() to external function caused divergence in model performance
+* Update defaults in argparse
+* New submissions
