@@ -444,17 +444,17 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--kelp_pixels_pct_importance_factor",
         type=float,
-        default=1.0,
+        default=0.2,
     )
     parser.add_argument(
         "--qa_ok_importance_factor",
         type=float,
-        default=0.2,
+        default=0.0,
     )
     parser.add_argument(
         "--qa_corrupted_pixels_pct_importance_factor",
         type=float,
-        default=0.0,
+        default=-1.0,
     )
     parser.add_argument(
         "--almost_all_water_importance_factor",
