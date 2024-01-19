@@ -7,13 +7,11 @@ import pytorch_lightning as pl
 import ttach as tta
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
-from timm.optim import AdamW
 from torch import Tensor
-from torch.optim import SGD
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
 from kelp import consts
-from kelp.models.factories import resolve_loss, resolve_lr_scheduler, resolve_model
+from kelp.models.factories import resolve_loss, resolve_lr_scheduler, resolve_model, resolve_optimizer
 
 _test_time_transforms = tta.Compose(
     [
@@ -277,29 +275,10 @@ class KelpForestSegmentationTask(pl.LightningModule):
         return batch
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        if (optimizer := self.hyperparams["optimizer"]) == "adam":
-            from torch.optim import Adam
-
-            optimizer = Adam(
-                self.model.parameters(),
-                lr=self.hyperparams["lr"],
-                weight_decay=self.hyperparams["weight_decay"],
-            )
-        elif optimizer == "adamw":
-            optimizer = AdamW(
-                self.model.parameters(),
-                lr=self.hyperparams["lr"],
-                weight_decay=self.hyperparams["weight_decay"],
-            )
-        elif optimizer == "sgd":
-            optimizer = SGD(
-                self.model.parameters(),
-                lr=self.hyperparams["lr"],
-                weight_decay=self.hyperparams["weight_decay"],
-            )
-        else:
-            raise ValueError(f"Optimizer: {optimizer} is not supported.")
-
+        optimizer = resolve_optimizer(
+            params=self.model.parameters(),
+            hyperparams=self.hyperparams,
+        )
         scheduler = resolve_lr_scheduler(
             optimizer=optimizer,
             steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),  # type: ignore[attr-defined]
