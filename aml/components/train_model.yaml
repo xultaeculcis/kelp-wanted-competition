@@ -43,28 +43,28 @@ command: >-
   --output_dir ${{outputs.output_dir}}
   --metadata_fp ${{inputs.metadata_file}}
   --dataset_stats_fp ${{inputs.dataset_stats_file}}
-  --cv_split=6
-  --batch_size=8
-  --num_workers=4
-  --band_order=2,3,4,0,1,5,6
-  --spectral_indices=ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
-  --image_size=384
-  --resize_strategy=pad
+  --cv_split 6
+  --batch_size 8
+  --num_workers 4
+  --band_order 2,3,4,0,1,5,6
+  --spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+  --image_size 384
+  --resize_strategy pad
   --fill_missing_pixels_with_torch_nan
   --mask_using_qa
   --mask_using_water_mask
   --use_weighted_sampler
-  --architecture=${{inputs.architecture}}
-  --encoder=${{inputs.encoder}}
+  --architecture ${{inputs.architecture}}
+  --encoder ${{inputs.encoder}}
   --pretrained
-  --encoder_weights=imagenet
-  --optimizer=adamw
-  --lr_scheduler=onecycle
-  --precision=16-mixed
-  --epochs=10
+  --encoder_weights imagenet
+  --optimizer adamw
+  --lr_scheduler onecycle
+  --precision 16-mixed
+  --epochs 10
   --tta
-  --experiment=model-hparam-search-exp
-  --accumulate_grad_batches=4
-  --val_check_interval=0.5
+  --experiment model-hparam-search-exp
+  --accumulate_grad_batches 4
+  --val_check_interval 0.5
 
 is_deterministic: false
