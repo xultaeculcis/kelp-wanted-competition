@@ -86,7 +86,6 @@ class TrainConfig(ConfigBase):
     pretrained: bool = False
     num_classes: int = 2
     ignore_index: Optional[int] = None
-    strategy: Literal["freeze", "no-freeze", "freeze-unfreeze"] = "no-freeze"
 
     # optimizer params
     optimizer: Literal["adam", "adamw", "sgd"] = "adamw"
@@ -324,7 +323,6 @@ class TrainConfig(ConfigBase):
             "reduce_lr_on_plateau_patience": self.reduce_lr_on_plateau_patience,
             "reduce_lr_on_plateau_threshold": self.reduce_lr_on_plateau_threshold,
             "reduce_lr_on_plateau_min_lr": self.reduce_lr_on_plateau_min_lr,
-            "strategy": self.strategy,
             "objective": self.objective,
             "loss": self.loss,
             "ce_class_weights": self.ce_class_weights,
@@ -617,12 +615,6 @@ def parse_args() -> TrainConfig:
         type=float,
     )
     parser.add_argument(
-        "--strategy",
-        type=str,
-        choices=["freeze", "no-freeze", "freeze-unfreeze"],
-        default="no-freeze",
-    )
-    parser.add_argument(
         "--loss",
         type=str,
         choices=[
@@ -655,9 +647,18 @@ def parse_args() -> TrainConfig:
         type=str,
         default="max",
     )
-    parser.add_argument("--ort", action="store_true")
-    parser.add_argument("--compile", action="store_true")
-    parser.add_argument("--compile_dynamic", action="store_true")
+    parser.add_argument(
+        "--ort",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--compile",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--compile_dynamic",
+        action="store_true",
+    )
     parser.add_argument(
         "--compile_mode",
         type=str,

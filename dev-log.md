@@ -31,11 +31,8 @@ Checklist:
 - [x] ConvNeXt v1/v2 - not supported by `segmentation-models-pytorch`
 - [x] EfficientNet v1/v2
 - [x] ResNeXt
-- [x] SwinV2-B
+- [x] SwinV2-B - not supported by `segmentation-models-pytorch`
 - [ ] Model Ensemble
-- [ ] Freeze strategy
-- [ ] Freeze-unfreeze strategy
-- [ ] No-freeze strategy
 - [ ] Mask post-processing
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
@@ -65,6 +62,8 @@ Checklist:
 * Masking indices with QA and DEM Water Mask
 * Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
 * Test Time Augmentations (only local runs)
+* Decision threshold change to 0.45-0.48
+* `OneCycleLR`
 
 ## What did not work
 
@@ -77,6 +76,7 @@ Checklist:
 * Normalization strategies other than `quantile` / `z-score`
 * Bunch of different index combinations
 * TTA (for leaderboard)
+* LR Schedulers other than `OneCycleLR`
 
 ## 2023-12-02
 
@@ -636,3 +636,5 @@ Findings:
 * Added guard against `NaN` loss
 * Fixed some typos, minor refactor in eval scripts
 * Validate encoder config with - modify `image_size` if model does not support the one specified by the user
+* Removed useless `--strategy` argument since the images are not RGB - most of the weights are
+  randomly initialized anyway
