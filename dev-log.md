@@ -569,7 +569,7 @@ Findings:
 * A lot of models failed due to lack of pre-trained weight - need to investigate more... are the docs lying?
 * Very large models failed with OOM errors - neet to retrain with lower batch size + gradient accumulation
 * Some model failed because of bad tensor shapes - probably those models require inputs to be divisible
-by 128 or something
+  by 128 or something
 * Looks like checkpoint saving using MLFlow is broken and instead of saving the best model the latest one is saved...
 * Added a workaround for this - always load model from checkpoints dir if exists
 * New submissions:
@@ -596,7 +596,7 @@ by 128 or something
 * Added support for different LR Schedulers
 * New submissions - no breakthroughs
 * Training with `batch_size=8` and `accumulate_grad_batches=4` resulted in better local eval scores,
-but did not improve leaderboard scores
+  but did not improve leaderboard scores
 * Tried out different resize strategies - padding works best so far
 * Some encoder models require input to be both divisible by 32, 7, 8 etc. - I cannot use the same image size
 * ConvNext not supported
@@ -611,4 +611,28 @@ but did not improve leaderboard scores
 
 * Resolve issue where sending over model.parameters() to external function caused divergence in model performance
 * Update defaults in argparse
-* New submissions
+* New submissions. Best: **0.7132** - fold #7 + bf16 + dt=0.45
+
+## 2024-01-19
+
+* Fixed import issue with `AdamW` being imported from `timm` instead of `torch`
+* Updated model hparam search pipeline - train with smaller batch size, remove all models that do not support
+  image_size = 352 or 384
+* New submissions. Best -> **0.7139** - fold #3 + bf16 + dt=0.45
+
+## 2024-01-20
+
+* Updated model training component. `arg=${{inputs.arg}}` results in default value being passed.
+  Use `arg ${{inputs.arg}}` instead.
+* New submissions using different CV folds. No improvement.
+
+## 2024-01-21
+
+* New submissions. Best -> **0.7152** - fold #8 + bf16 + dt=0.45
+* Tested a few folds with different dt, precision and tta. Using just bf16 without tta or dt yields best results.
+  Will try it next.
+* Running experiments with different architectures and best performing encoders.
+* ResUnet++ often results in `NaN` loss.
+* Added guard against `NaN` loss
+* Fixed some typos, minor refactor in eval scripts
+* Validate encoder config with - modify `image_size` if model does not support the one specified by the user

@@ -80,7 +80,7 @@ repos:
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: pytest -m "not requires_gpu" -v
+        entry: pytest -m "not requires_gpu" -v tests
         language: system
         pass_filenames: false
         always_run: true
