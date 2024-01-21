@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from segmentation_models_pytorch.base import ClassificationHead, SegmentationHead, SegmentationModel
 from segmentation_models_pytorch.encoders import get_encoder
 
-from .decoder import ResUnetPlusPlusDecoder
+from kelp.models.resunetplusplus.decoder import ResUnetPlusPlusDecoder
 
 
 class ResUnetPlusPlus(SegmentationModel):

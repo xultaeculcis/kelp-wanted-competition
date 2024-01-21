@@ -4,6 +4,7 @@ import dataclasses
 from typing import Any, Dict, Literal, Tuple, cast
 
 import pytorch_lightning as pl
+import torch
 import ttach as tta
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
@@ -206,6 +207,10 @@ class KelpForestSegmentationTask(pl.LightningModule):
 
         return y_hat, y_hat_hard
 
+    def _guard_against_nan(self, x: Tensor) -> None:
+        if torch.isnan(x):
+            raise ValueError("NaN encountered during training! Aborting.")
+
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         return self.model(*args, **kwargs)
 
@@ -216,7 +221,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.loss(y_hat, y)
-        self.log("train/loss", loss, on_step=True, on_epoch=False)
+        self._guard_against_nan(loss)
+        self.log("train/loss", loss, on_step=True, on_epoch=False, prog_bar=True)
         self.train_metrics(y_hat_hard, y)
         return cast(Tensor, loss)
 
@@ -232,7 +238,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.loss(y_hat, y)
-        self.log("val/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
+        self._guard_against_nan(loss)
+        self.log("val/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0], prog_bar=True)
         self.val_metrics(y_hat_hard, y)
         self._log_predictions_batch(batch, batch_idx, y_hat_hard)
 
@@ -253,6 +260,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         y = batch["mask"]
         y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
         loss = self.loss(y_hat, y)
+        self._guard_against_nan(loss)
         self.log("test/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.test_metrics(y_hat_hard, y)
 
