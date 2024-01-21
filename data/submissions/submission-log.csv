@@ -69,6 +69,6 @@ data/aml/Job_brave_ticket_crnvjwth_OutputsAndLogs;4;0.85506;0.7106;effnet-b5 + d
 data/aml/Job_sincere_pear_pfkfmyhf_OutputsAndLogs;9;0.85242;0.7047;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_teal_pea_pkhl66m8_OutputsAndLogs;1;0.85083;0.7086;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs;5;0.84931;0.7100;effnet-b5 + dt=0.45 + bf16
-data/aml/Job_jovial_neck_xjgtp32h_OutputsAndLogs;2;0.84419;;effnet-b5 + dt=0.45 + bf16
-data/aml/Job_serene_nose_xhks3350_OutputsAndLogs;0;0.84391;;effnet-b5 + dt=0.45 + bf16
-data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs;8;0.84312;;effnet-b5 + dt=0.45 + bf16
+data/aml/Job_jovial_neck_xjgtp32h_OutputsAndLogs;2;0.84419;0.7110;effnet-b5 + dt=0.45 + bf16
+data/aml/Job_serene_nose_xhks3350_OutputsAndLogs;0;0.84391;0.7110;effnet-b5 + dt=0.45 + bf16
+data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs;8;0.84312;0.7152;effnet-b5 + dt=0.45 + bf16

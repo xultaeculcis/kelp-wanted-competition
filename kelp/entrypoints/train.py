@@ -171,7 +171,7 @@ class TrainConfig(ConfigBase):
     seed: int = 42
 
     @model_validator(mode="before")
-    def validate_pretrained_weights_exist(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_encoder(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if values["pretrained"] and values["encoder"].startswith("tu-"):
             import timm
 
@@ -180,6 +180,11 @@ class TrainConfig(ConfigBase):
                 _logger.warning(f"No pretrained weights exist for tu-{encoder}. Forcing training with random init.")
                 values["pretrained"] = False
                 values["encoder_weights"] = None
+
+        if "384" in values["encoder"] and values["image_size"] != 384:
+            _logger.warning("Encoder requires image_size=384. Forcing training with adjusted image size.")
+            values["image_size"] = 384
+
         return values
 
     @field_validator("band_order", mode="before")
