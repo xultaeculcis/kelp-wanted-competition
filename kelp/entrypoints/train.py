@@ -104,7 +104,7 @@ class TrainConfig(ConfigBase):
     ] = None
     lr: float = 3e-4
     onecycle_pct_start: float = 0.1
-    onecycle_div_factor: float = 2
+    onecycle_div_factor: float = 2.0
     onecycle_final_div_factor: float = 1e2
     cyclic_base_lr: float = 1e-5
     cyclic_mode: Literal["triangular", "triangular2", "exp_range"] = "exp_range"
@@ -531,7 +531,11 @@ def parse_args() -> TrainConfig:
         choices=["adam", "adamw", "sgd"],
         default="adamw",
     )
-    parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument(
+        "--weight_decay",
+        type=float,
+        default=1e-4,
+    )
     parser.add_argument(
         "--lr_scheduler",
         type=str,
@@ -543,17 +547,17 @@ def parse_args() -> TrainConfig:
         default=3e-4,
     )
     parser.add_argument(
-        "--oneycle_pct_start",
+        "--onecycle_pct_start",
         type=float,
         default=0.1,
     )
     parser.add_argument(
-        "--oneycle_div_factor",
+        "--onecycle_div_factor",
         type=float,
-        default=2,
+        default=2.0,
     )
     parser.add_argument(
-        "--oneycle_final_div_factor",
+        "--onecycle_final_div_factor",
         type=float,
         default=1e2,
     )
@@ -785,7 +789,7 @@ def main() -> None:
     with run:
         pl.seed_everything(cfg.seed, workers=True)
         mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")
-        mlflow.log_params(cfg.model_dump())
+        mlflow.log_params(cfg.model_dump(mode="json"))
         mlflow_run_dir = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
         datamodule = KelpForestDataModule.from_metadata_file(**cfg.data_module_kwargs)
         segmentation_task = KelpForestSegmentationTask(in_channels=datamodule.in_channels, **cfg.model_kwargs)

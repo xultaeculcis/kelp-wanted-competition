@@ -60,12 +60,13 @@ def run_eval(
     with run:
         pl.seed_everything(train_cfg.seed, workers=True)
         mlflow.log_dict(train_cfg.model_dump(mode="json"), artifact_file="config.yaml")
-        mlflow.log_params(train_cfg.model_dump())
+        mlflow.log_params(train_cfg.model_dump(mode="json"))
         mlflow.log_params(
             {
                 "actual_tta": tta,
                 "actual_tta_merge_mode": tta_merge_mode,
                 "actual_decision_threshold": decision_threshold,
+                "actual_precision": train_cfg.precision,
             }
         )
         mlflow.set_tags(

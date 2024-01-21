@@ -141,10 +141,11 @@ def load_model(
         model = mlflow.pytorch.load_model(model_path)
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path)
-        model.eval()
     model.hyperparams["tta"] = tta
     model.hyperparams["tta_merge_mode"] = tta_merge_mode
     model.hyperparams["decision_threshold"] = decision_threshold
+    model.eval()
+    model.freeze()
     return model
 
 
