@@ -646,3 +646,5 @@ Findings:
 * Different results each time the training is run
 * Tried to submit preds with a model that had the best looking confusion matrix instead (checkpoint with DICE=0.829)
 vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
+* Add FCN - model collapses
+* Try out a bunch of `--benchmark` experiments
