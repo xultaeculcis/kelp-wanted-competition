@@ -64,7 +64,7 @@ data/aml/Job_sharp_diamond_rkmqf7v2_OutputsAndLogs;3;0.85938;0.7130;effnet-b5 + 
 data/aml/Job_quiet_engine_rd9x6p4w_OutputsAndLogs;8;0.84218;0.7116;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_strong_star_lp3sn14h_OutputsAndLogs;7;0.86937;0.7105;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_joyful_chain_lplz87r6_OutputsAndLogs;3;0.85997;0.7139;effnet-b5 + dt=0.45 + bf16
-data/aml/Job_boring_eye_m813lsb8_OutputsAndLogs;6;0.85854;;effnet-b5 + dt=0.45 + bf16
+data/aml/Job_boring_eye_m813lsb8_OutputsAndLogs;6;0.85854;0.7119;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_brave_ticket_crnvjwth_OutputsAndLogs;4;0.85506;0.7106;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_sincere_pear_pfkfmyhf_OutputsAndLogs;9;0.85242;0.7047;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_teal_pea_pkhl66m8_OutputsAndLogs;1;0.85083;0.7086;effnet-b5 + dt=0.45 + bf16
@@ -72,3 +72,9 @@ data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs;5;0.84931;0.7100;effnet-b5 + dt
 data/aml/Job_jovial_neck_xjgtp32h_OutputsAndLogs;2;0.84419;0.7110;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_serene_nose_xhks3350_OutputsAndLogs;0;0.84391;0.7110;effnet-b5 + dt=0.45 + bf16
 data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs;8;0.84312;0.7152;effnet-b5 + dt=0.45 + bf16
+data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs;8;0.84312;0.7151;effnet-b5 + bf16 + no dt + no tta
+data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs;8;0.84312;0.7153;effnet-b5 + bf16 + dt=0.48
+data/aml/Job_nifty_town_ygsm3t5f_OutputsAndLogs;8;0.84773;0.7115;tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 + bf16 + dt=0.48
+mlruns/992153174516526782/ea7f179a3f264049b45a3f13588d1339;8;0.84630;0.7125;tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 trained locally + bf16 + dt=0.48
+mlruns/992153174516526782/77d71f684b6e4e77b537a76e908d638c;8;0.82865;0.7021;tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 + unet++ + bf16 + dt=0.75 + best score on CM
+mlruns/992153174516526782/77d71f684b6e4e77b537a76e908d638c;8;0.82865;0.7055;tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 + unet++ + bf16 + best score on CM

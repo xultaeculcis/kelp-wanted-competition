@@ -638,3 +638,11 @@ Findings:
 * Validate encoder config with - modify `image_size` if model does not support the one specified by the user
 * Removed useless `--strategy` argument since the images are not RGB - most of the weights are
   randomly initialized anyway
+
+## 2024-01-24
+
+* Re-trained best model with unet++ architecture
+* Unet++ is not deterministic for some reason...
+* Different results each time the training is run
+* Tried to submit preds with a model that had the best looking confusion matrix instead (checkpoint with DICE=0.829)
+vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
