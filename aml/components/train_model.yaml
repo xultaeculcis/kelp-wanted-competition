@@ -44,7 +44,7 @@ command: >-
   --metadata_fp ${{inputs.metadata_file}}
   --dataset_stats_fp ${{inputs.dataset_stats_file}}
   --cv_split 8
-  --batch_size 8
+  --batch_size 32
   --num_workers 4
   --band_order 2,3,4,0,1,5,6
   --spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
@@ -54,18 +54,17 @@ command: >-
   --mask_using_qa
   --mask_using_water_mask
   --use_weighted_sampler
-  --architecture ${{inputs.architecture}}
-  --encoder ${{inputs.encoder}}
+  --architecture unet
+  --encoder tu-efficientnet_b5
   --pretrained
   --encoder_weights imagenet
   --optimizer adamw
   --lr_scheduler onecycle
-  --plot_n_batches 0
+  --plot_n_batches 3
   --precision 16-mixed
   --epochs 10
-  --tta
+  --decision_threshold 0.48
   --experiment model-hparam-search-exp
-  --accumulate_grad_batches 4
-  --val_check_interval 0.5
+  --benchmark
 
 is_deterministic: false
