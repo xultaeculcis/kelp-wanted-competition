@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import math
 from typing import Any, Dict, Literal, Tuple, cast
 
 import pytorch_lightning as pl
@@ -113,6 +114,10 @@ class KelpForestSegmentationTask(pl.LightningModule):
             prefix="val/",
         )
         self.test_metrics = self.val_metrics.clone(prefix="test/")
+
+    @property
+    def num_training_steps(self) -> int:
+        return self.trainer.estimated_stepping_batches  # type: ignore[no-any-return]
 
     def _log_predictions_batch(self, batch: Dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
@@ -287,9 +292,11 @@ class KelpForestSegmentationTask(pl.LightningModule):
             params=self.model.parameters(),
             hyperparams=self.hyperparams,
         )
+        total_steps = self.num_training_steps
         scheduler = resolve_lr_scheduler(
             optimizer=optimizer,
-            steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),  # type: ignore[attr-defined]
+            num_training_steps=total_steps,
+            steps_per_epoch=math.ceil(total_steps / self.hyperparams["epochs"]),
             hyperparams=self.hyperparams,
         )
         if scheduler is None:

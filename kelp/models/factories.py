@@ -20,6 +20,7 @@ from torch.optim.lr_scheduler import (
 
 from kelp import consts
 from kelp.models.efficientunetplusplus.model import EfficientUnetPlusPlus
+from kelp.models.fcn.model import FCN
 from kelp.models.resunet.model import ResUnet
 from kelp.models.resunetplusplus.model import ResUnetPlusPlus
 
@@ -27,6 +28,7 @@ _MODEL_LOOKUP: Dict[str, Type[SegmentationModel]] = {
     "deeplabv3": smp.DeepLabV3,
     "deeplabv3+": smp.DeepLabV3Plus,
     "efficientunet++": EfficientUnetPlusPlus,
+    "fcn": FCN,
     "fpn": smp.FPN,
     "linknet": smp.Linknet,
     "manet": smp.MAnet,
@@ -109,6 +111,9 @@ def resolve_model(
         }
         if "unet" not in architecture or architecture == "efficientunet++":
             model_kwargs.pop("decoder_attention_type")
+        if architecture == "fcn":
+            model_kwargs.pop("encoder_name")
+            model_kwargs.pop("encoder_weights")
         model = _MODEL_LOOKUP[architecture](**model_kwargs)
     else:
         raise ValueError(f"{architecture=} is not supported.")
@@ -147,6 +152,7 @@ def resolve_optimizer(params: Iterator[Parameter], hyperparams: Dict[str, Any]) 
 
 def resolve_lr_scheduler(
     optimizer: torch.optim.Optimizer,
+    num_training_steps: int,
     steps_per_epoch: int,
     hyperparams: Dict[str, Any],
 ) -> torch.optim.lr_scheduler.LRScheduler:
@@ -154,8 +160,7 @@ def resolve_lr_scheduler(
         scheduler = OneCycleLR(
             optimizer,
             max_lr=hyperparams["lr"],
-            steps_per_epoch=steps_per_epoch,
-            epochs=hyperparams["epochs"],
+            total_steps=num_training_steps,
             pct_start=hyperparams["onecycle_pct_start"],
             div_factor=hyperparams["onecycle_div_factor"],
             final_div_factor=hyperparams["onecycle_final_div_factor"],
