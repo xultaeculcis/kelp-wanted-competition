@@ -1,0 +1,106 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+description: Hyperparameter search for model encoder and architecture
+experiment_name: model-hparam-search
+
+settings:
+  default_compute: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+  default_datastore: azureml:workspaceblobstore
+
+jobs:
+  sweep_step:
+    type: sweep
+
+    resources:
+      shm_size: "12g"
+
+    inputs:
+      data_dir:
+        type: uri_folder
+        mode: download
+        path: azureml:train_dataset@latest
+      metadata_file:
+        type: uri_file
+        mode: download
+        path: azureml:metadata_file@latest
+      dataset_stats_file:
+        type: uri_file
+        mode: download
+        path: azureml:dataset_stats_file:2
+
+    outputs:
+      output_dir:
+
+    sampling_algorithm: random
+
+    trial: file:../components/train_model.yaml
+
+    search_space:
+      encoder:
+        type: choice
+        values:
+          - timm-efficientnet-b8
+          - timm-regnety_120
+          - timm-resnest101e
+          - timm-resnest200e
+          - timm-resnest50d
+          - tu-eca_resnet33ts.ra2_in1k
+          - tu-ecaresnet50d.miil_in1k
+          - tu-efficientnet_b5
+          - tu-efficientnet_b5.sw_in12k_ft_in1k
+          - tu-gcresnet33ts.ra2_in1k
+          - tu-hrnet_w18_small_v2.ms_in1k
+          - tu-hrnet_w44
+          - tu-maxvit_base_tf_384.in1k
+          - tu-maxvit_rmlp_base_rw_384.sw_in12k_ft_in1k
+          - tu-maxvit_small_tf_384.in1k
+          - tu-mobilevitv2_125.cvnets_in1k
+          - tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384
+          - tu-mobilevitv2_175.cvnets_in22k_ft_in1k_384
+          - tu-mobilevitv2_200.cvnets_in1k
+          - tu-mobilevitv2_200.cvnets_in22k_ft_in1k
+          - tu-mobilevitv2_200.cvnets_in22k_ft_in1k_384
+          - tu-regnety_064
+          - tu-regnety_120
+          - tu-regnety_160.lion_in12k_ft_in1k
+          - tu-regnety_320.seer_ft_in1k
+          - tu-regnety_320.tv2_in1k
+          - tu-resnest50d.in1k
+          - tu-resnest50d_4s2x40d
+          - tu-resnetrs50.tf_in1k
+          - tu-rexnetr_200.sw_in12k_ft_in1k
+          - tu-rexnetr_300
+          - tu-seresnext101_32x4d
+          - tu-seresnext26d_32x4d
+          - tu-seresnextaa101d_32x8d.ah_in1k
+          - tu-seresnextaa101d_32x8d.sw_in12k_ft_in1k
+          - tu-tf_efficientnet_em.in1k
+          - tu-tf_efficientnetv2_m.in1k
+          - tu-tf_efficientnetv2_m.in21k_ft_in1k
+          - tu-tf_efficientnetv2_s.in21k_ft_in1k
+
+      architecture:
+        type: choice
+        values:
+          - deeplabv3
+          - deeplabv3+
+          - efficientunet++
+          - fpn
+          - linknet
+          - manet
+          - pan
+          - pspnet
+          - resunet
+          - resunet++
+          - unet
+          - unet++
+
+    objective:
+      goal: maximize
+      primary_metric: hp_metric
+
+    limits:
+      max_total_trials: 1000
+      max_concurrent_trials: 50
+      trial_timeout: 3600  # 1 hour
+      timeout: 259200  # 3 days

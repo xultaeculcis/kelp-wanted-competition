@@ -58,6 +58,7 @@ markers = [
     "unit: mark a test as a unit test.",
     "integration: mark test as an integration test.",
     "e2e: mark test as an end to end test.",
+    "requires_gpu: mark test as requiring GPU.",
 ]
 filterwarnings = [
     "ignore::UserWarning",
@@ -114,6 +115,7 @@ module = [
     "torchvision.*",
     "pytorch_lightning.*",
     "segmentation_models_pytorch.*",
+    "timm.*",
     "torchmetrics.*",
     "kornia.*",
     "dask.*",

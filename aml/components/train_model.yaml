@@ -1,0 +1,70 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: train
+version: 0.0.1
+display_name: Model training
+description: Trains the Kelp Forest Segmentation model.
+
+inputs:
+  data_dir:
+    type: uri_folder
+    description: The training data dir.
+  metadata_file:
+    type: uri_file
+    description: The metadata file.
+  dataset_stats_file:
+    type: uri_file
+    description: The dataset stats file.
+  encoder:
+    type: string
+    default: resnet50
+    description: The encoder.
+  architecture:
+    type: string
+    default: unet
+    description: The network architecture.
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: The output dir.
+
+environment: azureml:acpt-train-env@latest
+
+resources:
+  shm_size: "14g"
+
+code: ../..
+command: >-
+  PYTHONPATH=$PYTHONPATH:. ; export PYTHONPATH ;
+  python ./kelp/entrypoints/train.py
+  --data_dir ${{inputs.data_dir}}
+  --output_dir ${{outputs.output_dir}}
+  --metadata_fp ${{inputs.metadata_file}}
+  --dataset_stats_fp ${{inputs.dataset_stats_file}}
+  --cv_split 8
+  --batch_size 32
+  --num_workers 4
+  --band_order 2,3,4,0,1,5,6
+  --spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+  --image_size 352
+  --resize_strategy pad
+  --fill_missing_pixels_with_torch_nan
+  --mask_using_qa
+  --mask_using_water_mask
+  --use_weighted_sampler
+  --architecture unet
+  --encoder tu-efficientnet_b5
+  --pretrained
+  --encoder_weights imagenet
+  --optimizer adamw
+  --lr_scheduler onecycle
+  --plot_n_batches 3
+  --precision 16-mixed
+  --epochs 10
+  --decision_threshold 0.48
+  --experiment model-hparam-search-exp
+  --benchmark
+
+is_deterministic: false

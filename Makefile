@@ -140,7 +140,7 @@ train-val-test-split:
 		--output_dir data/processed
 
 .PHONY: train  ## Trains single CV split
-train-single-split:
+train:
 	python ./kelp/entrypoints/train.py \
  		--data_dir data/raw \
 		--output_dir mlruns \
@@ -204,10 +204,13 @@ submission:
 
 .PHONY: predict-and-submit  ## Runs inference and generates submission file
 predict-and-submit:
-	python ./kelp/entrypoints/submission.py \
+	python ./kelp/entrypoints/predict_and_submit.py \
 		--data_dir data/raw/test/images \
+		--dataset_stats_dir=data/processed \
 		--output_dir data/submissions \
-		--run_dir $(RUN_DIR)
+		--run_dir $(RUN_DIR) \
+		--decision_threshold 0.45 \
+		--precision bf16-mixed
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:

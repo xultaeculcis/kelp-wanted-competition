@@ -37,7 +37,7 @@ def plot_sample(
     agriculture = min_max_normalize(agriculture)
     qa_mask = input_arr[5]
     dem = input_arr[6]
-    ndvi = input_arr[7]
+    ndvi = (input_arr[1] - input_arr[2]) / (input_arr[1] + input_arr[2] + consts.data.EPS)
     dem = min_max_normalize(dem)
 
     fig, axes = plt.subplots(nrows=1, ncols=num_panels, figsize=figsize, sharey=True)
@@ -53,7 +53,7 @@ def plot_sample(
         axes[6].imshow(target_arr, cmap=mask_cmap, interpolation=None)
 
     if predictions_arr is not None:
-        axes[7].imshow(predictions_arr, cmap=mask_cmap, interpolation=None)
+        axes[7 if target_arr is not None else 6].imshow(predictions_arr, cmap=mask_cmap, interpolation=None)
 
     if show_titles:
         axes[0].set_xlabel("Natural Color (R, G, B)")
@@ -67,7 +67,7 @@ def plot_sample(
             axes[6].set_xlabel("Kelp Mask GT")
 
         if predictions_arr is not None:
-            axes[7].set_xlabel("Prediction")
+            axes[7 if target_arr is not None else 6].set_xlabel("Prediction")
 
     if suptitle is not None:
         plt.suptitle(suptitle)

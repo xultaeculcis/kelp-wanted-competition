@@ -42,6 +42,17 @@ parameters:
     type: number
     displayName: Image size
     default: 352
+  - name: resize_strategy
+    type: string
+    displayName: Resize strategy
+    default: pad
+    values:
+      - pad
+      - resize
+  - name: spectral_indices
+    type: string
+    displayName: Spectral indices
+    default: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   - name: band_order
     type: string
     displayName: Band order
@@ -49,37 +60,37 @@ parameters:
   - name: samples_per_epoch
     type: number
     displayName: Number of samples per epoch
-    default: 5120
+    default: 10240
     values:
       - 5120
       - 10240
   - name: has_kelp_importance_factor
     type: number
-    default: 1.0
+    default: 3.0
     displayName: Importance factor for has_kelp flag
   - name: kelp_pixels_pct_importance_factor
     type: number
-    default: 1.0
+    default: 0.2
     displayName: Importance factor for kelp pixels percentage
   - name: qa_ok_importance_factor
     type: number
-    default: 1.0
+    default: 0.0
     displayName: Importance factor for qa_ok flag
   - name: qa_corrupted_pixels_pct_importance_factor
     type: number
-    default: 1.0
+    default: -1.0
     displayName: Importance factor for QA layer corrupted pixels percentage
   - name: almost_all_water_importance_factor
     type: number
-    default: 1.0
+    default: 0.5
     displayName: Importance factor for almost_all_water flag
   - name: dem_nan_pixels_pct_importance_factor
     type: number
-    default: 1.0
+    default: 0.25
     displayName: Importance factor for DEM layer zero pixels percentage
   - name: dem_zero_pixels_pct_importance_factor
     type: number
-    default: 1.0
+    default: -1.0
     displayName: Importance factor for DEM layer NaN pixels percentage
   - name: normalization_strategy
     type: string
@@ -95,6 +106,19 @@ parameters:
     type: string
     default: unet
     displayName: Architecture
+    values:
+      - deeplabv3
+      - deeplabv3+
+      - efficientunet++
+      - fpn
+      - linknet
+      - manet
+      - pan
+      - pspnet
+      - resunet
+      - resunet++
+      - unet
+      - unet++
   - name: encoder
     type: string
     default: resnet50
@@ -126,9 +150,12 @@ parameters:
     values:
       - onecycle
       - cosine
+      - cyclic
+      - cosine_with_warm_restarts
+      - reduce_lr_on_plateau
   - name: pct_start
     type: number
-    default: 0.3
+    default: 0.1
     displayName: Percent start
   - name: div_factor
     type: number
@@ -150,6 +177,17 @@ parameters:
       - lovasz
       - tversky
       - soft_ce
+  - name: tta_merge_mode
+    type: string
+    default: max
+    displayName: TTA merge mode
+    values:
+      - max
+      - min
+      - mean
+      - gmean
+      - sum
+      - tsharpen
   - name: strategy
     type: string
     default: no-freeze
@@ -184,6 +222,14 @@ parameters:
     type: number
     default: 10
     displayName: Epochs
+  - name: accumulate_grad_batches
+    type: number
+    default: 1
+    displayName: Accumulate grad batches
+  - name: val_check_interval
+    type: number
+    default: 1
+    displayName: VAL check interval
 
 variables:
   - group: ${{parameters.runtime_env}}-vg
@@ -224,8 +270,10 @@ stages:
                   display_name=$(ENVIRONMENT)_${{parameters.experiment_name}}_$(Build.BuildID) \
                   settings.default_compute=${{parameters.default_compute}} \
                   inputs.cv_split=${{parameters.cv_split}} \
+                  inputs.spectral_indices=${{parameters.spectral_indices}} \
                   inputs.band_order=${{parameters.band_order}} \
                   inputs.image_size=${{parameters.image_size}} \
+                  inputs.resize_strategy=${{parameters.resize_strategy}} \
                   inputs.batch_size=${{parameters.batch_size}} \
                   inputs.num_workers=${{parameters.num_workers}} \
                   inputs.normalization_strategy=${{parameters.normalization_strategy}} \
@@ -249,11 +297,14 @@ stages:
                   inputs.final_div_factor=${{parameters.final_div_factor}} \
                   inputs.strategy=${{parameters.strategy}} \
                   inputs.loss=${{parameters.loss}} \
+                  inputs.tta_merge_mode=${{parameters.tta_merge_mode}} \
                   inputs.save_top_k=${{parameters.save_top_k}} \
                   inputs.monitor_metric=${{parameters.monitor_metric}} \
                   inputs.early_stopping_patience=${{parameters.early_stopping_patience}} \
                   inputs.precision=${{parameters.precision}} \
                   inputs.epochs=${{parameters.epochs}} \
+                  inputs.accumulate_grad_batches=${{parameters.accumulate_grad_batches}} \
+                  inputs.val_check_interval=${{parameters.val_check_interval}} \
                   --query name -o tsv \
                 )
 

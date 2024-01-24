@@ -28,15 +28,12 @@ Checklist:
 - [x] Eval script
 - [x] TTA
 - [x] Decision threshold optimization
-- [ ] ConvNeXt v1/v2
-- [ ] EfficientNet v1/v2
-- [ ] ResNeXt
-- [ ] SwinV2-B
-- [ ] Freeze strategy
-- [ ] Freeze-unfreeze strategy
-- [ ] No-freeze strategy
-- [ ] Mask post-processing
+- [x] ConvNeXt v1/v2 - not supported by `segmentation-models-pytorch`
+- [x] EfficientNet v1/v2
+- [x] ResNeXt
+- [x] SwinV2-B - not supported by `segmentation-models-pytorch`
 - [ ] Model Ensemble
+- [ ] Mask post-processing
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
 - [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
@@ -65,6 +62,8 @@ Checklist:
 * Masking indices with QA and DEM Water Mask
 * Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
 * Test Time Augmentations (only local runs)
+* Decision threshold change to 0.45-0.48
+* `OneCycleLR`
 
 ## What did not work
 
@@ -77,6 +76,7 @@ Checklist:
 * Normalization strategies other than `quantile` / `z-score`
 * Bunch of different index combinations
 * TTA (for leaderboard)
+* LR Schedulers other than `OneCycleLR`
 
 ## 2023-12-02
 
@@ -541,4 +541,110 @@ Findings:
 | 0.69      | 0.85259     |
 | 0.7       | 0.85253     |
 
-* Leaderboard: TODO
+* Leaderboard: 0.7077
+
+# 2024-01-09
+
+* Added new model architectures based on https://github.com/jlcsilva/segmentation_models.pytorch
+
+# 2024-01-10
+
+* Added hparam search AML pipeline
+* Running a few runs overnight
+
+# 2024-01-11
+
+* Results after overnight training (Top 5 runs only):
+
+| encoder               | architecture | val/dice |
+|-----------------------|--------------|----------|
+| tu-efficientnet_b5    | unet         | 0.85854  |
+| tu-seresnext101_32x4d | unet         | 0.85807  |
+| tu-resnest50d_4s2x40d | unet         | 0.85787  |
+| tu-rexnetr_300        | unet         | 0.85749  |
+| tu-seresnext26d_32x4d | unet         | 0.85728  |
+
+* Observation: bigger models = better
+* TTA on test set worked for some models and failed for the others
+* A lot of models failed due to lack of pre-trained weight - need to investigate more... are the docs lying?
+* Very large models failed with OOM errors - neet to retrain with lower batch size + gradient accumulation
+* Some model failed because of bad tensor shapes - probably those models require inputs to be divisible
+  by 128 or something
+* Looks like checkpoint saving using MLFlow is broken and instead of saving the best model the latest one is saved...
+* Added a workaround for this - always load model from checkpoints dir if exists
+* New submissions:
+
+| encoder            | architecture | val/dice | leaderboard | notes                                                            |
+|--------------------|--------------|----------|-------------|------------------------------------------------------------------|
+| tu-efficientnet_b5 | unet         | 0.85920  | 0.7119      | trained on AML + bf16-mixed + dt=0.45 + fixed checkpoint restore |
+| tu-efficientnet_b5 | unet         | 0.85854  | 0.7105      | trained on AML + fp32-true                                       |
+| tu-efficientnet_b5 | unet         | 0.85817  | 0.7101      | trained locally                                                  |
+
+## 2024-01-12
+
+* Update encoder list in hparam search pipeline
+* Add option to pass `val_check_interval`
+* `image_size=384` + `batch_size=16` + `accumulate_grad_batches=2`
+* Force training with random init when no weights exist
+
+## 2024-01-13
+
+* Fixed issue with logging images with the same key twice when using sub-1 `val_check_interval`
+
+## 2024-01-16
+
+* Added support for different LR Schedulers
+* New submissions - no breakthroughs
+* Training with `batch_size=8` and `accumulate_grad_batches=4` resulted in better local eval scores,
+  but did not improve leaderboard scores
+* Tried out different resize strategies - padding works best so far
+* Some encoder models require input to be both divisible by 32, 7, 8 etc. - I cannot use the same image size
+* ConvNext not supported
+
+## 2024-01-17
+
+* Added new params to AML Model training pipeline
+* Added CV split training pipeline
+* Fix with param names
+
+## 2024-01-18
+
+* Resolve issue where sending over model.parameters() to external function caused divergence in model performance
+* Update defaults in argparse
+* New submissions. Best: **0.7132** - fold #7 + bf16 + dt=0.45
+
+## 2024-01-19
+
+* Fixed import issue with `AdamW` being imported from `timm` instead of `torch`
+* Updated model hparam search pipeline - train with smaller batch size, remove all models that do not support
+  image_size = 352 or 384
+* New submissions. Best -> **0.7139** - fold #3 + bf16 + dt=0.45
+
+## 2024-01-20
+
+* Updated model training component. `arg=${{inputs.arg}}` results in default value being passed.
+  Use `arg ${{inputs.arg}}` instead.
+* New submissions using different CV folds. No improvement.
+
+## 2024-01-21
+
+* New submissions. Best -> **0.7152** - fold #8 + bf16 + dt=0.45
+* Tested a few folds with different dt, precision and tta. Using just bf16 without tta or dt yields best results.
+  Will try it next.
+* Running experiments with different architectures and best performing encoders.
+* ResUnet++ often results in `NaN` loss.
+* Added guard against `NaN` loss
+* Fixed some typos, minor refactor in eval scripts
+* Validate encoder config with - modify `image_size` if model does not support the one specified by the user
+* Removed useless `--strategy` argument since the images are not RGB - most of the weights are
+  randomly initialized anyway
+
+## 2024-01-24
+
+* Re-trained best model with unet++ architecture
+* Unet++ is not deterministic for some reason...
+* Different results each time the training is run
+* Tried to submit preds with a model that had the best looking confusion matrix instead (checkpoint with DICE=0.829)
+vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
+* Add FCN - model collapses
+* Try out a bunch of `--benchmark` experiments

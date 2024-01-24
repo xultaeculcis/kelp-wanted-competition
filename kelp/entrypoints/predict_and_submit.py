@@ -2,6 +2,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+import yaml
+
 from kelp.entrypoints.predict import parse_args, run_prediction
 from kelp.entrypoints.submission import create_submission_tar
 
@@ -16,6 +18,7 @@ def main() -> None:
     out_dir = cfg.output_dir / now
     preds_dir = cfg.output_dir / now / "predictions"
     preds_dir.mkdir(exist_ok=False, parents=True)
+    (out_dir / "predict_config.yaml").write_text(yaml.dump(cfg.model_dump(mode="json")))
     run_prediction(
         data_dir=cfg.data_dir,
         output_dir=preds_dir,

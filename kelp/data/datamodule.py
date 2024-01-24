@@ -14,6 +14,7 @@ from kornia.augmentation.base import _AugmentationBase
 from matplotlib import pyplot as plt
 from torch import Tensor, nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
+from torchvision.transforms import InterpolationMode
 
 from kelp import consts
 from kelp.data.dataset import FigureGrids, KelpForestSegmentationDataset
@@ -66,6 +67,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         batch_size: int = 32,
         num_workers: int = 0,
         image_size: int = 352,
+        resize_strategy: Literal["pad", "resize"] = "pad",
         normalization_strategy: Literal[
             "min-max",
             "quantile",
@@ -76,12 +78,12 @@ class KelpForestDataModule(pl.LightningDataModule):
         mask_using_qa: bool = False,
         mask_using_water_mask: bool = False,
         use_weighted_sampler: bool = False,
-        samples_per_epoch: int = 230,
+        samples_per_epoch: int = 10240,
         image_weights: Optional[List[float]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
-        assert image_size > TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
+        assert image_size >= TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
         if band_order is not None and len(band_order) != len(self.base_bands):
             raise ValueError(
                 f"channel_order should have exactly {len(self.base_bands)} elements, you passed {len(band_order)}"
@@ -101,6 +103,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.missing_pixels_fill_value = missing_pixels_fill_value
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.image_size = image_size
         self.normalization_strategy = normalization_strategy
         self.mask_using_qa = mask_using_qa
         self.mask_using_water_mask = mask_using_water_mask
@@ -113,12 +116,15 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.val_augmentations = self.resolve_transforms(stage="val")
         self.test_augmentations = self.resolve_transforms(stage="test")
         self.predict_augmentations = self.resolve_transforms(stage="predict")
-        self.pad = T.Pad(
-            padding=[
-                (image_size - TILE_SIZE) // 2,
-            ],
-            fill=0,
-            padding_mode="constant",
+        self.image_resize_tf = self.resolve_resize_transform(
+            image_or_mask="image",
+            resize_strategy=resize_strategy,
+            image_size=image_size,
+        )
+        self.mask_resize_tf = self.resolve_resize_transform(
+            image_or_mask="mask",
+            resize_strategy=resize_strategy,
+            image_size=image_size,
         )
 
     def build_dataset(self, images: List[Path], masks: Optional[List[Path]] = None) -> KelpForestSegmentationDataset:
@@ -185,9 +191,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         return batch
 
     def common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        sample["image"] = self.pad(sample["image"])
+        sample["image"] = self.image_resize_tf(sample["image"])
         if "mask" in sample:
-            sample["mask"] = self.pad(sample["mask"])
+            sample["mask"] = self.mask_resize_tf(sample["mask"].unsqueeze(0)).squeeze()
         return sample
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -278,6 +284,28 @@ class KelpForestDataModule(pl.LightningDataModule):
             # Should never happen if the config validation worked, but alas here we are anyway...
             return ["DEMWM", "NDVI"]
         return spectral_indices
+
+    def resolve_resize_transform(
+        self,
+        image_or_mask: Literal["image", "mask"],
+        resize_strategy: Literal["pad", "resize"] = "pad",
+        image_size: int = 352,
+    ) -> Callable[[Tensor], Tensor]:
+        if resize_strategy == "pad":
+            return T.Pad(  # type: ignore[no-any-return]
+                padding=[
+                    (image_size - TILE_SIZE) // 2,
+                ],
+                fill=0,
+                padding_mode="constant",
+            )
+        elif resize_strategy == "resize":
+            return T.Resize(  # type: ignore[no-any-return]
+                size=image_size,
+                interpolation=InterpolationMode.BILINEAR if image_or_mask == "image" else InterpolationMode.NEAREST,
+                antialias=False,
+            )
+        raise ValueError(f"{resize_strategy=} is not supported!")
 
     def resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
         common_transforms = []

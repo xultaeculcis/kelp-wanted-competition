@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Dict, Literal, cast
+import math
+from typing import Any, Dict, Literal, Tuple, cast
 
 import pytorch_lightning as pl
+import torch
 import ttach as tta
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch import Tensor
-from torch.optim import Adam, AdamW
-from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics import Accuracy, ConfusionMatrix, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 
 from kelp import consts
-from kelp.models.factories import resolve_loss, resolve_model
+from kelp.models.factories import resolve_loss, resolve_lr_scheduler, resolve_model, resolve_optimizer
 
 _test_time_transforms = tta.Compose(
     [
@@ -115,10 +115,15 @@ class KelpForestSegmentationTask(pl.LightningModule):
         )
         self.test_metrics = self.val_metrics.clone(prefix="test/")
 
+    @property
+    def num_training_steps(self) -> int:
+        return self.trainer.estimated_stepping_batches  # type: ignore[no-any-return]
+
     def _log_predictions_batch(self, batch: Dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
         # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
         epoch = self.current_epoch
-        if batch_idx < self.hyperparams["plot_n_batches"] and self.global_step:
+        step = self.global_step
+        if batch_idx < self.hyperparams["plot_n_batches"] and step:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
             band_index_lookup = {band: idx for idx, band in enumerate(datamodule.reordered_bands)}
             batch["prediction"] = y_hat_hard
@@ -145,20 +150,22 @@ class KelpForestSegmentationTask(pl.LightningModule):
                         self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                             run_id=self.logger.run_id,  # type: ignore[attr-defined]
                             figure=nested_figure,
-                            artifact_file=f"images/{key}/{nested_key}_{epoch=:02d}_{batch_idx=}.jpg",
+                            artifact_file=f"images/{key}/{nested_key}_{batch_idx=}_{epoch=:02d}_{step=:04d}.jpg",
                         )
                         plt.close(nested_figure)
                 else:
                     self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                         run_id=self.logger.run_id,  # type: ignore[attr-defined]
                         figure=fig,
-                        artifact_file=f"images/{key}/{key}_{epoch=:02d}_{batch_idx=}.jpg",
+                        artifact_file=f"images/{key}/{key}_{batch_idx=}_{epoch=:02d}_{step=:04d}.jpg",
                     )
             plt.close()
 
     def _log_confusion_matrices(
         self, metrics: Dict[str, Tensor], stage: Literal["val", "test"], cmap: str = "Blues"
     ) -> None:
+        epoch = self.current_epoch
+        step = self.global_step
         for metric_key, title, matrix_kind in zip(
             [f"{stage}/conf_mtrx", f"{stage}/norm_conf_mtrx"],
             ["Confusion matrix", "Normalized confusion matrix"],
@@ -166,7 +173,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         ):
             conf_matrix = metrics.pop(metric_key)
             # Ensure global step is non-zero -> that we are not running plotting during sanity val step check
-            if self.global_step == 0:
+            if step == 0:
                 continue
             fig, axes = plt.subplots(1, 1, figsize=(7, 5))
             ConfusionMatrixDisplay(
@@ -181,17 +188,33 @@ class KelpForestSegmentationTask(pl.LightningModule):
             self.logger.experiment.log_figure(  # type: ignore[attr-defined]
                 run_id=self.logger.run_id,  # type: ignore[attr-defined]
                 figure=fig,
-                artifact_file=f"images/{stage}_{matrix_kind}/{matrix_kind}_{self.current_epoch:02d}.jpg",
+                artifact_file=f"images/{stage}_{matrix_kind}/{matrix_kind}_{epoch=:02d}_{step=:04d}.jpg",
             )
             plt.close(fig)
 
-    def forward_tta(self, x: Tensor) -> Tensor:
-        tta_model = tta.SegmentationTTAWrapper(
-            model=self.model,
-            transforms=_test_time_transforms,
-            merge_mode=self.hyperparams.get("tta_merge_mode", "mean"),
-        )
-        return tta_model(x)
+    def _predict_with_tta_if_necessary(self, x: Tensor) -> Tuple[Tensor, Tensor]:
+        if self.hyperparams.get("tta", False):
+            tta_model = tta.SegmentationTTAWrapper(
+                model=self.model,
+                transforms=_test_time_transforms,
+                merge_mode=self.hyperparams.get("tta_merge_mode", "mean"),
+            )
+            y_hat = tta_model(x)
+        else:
+            y_hat = self.forward(x)
+
+        if self.hyperparams.get("decision_threshold", None):
+            y_hat_hard = (  # type: ignore[attr-defined]
+                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
+            ).long()
+        else:
+            y_hat_hard = y_hat.argmax(dim=1)
+
+        return y_hat, y_hat_hard
+
+    def _guard_against_nan(self, x: Tensor) -> None:
+        if torch.isnan(x):
+            raise ValueError("NaN encountered during training! Aborting.")
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         return self.model(*args, **kwargs)
@@ -203,7 +226,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.loss(y_hat, y)
-        self.log("train/loss", loss, on_step=True, on_epoch=False)
+        self._guard_against_nan(loss)
+        self.log("train/loss", loss, on_step=True, on_epoch=False, prog_bar=True)
         self.train_metrics(y_hat_hard, y)
         return cast(Tensor, loss)
 
@@ -219,7 +243,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.loss(y_hat, y)
-        self.log("val/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
+        self._guard_against_nan(loss)
+        self.log("val/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0], prog_bar=True)
         self.val_metrics(y_hat_hard, y)
         self._log_predictions_batch(batch, batch_idx, y_hat_hard)
 
@@ -238,14 +263,9 @@ class KelpForestSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward_tta(x) if self.hyperparams["tta"] else self.forward(x)
-        if self.hyperparams.get("decision_threshold", None):
-            y_hat_hard = (  # type: ignore[attr-defined]
-                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
-            ).long()
-        else:
-            y_hat_hard = y_hat.argmax(dim=1)
+        y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
         loss = self.loss(y_hat, y)
+        self._guard_against_nan(loss)
         self.log("test/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
         self.test_metrics(y_hat_hard, y)
 
@@ -263,47 +283,31 @@ class KelpForestSegmentationTask(pl.LightningModule):
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
         batch = args[0]
         x = batch.pop("image")
-        y_hat = self.forward_tta(x) if self.hyperparams.get("tta", False) else self.forward(x)
-        if "decision_threshold" in self.hyperparams:
-            y_hat_hard = (  # type: ignore[attr-defined]
-                y_hat.sigmoid()[:, 1, :, :] >= self.hyperparams["decision_threshold"]
-            ).long()
-        else:
-            y_hat_hard = y_hat.argmax(dim=1)
+        y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
         batch["prediction"] = y_hat_hard
         return batch
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        if (optimizer := self.hyperparams["optimizer"]) == "adam":
-            optimizer = Adam(
-                self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
-            )
-        elif optimizer == "adamw":
-            optimizer = AdamW(
-                self.model.parameters(), lr=self.hyperparams["lr"], weight_decay=self.hyperparams["weight_decay"]
-            )
-        else:
-            raise ValueError(f"Optimizer: {optimizer} is not supported.")
-
-        if (lr_scheduler := self.hyperparams["lr_scheduler"]) == "onecycle":
-            scheduler = OneCycleLR(
-                optimizer,
-                max_lr=self.hyperparams["lr"],
-                steps_per_epoch=len(self.trainer.datamodule.train_dataloader()),  # type: ignore[attr-defined]
-                epochs=self.hyperparams["epochs"],
-                pct_start=self.hyperparams["pct_start"],
-                div_factor=self.hyperparams["div_factor"],
-                final_div_factor=self.hyperparams["final_div_factor"],
-            )
-        elif lr_scheduler is None:
+        optimizer = resolve_optimizer(
+            params=self.model.parameters(),
+            hyperparams=self.hyperparams,
+        )
+        total_steps = self.num_training_steps
+        scheduler = resolve_lr_scheduler(
+            optimizer=optimizer,
+            num_training_steps=total_steps,
+            steps_per_epoch=math.ceil(total_steps / self.hyperparams["epochs"]),
+            hyperparams=self.hyperparams,
+        )
+        if scheduler is None:
             return {"optimizer": optimizer}
-        else:
-            raise ValueError(f"LR Scheduler: {lr_scheduler} is not supported.")
-
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "interval": "step",
+                "interval": "step"
+                if self.hyperparams["lr_scheduler"] in ["onecycle", "cyclic", "cosine_with_warm_restarts"]
+                else "epoch",
+                "monitor": "val/loss",
             },
         }

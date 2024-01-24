@@ -1,0 +1,61 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+description: Hyperparameter search with CV splits
+experiment_name: cv-split-hparam-search
+
+settings:
+  default_compute: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
+  default_datastore: azureml:workspaceblobstore
+
+jobs:
+  sweep_step:
+    type: sweep
+
+    resources:
+      shm_size: "12g"
+
+    inputs:
+      data_dir:
+        type: uri_folder
+        mode: download
+        path: azureml:train_dataset@latest
+      metadata_file:
+        type: uri_file
+        mode: download
+        path: azureml:metadata_file@latest
+      dataset_stats_file:
+        type: uri_file
+        mode: download
+        path: azureml:dataset_stats_file:2
+
+    outputs:
+      output_dir:
+
+    sampling_algorithm: random
+
+    trial: file:../components/train_split.yaml
+
+    search_space:
+      cv_split:
+        type: choice
+        values:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+
+    objective:
+      goal: maximize
+      primary_metric: hp_metric
+
+    limits:
+      max_total_trials: 10
+      max_concurrent_trials: 50
+      trial_timeout: 3600  # 1 hour
+      timeout: 259200  # 3 days
