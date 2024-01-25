@@ -648,3 +648,8 @@ Findings:
 vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Add FCN - model collapses
 * Try out a bunch of `--benchmark` experiments
+
+## 2024-01-26
+
+* WIP. prediction averaging
+* Used all folds for averaging - might not be optimal -> best score so far: **dice=0.7170**
