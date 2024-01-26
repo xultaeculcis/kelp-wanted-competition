@@ -649,7 +649,17 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Add FCN - model collapses
 * Try out a bunch of `--benchmark` experiments
 
-## 2024-01-26
+## 2024-01-25
 
 * WIP. prediction averaging
 * Used all folds for averaging - might not be optimal -> best score so far: **dice=0.7170**
+
+## 2024-01-26
+
+* Added option to ignore folds if weight=0.0
+* Added option to automatically plot submission samples after prediction using
+`predict_and_submit.py` and `average_predictions.py`
+* New submission:
+  * Top 3 folds on Public Leaderboard, DT=0.5: no improvement
+  * Top 3 folds on Public Leaderboard, DT=0.1: no improvement
+  * Top 6 folds on Public Leaderboard, DT=0.5: no improvement

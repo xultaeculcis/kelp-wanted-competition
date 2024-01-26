@@ -225,9 +225,30 @@ eval:
 		--output_dir mlruns \
 		--experiment_name model-eval-exp
 
+.PHONY: average-predicitons  ## Runs prediction averaging
+average-predictions:
+	python ./kelp/entrpoint/average_predictions.py \
+		--predictions_dir=data/predictions/v1 \
+		--output_dir=data/submissions/avg \
+		--decision_threshold=0.5 \
+		--fold_0_weight=0.711 \
+		--fold_1_weight=0.7086 \
+		--fold_2_weight=0.711 \
+		--fold_3_weight=0.7139 \
+		--fold_4_weight=0.7106 \
+		--fold_5_weight=0.711 \
+		--fold_6_weight=0.7119 \
+		--fold_7_weight=0.7105 \
+		--fold_8_weight=0.7153 \
+		--fold_9_weight=0.7049 \
+		--preview_submission \
+		--test_data_dir=data/raw/test/images \
+		--submission_preview_output_dir=data/interim/submission-previews/avg \
+		--preview_first_n=10
+
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	#make predict RUN_DIR=data/aml/Job_serene_nose_xhks3350_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=0
+	make predict RUN_DIR=data/aml/Job_serene_nose_xhks3350_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=0
 	make predict RUN_DIR=data/aml/Job_teal_pea_pkhl66m8_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=1
 	make predict RUN_DIR=data/aml/Job_jovial_neck_xjgtp32h_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=2
 	make predict RUN_DIR=data/aml/Job_joyful_chain_lplz87r6_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=3
@@ -237,4 +258,4 @@ cv-predict:
 	make predict RUN_DIR=data/aml/Job_strong_star_lp3sn14h_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=7
 	make predict RUN_DIR=data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=8
 	make predict RUN_DIR=data/aml/Job_sincere_pear_pfkfmyhf_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=9
-	#make average-predictions PREDS_OUTPUT_DIR=data/predictions/v1
+	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v1

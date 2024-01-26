@@ -82,3 +82,6 @@ data/aml/Job_sweet_tiger_rcnbgqm8_OutputsAndLogs;8;0.84499;0.7108;tu-efficientne
 dynamic_bulb_l7vcl596;8;???;0.7169;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> all 1.0
 dynamic_bulb_l7vcl596;8;???;0.7151;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> as public LB, fold=8 => 1.0
 dynamic_bulb_l7vcl596;8;???;0.7170;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.4, weights -> as public LB, fold=8 => 1.0
+dynamic_bulb_l7vcl596;8;???;0.7164;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[3,6,8] with dt=0.5, weights=[1,1,1]
+dynamic_bulb_l7vcl596;8;???;0.7112;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[3,6,8] with dt=0.2, weights=[1,1,1]
+dynamic_bulb_l7vcl596;8;???;0.7142;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[0,2,3,5,6,8] with dt=0.6, weights=[1,1,1,1,1,1]
