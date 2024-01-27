@@ -152,7 +152,7 @@ Findings:
 * Add factory methods to `KelpForestDataModule`
 * `TrainConfig` now has dedicated properties for data module, model and trainer kwargs
 * Prediction script works, preds look ok
-* Tried to install lightning-bolts for torch ORT support - PL ends up being downgraded since bolts require it to be
+* Tried to install `lightning-bolts` for torch ORT support - PL ends up being downgraded since bolts require it to be
   less than 2.0
 * Needed to bring the images to original shape because of padding necessary by unet -> hacked ugly solution to remove
   the padding
