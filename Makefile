@@ -133,7 +133,7 @@ calculate-band-stats:
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-cv  ## Runs train-val-test split using cross validation
-train-val-test-split:
+train-val-test-split-cv:
 	python ./kelp/entrypoints/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
 		--split_strategy cross_val \
@@ -142,7 +142,7 @@ train-val-test-split:
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-random  ## Runs train-val-test split using random split
-train-val-test-split:
+train-val-test-split-random:
 	python ./kelp/entrypoints/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
 		--split_strategy random_split \

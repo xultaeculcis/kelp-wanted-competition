@@ -107,6 +107,7 @@ module = [
     "pydantic_settings.*",
     "pandas.*",
     "sklearn.*",
+    "skimage.*",
     "mlflow.*",
     "lightning_fabric.*",
     "lightning_utilities.*",
