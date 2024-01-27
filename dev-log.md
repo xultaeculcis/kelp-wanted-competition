@@ -663,3 +663,10 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
   * Top 3 folds on Public Leaderboard, DT=0.5: no improvement
   * Top 3 folds on Public Leaderboard, DT=0.1: no improvement
   * Top 6 folds on Public Leaderboard, DT=0.5: no improvement
+
+## 2024-01-27
+
+* Training on random split with 98% of data in train set
+* Best submission **dice=0.7090** bf16 + dt=0.45
+* Did not work very well compared to fold=8
+* WIP. training for longer

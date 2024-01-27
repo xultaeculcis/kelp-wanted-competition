@@ -29,7 +29,7 @@ parameters:
   - name: cv_split
     type: number
     displayName: CV split
-    default: 6
+    default: 8
   - name: batch_size
     type: number
     displayName: Batch size
@@ -110,6 +110,7 @@ parameters:
       - deeplabv3
       - deeplabv3+
       - efficientunet++
+      - fcn
       - fpn
       - linknet
       - manet
@@ -153,18 +154,18 @@ parameters:
       - cyclic
       - cosine_with_warm_restarts
       - reduce_lr_on_plateau
-  - name: pct_start
+  - name: onecycle_pct_start
     type: number
     default: 0.1
-    displayName: Percent start
-  - name: div_factor
+    displayName: Percent start for onecycle lr scheduler
+  - name: onecycle_div_factor
     type: number
     default: 2
-    displayName: Div factor for lr scheduler
-  - name: final_div_factor
+    displayName: Div factor for onecycle lr scheduler
+  - name: onecycle_final_div_factor
     type: number
     default: 100
-    displayName: Final div factor for lr scheduler
+    displayName: Final div factor for onecycle lr scheduler
   - name: loss
     type: string
     default: dice
@@ -188,14 +189,10 @@ parameters:
       - gmean
       - sum
       - tsharpen
-  - name: strategy
-    type: string
-    default: no-freeze
-    displayName: Fine-tuning strategy
-    values:
-      - freeze
-      - no-freeze
-      - freeze-unfreeze
+  - name: decision_threshold
+    type: number
+    default: 0.48
+    displayName: Decision threshold
   - name: monitor_metric
     type: string
     default: val/dice
@@ -292,12 +289,12 @@ stages:
                   inputs.weight_decay=${{parameters.weight_decay}} \
                   inputs.lr_scheduler=${{parameters.lr_scheduler}} \
                   inputs.lr=${{parameters.lr}} \
-                  inputs.pct_start=${{parameters.pct_start}} \
-                  inputs.div_factor=${{parameters.div_factor}} \
-                  inputs.final_div_factor=${{parameters.final_div_factor}} \
-                  inputs.strategy=${{parameters.strategy}} \
+                  inputs.onecycle_pct_start=${{parameters.onecycle_pct_start}} \
+                  inputs.onecycle_div_factor=${{parameters.onecycle_div_factor}} \
+                  inputs.onecycle_final_div_factor=${{parameters.onecycle_final_div_factor}} \
                   inputs.loss=${{parameters.loss}} \
                   inputs.tta_merge_mode=${{parameters.tta_merge_mode}} \
+                  inputs.decision_threshold=${{parameters.decision_threshold}} \
                   inputs.save_top_k=${{parameters.save_top_k}} \
                   inputs.monitor_metric=${{parameters.monitor_metric}} \
                   inputs.early_stopping_patience=${{parameters.early_stopping_patience}} \

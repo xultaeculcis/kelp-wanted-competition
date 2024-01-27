@@ -85,3 +85,6 @@ dynamic_bulb_l7vcl596;8;???;0.7170;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold 
 dynamic_bulb_l7vcl596;8;???;0.7164;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[3,6,8] with dt=0.5, weights=[1,1,1]
 dynamic_bulb_l7vcl596;8;???;0.7112;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[3,6,8] with dt=0.2, weights=[1,1,1]
 dynamic_bulb_l7vcl596;8;???;0.7142;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[0,2,3,5,6,8] with dt=0.6, weights=[1,1,1,1,1,1]
+mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae;8;0.87097;0.7072;tu-efficientnet_b5 + bf16, random split train@98%
+mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae;8;0.87097;0.7088;tu-efficientnet_b5 + bf16 + dt=0.48, random split train@98%
+mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae;8;0.87097;0.7090;tu-efficientnet_b5 + bf16 + dt=0.45, random split train@98%
