@@ -32,7 +32,7 @@ Checklist:
 - [x] EfficientNet v1/v2
 - [x] ResNeXt
 - [x] SwinV2-B - not supported by `segmentation-models-pytorch`
-- [ ] Model Ensemble
+- [x] Model Ensemble
 - [ ] Mask post-processing
 - [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
@@ -64,6 +64,7 @@ Checklist:
 * Test Time Augmentations (only local runs)
 * Decision threshold change to 0.45-0.48
 * `OneCycleLR`
+* 10-fold CV
 
 ## What did not work
 
@@ -77,6 +78,7 @@ Checklist:
 * Bunch of different index combinations
 * TTA (for leaderboard)
 * LR Schedulers other than `OneCycleLR`
+* Random split
 
 ## 2023-12-02
 
