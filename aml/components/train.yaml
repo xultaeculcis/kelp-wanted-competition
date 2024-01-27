@@ -105,15 +105,15 @@ inputs:
     type: string
     default: onecycle
     description: The learning rate scheduler.
-  pct_start:
+  onecycle_pct_start:
     type: number
     default: 0.1
     description: The percentage of training when the lr will be at peak value.
-  div_factor:
+  onecycle_div_factor:
     type: number
     default: 2
     description: The div factor for lr scheduler.
-  final_div_factor:
+  onecycle_final_div_factor:
     type: number
     default: 1e2
     description: The final div factor for lr scheduler.
@@ -125,10 +125,10 @@ inputs:
     type: string
     default: max
     description: The TTA merge mode.
-  strategy:
-    type: string
-    default: no-freeze
-    description: The fine-tuning strategy.
+  decision_threshold:
+    type: number
+    default: 0.48
+    description: The decision threshold.
   monitor_metric:
     type: string
     default: val/dice
@@ -203,13 +203,13 @@ command: >-
   --optimizer ${{inputs.optimizer}}
   --weight_decay ${{inputs.weight_decay}}
   --lr_scheduler ${{inputs.lr_scheduler}}
-  --pct_start ${{inputs.pct_start}}
-  --div_factor ${{inputs.div_factor}}
-  --final_div_factor ${{inputs.final_div_factor}}
+  --onecycle_pct_start ${{inputs.onecycle_pct_start}}
+  --onecycle_div_factor ${{inputs.onecycle_div_factor}}
+  --onecycle_final_div_factor ${{inputs.onecycle_final_div_factor}}
   --loss ${{inputs.loss}}
   --tta
   --tta_merge_mode ${{inputs.tta_merge_mode}}
-  --strategy ${{inputs.strategy}}
+  --decision_threshold ${{inputs.decision_threshold}}
   --monitor_metric ${{inputs.monitor_metric}}
   --save_top_k ${{inputs.save_top_k}}
   --early_stopping_patience ${{inputs.early_stopping_patience}}

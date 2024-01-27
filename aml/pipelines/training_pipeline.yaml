@@ -34,10 +34,12 @@ inputs:
   optimizer: adamw
   weight_decay: 1e-4
   lr_scheduler: onecycle
-  pct_start: 0.1
-  div_factor: 2
-  final_div_factor: 1e2
+  onecycle_pct_start: 0.1
+  onecycle_div_factor: 2
+  onecycle_final_div_factor: 1e2
   loss: dice
+  tta_merge_mode: max
+  decision_threshold: 0.48
   monitor_metric: val/dice
   save_top_k: 1
   early_stopping_patience: 7
@@ -83,10 +85,12 @@ jobs:
       optimizer: ${{parent.inputs.optimizer}}
       weight_decay: ${{parent.inputs.weight_decay}}
       lr_scheduler: ${{parent.inputs.lr_scheduler}}
-      pct_start: ${{parent.inputs.pct_start}}
-      div_factor: ${{parent.inputs.div_factor}}
-      final_div_factor: ${{parent.inputs.final_div_factor}}
+      onecycle_pct_start: ${{parent.inputs.onecycle_pct_start}}
+      onecycle_div_factor: ${{parent.inputs.onecycle_div_factor}}
+      onecycle_final_div_factor: ${{parent.inputs.onecycle_final_div_factor}}
       loss: ${{parent.inputs.loss}}
+      tta_merge_mode: ${{parent.inputs.tta_merge_mode}}
+      decision_threshold: ${{parent.inputs.decision_threshold}}
       monitor_metric: ${{parent.inputs.monitor_metric}}
       save_top_k: ${{parent.inputs.save_top_k}}
       early_stopping_patience: ${{parent.inputs.early_stopping_patience}}
