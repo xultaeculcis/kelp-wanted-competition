@@ -13,6 +13,9 @@ inputs:
   metadata_file:
     type: uri_file
     description: The metadata file.
+  dataset_stats_file:
+    type: uri_file
+    description: The dataset stats file.
   cv_split:
     type: integer
     default: 6
@@ -175,6 +178,7 @@ command: >-
   --data_dir ${{inputs.data_dir}}
   --output_dir ${{outputs.output_dir}}
   --metadata_fp ${{inputs.metadata_file}}
+  --dataset_stats_fp ${{inputs.dataset_stats_file}}
   --cv_split ${{inputs.cv_split}}
   --batch_size ${{inputs.batch_size}}
   --num_workers ${{inputs.num_workers}}
