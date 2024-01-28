@@ -80,6 +80,12 @@ def parse_args() -> DataPrepConfig:
     return cfg
 
 
+def load_data(metadata_fp: Path) -> pd.DataFrame:
+    metadata = pd.read_parquet(metadata_fp).rename(columns={"split": "original_split"})
+    metadata = metadata[metadata["high_kelp_pixels_pct"].isin([False, None])]
+    return metadata
+
+
 @torch.inference_mode()
 def append_indices(df: pd.DataFrame) -> pd.DataFrame:
     arr = df.values
@@ -182,7 +188,7 @@ def extract_labels(
     random_sample_pixel_frac: float = 0.02,
 ) -> pd.DataFrame:
     frames = []
-    metadata = metadata[(metadata["type"] == "satellite") & metadata["in_train"]]
+    metadata = metadata[metadata["original_split"] == "train"]
     for _, row in tqdm(metadata.iterrows(), desc="Processing files", total=len(metadata)):
         frames.append(
             process_single_file(
@@ -231,7 +237,9 @@ def main() -> None:
     cfg = parse_args()
     np.random.seed(cfg.seed)
     random.seed(cfg.seed)
-    metadata = pd.read_csv(cfg.metadata_fp)
+
+    metadata = load_data(cfg.metadata_fp)
+
     ds = prepare_dataset(
         data_dir=cfg.data_dir,
         metadata=metadata,

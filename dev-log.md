@@ -676,3 +676,8 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Added training script for Random Forest and Gradient Boosting Trees classifiers form `scikit-learn`
 * Trained on 0.05% of data -> **dice=0.673**
 * Forgot to remove samples with corrupted masks...
+
+## 2024-01-28
+
+* Log more plots and metrics during evaluation
+* Fixing dataset
