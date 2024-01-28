@@ -4,9 +4,11 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Set, Tuple
 
+import kornia.augmentation as K
 import numpy as np
 import pandas as pd
 import rasterio
+import torch
 from rasterio.errors import NotGeoreferencedWarning
 from skimage.morphology import dilation, square
 from sklearn.model_selection import train_test_split
@@ -14,13 +16,40 @@ from tqdm import tqdm
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
+from kelp.entrypoints.calculate_band_stats import BAND_INDEX_LOOKUP, AppendDEMWM
 from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(
     action="ignore",
     category=NotGeoreferencedWarning,
 )
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _logger = get_logger(__name__)
+_transforms = transform = K.AugmentationSequential(
+    AppendDEMWM(  # type: ignore
+        index_dem=BAND_INDEX_LOOKUP["DEM"],
+        index_qa=BAND_INDEX_LOOKUP["QA"],
+    ),
+    *[
+        append_index_transform(
+            index_swir=BAND_INDEX_LOOKUP["SWIR"],
+            index_nir=BAND_INDEX_LOOKUP["NIR"],
+            index_red=BAND_INDEX_LOOKUP["R"],
+            index_green=BAND_INDEX_LOOKUP["G"],
+            index_blue=BAND_INDEX_LOOKUP["B"],
+            index_dem=BAND_INDEX_LOOKUP["DEM"],
+            index_qa=BAND_INDEX_LOOKUP["QA"],
+            index_water_mask=BAND_INDEX_LOOKUP["DEMWM"],
+            mask_using_qa=not index_name.endswith("WM"),
+            mask_using_water_mask=not index_name.endswith("WM"),
+            fill_val=torch.nan,
+        )
+        for index_name, append_index_transform in SPECTRAL_INDEX_LOOKUP.items()
+        if index_name != "DEMWM"
+    ],
+    data_keys=["input"],
+).to(DEVICE)
 
 
 class DataPrepConfig(ConfigBase):
@@ -49,6 +78,17 @@ def parse_args() -> DataPrepConfig:
     cfg.log_self()
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
     return cfg
+
+
+@torch.inference_mode()
+def append_indices(df: pd.DataFrame) -> pd.DataFrame:
+    arr = df.values
+    x = torch.tensor(arr, dtype=torch.float32, device=DEVICE)
+    x = x.reshape(x.size(0), x.size(1), 1, 1)
+    x = _transforms(x).squeeze()
+    df = pd.DataFrame(x.detach().cpu().numpy(), columns=df.columns.tolist() + list(SPECTRAL_INDEX_LOOKUP.keys()))
+    df = df.replace({np.nan: -32768.0})
+    return df
 
 
 def process_single_file(
@@ -102,6 +142,7 @@ def process_single_file(
     pixel_values = input_image[:, all_pixels[0], all_pixels[1]].T
     mask_values = mask_image[all_pixels[0], all_pixels[1]]
     df = pd.DataFrame(pixel_values, columns=consts.data.ORIGINAL_BANDS)
+    df = append_indices(df)
     df["label"] = mask_values
     return df
 

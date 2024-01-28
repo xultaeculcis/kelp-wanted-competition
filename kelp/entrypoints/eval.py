@@ -9,9 +9,10 @@ import pytorch_lightning as pl
 
 from kelp.data.datamodule import KelpForestDataModule
 from kelp.entrypoints.predict import PredictConfig, build_prediction_arg_parser, load_model
-from kelp.entrypoints.train import TrainConfig, get_mlflow_run_dir, make_callbacks, make_loggers
+from kelp.entrypoints.train import TrainConfig, make_callbacks, make_loggers
 from kelp.utils.gpu import set_gpu_power_limit_if_needed
 from kelp.utils.logging import get_logger
+from kelp.utils.mlflow import get_mlflow_run_dir
 
 _logger = get_logger(__name__)
 

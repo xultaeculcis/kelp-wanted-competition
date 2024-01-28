@@ -672,3 +672,7 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Best submission **dice=0.7090** bf16 + dt=0.45
 * Did not work very well compared to fold=8
 * WIP. training for longer
+* Added data prep script for pixel level training
+* Added training script for Random Forest and Gradient Boosting Trees classifiers form `scikit-learn`
+* Trained on 0.05% of data -> **dice=0.673**
+* Forgot to remove samples with corrupted masks...
