@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import rasterio
 import torch
+from catboost import CatBoostClassifier
+from lightgbm import LGBMClassifier
 from matplotlib import pyplot as plt
 from pydantic import field_validator
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
@@ -30,6 +32,7 @@ from sklearn.metrics import (
 )
 from torch import Tensor
 from tqdm import tqdm
+from xgboost import XGBClassifier
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
@@ -113,11 +116,25 @@ class TrainConfig(ConfigBase):
         return consts.data.ORIGINAL_BANDS + self.spectral_indices
 
 
-def model_factory(model_type: str, seed: int = consts.reproducibility.SEED) -> Any:
+def model_factory(
+    model_type: str,
+    seed: int = consts.reproducibility.SEED,
+) -> Union[RandomForestClassifier, GradientBoostingClassifier, XGBClassifier, CatBoostClassifier, LGBMClassifier]:
     if model_type == "rf":
+        mlflow.sklearn.autolog()
         return RandomForestClassifier(n_jobs=-1, random_state=seed)
     elif model_type == "gbt":
+        mlflow.sklearn.autolog()
         return GradientBoostingClassifier()
+    elif model_type == "xgboost":
+        mlflow.xgboost.autolog()
+        return XGBClassifier(device="cuda")
+    elif model_type == "catboost":
+        mlflow.catboost.autolog()
+        return CatBoostClassifier(task_type="GPU")
+    elif model_type == "lightgbm":
+        mlflow.lightgbm.autolog()
+        return LGBMClassifier(device="gpu")
     else:
         raise ValueError(f"{model_type=} is not supported")
 
@@ -436,7 +453,6 @@ def run_training(
 def main() -> None:
     cfg = parse_args()
     mlflow.set_experiment(cfg.resolved_experiment_name)
-    mlflow.autolog()
     run = mlflow.start_run(run_id=cfg.run_id_from_context)
     with run:
         mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")

@@ -647,7 +647,7 @@ Findings:
 * Unet++ is not deterministic for some reason...
 * Different results each time the training is run
 * Tried to submit preds with a model that had the best looking confusion matrix instead (checkpoint with DICE=0.829)
-vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
+  vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Add FCN - model collapses
 * Try out a bunch of `--benchmark` experiments
 
@@ -660,11 +660,11 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 
 * Added option to ignore folds if weight=0.0
 * Added option to automatically plot submission samples after prediction using
-`predict_and_submit.py` and `average_predictions.py`
+  `predict_and_submit.py` and `average_predictions.py`
 * New submission:
-  * Top 3 folds on Public Leaderboard, DT=0.5: no improvement
-  * Top 3 folds on Public Leaderboard, DT=0.1: no improvement
-  * Top 6 folds on Public Leaderboard, DT=0.5: no improvement
+    * Top 3 folds on Public Leaderboard, DT=0.5: no improvement
+    * Top 3 folds on Public Leaderboard, DT=0.1: no improvement
+    * Top 6 folds on Public Leaderboard, DT=0.5: no improvement
 
 ## 2024-01-27
 
@@ -681,3 +681,21 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 
 * Log more plots and metrics during evaluation
 * Fixing dataset
+* Add support for xgboost, lightgbm and catboost
+* Log sample predictions after training
+* Training for longer results (50 epochs):
+
+| split | 10 epochs exp | 50 epochs exp            | 10 epoch dice | 50 epoch dice |
+|-------|---------------|--------------------------|---------------|---------------|
+| 0     | serene_nose   | strong_door              | 0.84391       | 0.84374       |
+| 1     | teal_pea      | keen_evening             | 0.85083       | 0.84871       |
+| 2     | jovial_neck   | hungry_loquat            | 0.84419       | 0.84723       |
+| 3     | joyful_chain  | elated_atemoya           | 0.85997       | 0.86425       |
+| 4     | brave_ticket  | nice_cheetah             | 0.85506       | 0.85540       |
+| 5     | willing_pin   | gentle_stamp             | 0.84931       | 0.85120       |
+| 6     | boring_eye    | dev_kelp_training_exp_67 | 0.85854       | 0.85985       |
+| 7     | strong_star   | dev_kelp_training_exp_65 | 0.86937       | 0.87241       |
+| 8     | sleepy_feijoa | yellow_evening           | 0.84312       | 0.84425       |
+| 9     | sincere_pear  | icy_market               | 0.85242       | 0.85168       |
+
+* Best score on public LB: **0.7169** - using val/dice scores as weights + dt=0.5

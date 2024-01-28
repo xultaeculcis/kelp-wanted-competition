@@ -233,39 +233,51 @@ eval:
 		--dataset_stats_dir data/processed \
 		--run_dir $(RUN_DIR) \
 		--output_dir mlruns \
+		--precision bf16-mixed \
 		--experiment_name model-eval-exp
 
-.PHONY: average-predicitons  ## Runs prediction averaging
+.PHONY: average-predictions  ## Runs prediction averaging
 average-predictions:
-	python ./kelp/entrpoint/average_predictions.py \
+	python ./kelp/entrypoints/average_predictions.py \
 		--predictions_dir=data/predictions/v1 \
 		--output_dir=data/submissions/avg \
 		--decision_threshold=0.5 \
-		--fold_0_weight=0.711 \
-		--fold_1_weight=0.7086 \
-		--fold_2_weight=0.711 \
-		--fold_3_weight=0.7139 \
-		--fold_4_weight=0.7106 \
-		--fold_5_weight=0.711 \
-		--fold_6_weight=0.7119 \
-		--fold_7_weight=0.7105 \
-		--fold_8_weight=0.7153 \
-		--fold_9_weight=0.7049 \
+		--fold_0_weight=0.84374 \
+		--fold_1_weight=0.84871 \
+		--fold_2_weight=0.84723 \
+		--fold_3_weight=0.86425 \
+		--fold_4_weight=0.85540 \
+		--fold_5_weight=0.85120 \
+		--fold_6_weight=0.85985 \
+		--fold_7_weight=0.87241 \
+		--fold_8_weight=0.84425 \
+		--fold_9_weight=0.85168 \
 		--preview_submission \
 		--test_data_dir=data/raw/test/images \
-		--submission_preview_output_dir=data/interim/submission-previews/avg \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	make predict RUN_DIR=data/aml/Job_serene_nose_xhks3350_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=0
-	make predict RUN_DIR=data/aml/Job_teal_pea_pkhl66m8_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=1
-	make predict RUN_DIR=data/aml/Job_jovial_neck_xjgtp32h_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=2
-	make predict RUN_DIR=data/aml/Job_joyful_chain_lplz87r6_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=3
-	make predict RUN_DIR=data/aml/Job_brave_ticket_crnvjwth_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=4
-	make predict RUN_DIR=data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=5
-	make predict RUN_DIR=data/aml/Job_boring_eye_m813lsb8_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=6
-	make predict RUN_DIR=data/aml/Job_strong_star_lp3sn14h_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=7
-	make predict RUN_DIR=data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=8
-	make predict RUN_DIR=data/aml/Job_sincere_pear_pfkfmyhf_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=9
-	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v1
+	make predict RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=0
+	make predict RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=1
+	make predict RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=2
+	make predict RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=3
+	make predict RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=4
+	make predict RUN_DIR=data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=5
+	make predict RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=6
+	make predict RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=7
+	make predict RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=8
+	make predict RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=9
+	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v2
+
+eval-many:
+	make eval RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=0
+	make eval RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=1
+	make eval RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=2
+	make eval RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=3
+	make eval RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=4
+	make eval RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=5
+	make eval RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=6
+	make eval RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=7
+	make eval RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=8
+	make eval RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=9
