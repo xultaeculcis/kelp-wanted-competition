@@ -26,7 +26,7 @@ warnings.filterwarnings(
 )
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _logger = get_logger(__name__)
-_transforms = transform = K.AugmentationSequential(
+_transforms = K.AugmentationSequential(
     AppendDEMWM(  # type: ignore
         index_dem=BAND_INDEX_LOOKUP["DEM"],
         index_qa=BAND_INDEX_LOOKUP["QA"],
@@ -98,11 +98,14 @@ def append_indices(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def process_single_file(
-    input_fp: Path,
-    mask_fp: Path,
+    data_dir: Path,
+    tile_id: str,
     buffer_pixels: int = 10,
     random_sample_pixel_fraction: float = 0.05,
 ) -> pd.DataFrame:
+    input_fp = data_dir / "images" / f"{tile_id}_satellite.tif"
+    mask_fp = data_dir / "masks" / f"{tile_id}_kelp.tif"
+
     # Load input image file with rasterio
     with rasterio.open(input_fp) as src:
         input_image = src.read()
@@ -150,6 +153,7 @@ def process_single_file(
     df = pd.DataFrame(pixel_values, columns=consts.data.ORIGINAL_BANDS)
     df = append_indices(df)
     df["label"] = mask_values
+    df["tile_id"] = tile_id
     return df
 
 
@@ -192,8 +196,8 @@ def extract_labels(
     for _, row in tqdm(metadata.iterrows(), desc="Processing files", total=len(metadata)):
         frames.append(
             process_single_file(
-                input_fp=data_dir / "images" / f"{row['tile_id']}_satellite.tif",
-                mask_fp=data_dir / "masks" / f"{row['tile_id']}_kelp.tif",
+                data_dir=data_dir,
+                tile_id=row["tile_id"],
                 buffer_pixels=buffer_pixels,
                 random_sample_pixel_fraction=random_sample_pixel_frac,
             )
