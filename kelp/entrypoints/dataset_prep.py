@@ -93,7 +93,7 @@ def append_indices(df: pd.DataFrame) -> pd.DataFrame:
     x = x.reshape(x.size(0), x.size(1), 1, 1)
     x = _transforms(x).squeeze()
     df = pd.DataFrame(x.detach().cpu().numpy(), columns=df.columns.tolist() + list(SPECTRAL_INDEX_LOOKUP.keys()))
-    df = df.replace({np.nan: -32768.0})
+    df = df.replace({v: -32768.0 for v in [np.nan, np.inf, -np.inf]})
     return df
 
 

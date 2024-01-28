@@ -29,6 +29,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from torch import Tensor
+from tqdm import tqdm
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
@@ -115,7 +116,7 @@ class TrainConfig(ConfigBase):
 def model_factory(model_type: str, seed: int = consts.reproducibility.SEED) -> Any:
     if model_type == "rf":
         return RandomForestClassifier(n_jobs=-1, random_state=seed)
-    elif model_type == "fbt":
+    elif model_type == "gbt":
         return GradientBoostingClassifier()
     else:
         raise ValueError(f"{model_type=} is not supported")
@@ -386,7 +387,7 @@ def log_sample_predictions(
         data_keys=["input"],
     ).to(DEVICE)
 
-    for tile in tile_ids:
+    for tile in tqdm(tile_ids, desc="Plotting sample predictions"):
         with rasterio.open(train_data_dir / "images" / f"{tile}_satellite.tif") as src:
             input_arr = src.read()
         with rasterio.open(train_data_dir / "masks" / f"{tile}_kelp.tif") as src:
@@ -419,8 +420,6 @@ def run_training(
         seed=seed,
     )
     model = fit_model(model, X_train, y_train)
-    eval_model(model, X_val, y_val, prefix="val", seed=seed, explain_model=explain_model)
-    eval_model(model, X_test, y_test, prefix="test", seed=seed, explain_model=explain_model)
     if plot_n_samples > 0:
         log_sample_predictions(
             train_data_dir=train_data_dir,
@@ -430,6 +429,8 @@ def run_training(
             sample_size=plot_n_samples,
             seed=seed,
         )
+    eval_model(model, X_val, y_val, prefix="val", seed=seed, explain_model=explain_model)
+    eval_model(model, X_test, y_test, prefix="test", seed=seed, explain_model=explain_model)
 
 
 def main() -> None:
