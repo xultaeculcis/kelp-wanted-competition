@@ -241,17 +241,17 @@ average-predictions:
 	python ./kelp/entrypoints/average_predictions.py \
 		--predictions_dir=data/predictions/v1 \
 		--output_dir=data/submissions/avg \
-		--decision_threshold=0.5 \
-		--fold_0_weight=0.84374 \
-		--fold_1_weight=0.84871 \
-		--fold_2_weight=0.84723 \
-		--fold_3_weight=0.86425 \
-		--fold_4_weight=0.85540 \
-		--fold_5_weight=0.85120 \
-		--fold_6_weight=0.85985 \
-		--fold_7_weight=0.87241 \
-		--fold_8_weight=0.84425 \
-		--fold_9_weight=0.85168 \
+		--decision_threshold=0.45 \
+		--fold_0_weight=1.0 \
+		--fold_1_weight=1.0 \
+		--fold_2_weight=1.0 \
+		--fold_3_weight=1.0 \
+		--fold_4_weight=1.0 \
+		--fold_5_weight=1.0 \
+		--fold_6_weight=1.0 \
+		--fold_7_weight=1.0 \
+		--fold_8_weight=1.0 \
+		--fold_9_weight=1.0 \
 		--preview_submission \
 		--test_data_dir=data/raw/test/images \
 		--preview_first_n=10

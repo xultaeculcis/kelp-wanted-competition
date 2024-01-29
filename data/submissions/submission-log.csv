@@ -91,3 +91,6 @@ mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae;8;0.87097;0.7090;tu-e
 ???;all;???;0.7164;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.4, weights -> as public LB, fold=8 => 1.0, retrain @50 epochs
 ???;all;???;0.7156;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.35, weights -> as public LB, fold=8 => 1.0, retrain @50 epochs
 ???;all;???;0.7169;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> as val scores, retrain @50 epochs
+???;all;???;0.7169;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> 1.0, retrain @50 epochs
+???;all;???;0.7164;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.55, weights -> 1.0, retrain @50 epochs
+???;all;???;0.7164;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.45, weights -> 1.0, retrain @50 epochs
