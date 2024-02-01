@@ -1,49 +1,28 @@
-import argparse
-import os
 import warnings
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import Dict, List, Literal, Tuple
 
-import kornia.augmentation as K
 import mlflow
 import numpy as np
 import pandas as pd
 import rasterio
 import torch
-from catboost import CatBoostClassifier
-from lightgbm import LGBMClassifier
 from matplotlib import pyplot as plt
-from pydantic import field_validator
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import (
-    ConfusionMatrixDisplay,
-    PrecisionRecallDisplay,
-    RocCurveDisplay,
-    accuracy_score,
-    f1_score,
-    jaccard_score,
-    log_loss,
-    matthews_corrcoef,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
-from torch import Tensor
+from sklearn.metrics import ConfusionMatrixDisplay, PrecisionRecallDisplay, RocCurveDisplay, log_loss
+from torchmetrics import AUROC, Accuracy, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 from tqdm import tqdm
-from xgboost import XGBClassifier
 
 from kelp import consts
-from kelp.core.configs import ConfigBase
-from kelp.data.indices import SPECTRAL_INDEX_LOOKUP, AppendDEMWM
+from kelp.core.device import DEVICE
 from kelp.data.plotting import plot_sample
-from kelp.entrypoints.calculate_band_stats import BAND_INDEX_LOOKUP
+from kelp.trees.inference.predict import build_transforms, predict_on_single_image
+from kelp.trees.training.estimator import Estimator
+from kelp.trees.training.factories import model_factory
+from kelp.trees.training.options import parse_args
 from kelp.utils.logging import get_logger, timed
 from kelp.utils.mlflow import get_mlflow_run_dir
 
-MAX_INDICES = 15
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _logger = get_logger(__name__)
 warnings.filterwarnings(
     action="ignore",
@@ -51,121 +30,6 @@ warnings.filterwarnings(
     module="mlflow",
     message="DataFrame.applymap has been deprecated.",
 )
-
-
-class TrainConfig(ConfigBase):
-    dataset_fp: Path
-    train_data_dir: Path
-    output_dir: Path
-    spectral_indices: List[str]
-    classifier: Literal["xgboost", "catboost", "lightgbm", "rf", "gbt"]
-    sample_size: float = 1.0
-    seed: int = consts.reproducibility.SEED
-    plot_n_samples: int = 10
-    experiment: str = "train-tree-clf-exp"
-    explain_model: bool = False
-
-    @field_validator("spectral_indices", mode="before")
-    def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
-        if not value:
-            return ["DEMWM", "NDVI"]
-
-        if value == "all":
-            return list(SPECTRAL_INDEX_LOOKUP.keys())
-
-        indices = value if isinstance(value, list) else [index.strip() for index in value.split(",")]
-
-        if "DEMWM" in indices:
-            _logger.warning("DEMWM is automatically added during training. No need to add it twice.")
-            indices.remove("DEMWM")
-
-        if "NDVI" in indices:
-            _logger.warning("NDVI is automatically added during training. No need to add it twice.")
-            indices.remove("NDVI")
-
-        unknown_indices = set(indices).difference(list(SPECTRAL_INDEX_LOOKUP.keys()))
-        if unknown_indices:
-            raise ValueError(
-                f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
-                f"Please provide at most 5 comma separated indices: {', '.join(SPECTRAL_INDEX_LOOKUP.keys())}."
-            )
-
-        if len(indices) > MAX_INDICES:
-            raise ValueError(f"Please provide at most {MAX_INDICES} spectral indices. You provided: {len(indices)}")
-
-        return ["DEMWM", "NDVI"] + indices
-
-    @property
-    def resolved_experiment_name(self) -> str:
-        return os.environ.get("MLFLOW_EXPERIMENT_NAME", self.experiment)
-
-    @property
-    def run_id_from_context(self) -> Optional[str]:
-        return os.environ.get("MLFLOW_RUN_ID", None)
-
-    @property
-    def tags(self) -> Dict[str, Any]:
-        return {"trained_at": datetime.utcnow().isoformat()}
-
-    @property
-    def columns_to_load(self) -> List[str]:
-        return self.model_input_columns + ["label", "tile_id", "split"]
-
-    @property
-    def model_input_columns(self) -> List[str]:
-        return consts.data.ORIGINAL_BANDS + self.spectral_indices
-
-
-def model_factory(
-    model_type: str,
-    seed: int = consts.reproducibility.SEED,
-) -> Union[RandomForestClassifier, GradientBoostingClassifier, XGBClassifier, CatBoostClassifier, LGBMClassifier]:
-    if model_type == "rf":
-        mlflow.sklearn.autolog()
-        return RandomForestClassifier(n_jobs=-1, random_state=seed)
-    elif model_type == "gbt":
-        mlflow.sklearn.autolog()
-        return GradientBoostingClassifier()
-    elif model_type == "xgboost":
-        mlflow.xgboost.autolog()
-        return XGBClassifier(device="cuda")
-    elif model_type == "catboost":
-        mlflow.catboost.autolog()
-        return CatBoostClassifier(task_type="GPU")
-    elif model_type == "lightgbm":
-        mlflow.lightgbm.autolog()
-        return LGBMClassifier(device="gpu")
-    else:
-        raise ValueError(f"{model_type=} is not supported")
-
-
-def dice_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:  # type: ignore[type-arg]
-    intersection = np.sum(y_true * y_pred)
-    return (2.0 * intersection) / (np.sum(y_true) + np.sum(y_pred))  # type: ignore[no-any-return]
-
-
-def parse_args() -> TrainConfig:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--train_data_dir", type=str, required=True)
-    parser.add_argument("--dataset_fp", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, required=True)
-    parser.add_argument("--spectral_indices", type=str)
-    parser.add_argument(
-        "--classifier",
-        type=str,
-        choices=["xgboost", "catboost", "lightgbm", "rf", "gbt"],
-        default="rf",
-    )
-    parser.add_argument("--sample_size", type=float, default=1.0)
-    parser.add_argument("--seed", type=int, default=consts.reproducibility.SEED)
-    parser.add_argument("--plot_n_samples", type=int, default=10)
-    parser.add_argument("--experiment", type=str, default="train-tree-clf-exp")
-    parser.add_argument("--explain_model", action="store_true")
-    args = parser.parse_args()
-    cfg = TrainConfig(**vars(args))
-    cfg.log_self()
-    cfg.output_dir.mkdir(exist_ok=True, parents=True)
-    return cfg
 
 
 @timed
@@ -192,37 +56,39 @@ def load_data(
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
+@torch.inference_mode()
 @timed
 def calculate_metrics(
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     x: pd.DataFrame,
     y_true: pd.Series,
     y_pred: np.ndarray,  # type: ignore[type-arg]
     prefix: str,
 ) -> Dict[str, float]:
-    accuracy = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    iou = jaccard_score(y_true, y_pred)
-    dice = dice_score(y_true.values, y_pred)
-    mcc = matthews_corrcoef(y_true.values, y_pred)
-    metrics = {
-        f"{prefix}/accuracy": accuracy,
-        f"{prefix}/f1": f1,
-        f"{prefix}/precision": precision,
-        f"{prefix}/recall": recall,
-        f"{prefix}/iou": iou,
-        f"{prefix}/dice": dice,
-        f"{prefix}/mcc": mcc,
-    }
+    metrics = MetricCollection(
+        metrics={
+            "dice": Dice(num_classes=2, average="macro"),
+            "iou": JaccardIndex(task="binary"),
+            "accuracy": Accuracy(task="binary"),
+            "recall": Recall(task="binary", average="macro"),
+            "precision": Precision(task="binary", average="macro"),
+            "f1": F1Score(task="binary", average="macro"),
+            "auroc": AUROC(task="binary"),
+        },
+        prefix=f"{prefix}/",
+    ).to(DEVICE)
+    metrics(
+        torch.tensor(y_pred, device=DEVICE, dtype=torch.int32),
+        torch.tensor(y_true.values, device=DEVICE, dtype=torch.int32),
+    )
+    metrics_dict = metrics.compute()
+    for name, value in metrics_dict.items():
+        metrics_dict[name] = value.item()
     if hasattr(model, "predict_proba"):
         y_pred_prob = model.predict_proba(x)
         loss = log_loss(y_true, y_pred_prob)
-        roc_auc = roc_auc_score(y_true, y_pred_prob[:, 1])
-        metrics[f"{prefix}/log_loss"] = loss
-        metrics[f"{prefix}/roc_auc"] = roc_auc
-    return metrics
+        metrics_dict[f"{prefix}/log_loss"] = loss
+    return metrics_dict  # type: ignore[no-any-return]
 
 
 @timed
@@ -280,7 +146,7 @@ def log_roc_curve(
 
 @timed
 def log_mdi_feature_importance(
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     feature_names: List[str],
 ) -> None:
     importances = model.feature_importances_
@@ -298,7 +164,7 @@ def log_mdi_feature_importance(
 
 @timed
 def log_permutation_feature_importance(
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     x: pd.DataFrame,
     y_true: pd.Series,
     seed: int = consts.reproducibility.SEED,
@@ -318,7 +184,7 @@ def log_permutation_feature_importance(
 
 @timed
 def eval_model(
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     x: pd.DataFrame,
     y_true: pd.Series,
     prefix: str,
@@ -333,33 +199,19 @@ def eval_model(
     log_confusion_matrix(y_true=y_true, y_pred=y_pred, prefix=prefix, normalize=True)
     log_precision_recall_curve(y_true=y_true, y_pred=y_pred, prefix=prefix)
     log_roc_curve(y_true=y_true, y_pred=y_pred, prefix=prefix)
-    if prefix == "val" and explain_model:  # calculate feature importance only once
+    if prefix == "test" and explain_model:  # calculate feature importance only once
         log_mdi_feature_importance(model=model, feature_names=x.columns.tolist())
         log_permutation_feature_importance(model=model, x=x, y_true=y_true, seed=seed)
 
 
 @timed
 def fit_model(
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     x: pd.DataFrame,
     y_true: pd.Series,
-) -> Union[RandomForestClassifier, GradientBoostingClassifier]:
+) -> Estimator:
     model.fit(x, y_true)
     return model
-
-
-@torch.inference_mode()
-def predict_on_single_image_using_tree_based_classifier(
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
-    x: np.ndarray,  # type: ignore[type-arg]
-    transforms: Callable[[Tensor], Tensor],
-    columns: List[str],
-) -> np.ndarray:  # type: ignore[type-arg]
-    tensor = torch.tensor(x, dtype=torch.float32, device=DEVICE).unsqueeze(0)
-    tensor = torch.flatten(transforms(tensor), start_dim=2).squeeze().T
-    df = pd.DataFrame(tensor.detach().cpu().numpy(), columns=columns).replace({np.nan: -32768.0})
-    prediction = model.predict(df).reshape(x.shape[1], x.shape[2])
-    return prediction  # type: ignore[no-any-return]
 
 
 def min_max_normalize(x: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
@@ -372,44 +224,20 @@ def min_max_normalize(x: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
 def log_sample_predictions(
     train_data_dir: Path,
     metadata: pd.DataFrame,
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     spectral_indices: List[str],
     sample_size: int = 10,
     seed: int = consts.reproducibility.SEED,
 ) -> None:
     sample_to_plot = metadata.sample(n=sample_size, random_state=seed)
     tile_ids = sample_to_plot["tile_id"].tolist()
-    transforms = K.AugmentationSequential(
-        AppendDEMWM(  # type: ignore
-            index_dem=BAND_INDEX_LOOKUP["DEM"],
-            index_qa=BAND_INDEX_LOOKUP["QA"],
-        ),
-        *[
-            SPECTRAL_INDEX_LOOKUP[idx](
-                index_swir=BAND_INDEX_LOOKUP["SWIR"],
-                index_nir=BAND_INDEX_LOOKUP["NIR"],
-                index_red=BAND_INDEX_LOOKUP["R"],
-                index_green=BAND_INDEX_LOOKUP["G"],
-                index_blue=BAND_INDEX_LOOKUP["B"],
-                index_dem=BAND_INDEX_LOOKUP["DEM"],
-                index_qa=BAND_INDEX_LOOKUP["QA"],
-                index_water_mask=BAND_INDEX_LOOKUP["DEMWM"],
-                mask_using_qa=not idx.endswith("WM"),
-                mask_using_water_mask=not idx.endswith("WM"),
-                fill_val=torch.nan,
-            )
-            for idx in spectral_indices
-            if idx != "DEMWM"
-        ],
-        data_keys=["input"],
-    ).to(DEVICE)
-
+    transforms = build_transforms(spectral_indices)
     for tile in tqdm(tile_ids, desc="Plotting sample predictions"):
         with rasterio.open(train_data_dir / "images" / f"{tile}_satellite.tif") as src:
             input_arr = src.read()
         with rasterio.open(train_data_dir / "masks" / f"{tile}_kelp.tif") as src:
             mask_arr = src.read(1)
-        prediction = predict_on_single_image_using_tree_based_classifier(
+        prediction = predict_on_single_image(
             model=model, x=input_arr, transforms=transforms, columns=consts.data.ORIGINAL_BANDS + spectral_indices
         )
         input_arr = min_max_normalize(input_arr)
@@ -423,13 +251,13 @@ def run_training(
     train_data_dir: Path,
     dataset_fp: Path,
     columns_to_load: List[str],
-    model: Union[RandomForestClassifier, GradientBoostingClassifier],
+    model: Estimator,
     spectral_indices: List[str],
     sample_size: float = 1.0,
     plot_n_samples: int = 10,
     seed: int = consts.reproducibility.SEED,
     explain_model: bool = False,
-) -> None:
+) -> Tuple[Estimator, pd.DataFrame]:
     metadata = pd.read_parquet(dataset_fp, columns=columns_to_load)
     X_train, y_train, X_val, y_val, X_test, y_test = load_data(
         df=metadata.drop(["tile_id"], axis=1, errors="ignore"),
@@ -448,6 +276,18 @@ def run_training(
         )
     eval_model(model, X_val, y_val, prefix="val", seed=seed, explain_model=explain_model)
     eval_model(model, X_test, y_test, prefix="test", seed=seed, explain_model=explain_model)
+    return model, X_val.head(10)
+
+
+def log_model(
+    model_type: Literal["xgboost", "catboost", "lightgbm", "rf", "gbt"], model: Estimator, sample_input: pd.DataFrame
+) -> None:
+    if model_type in ["rf", "gbt", "xgboost", "lightgbm"]:
+        _logger.info("Model was auto logged. Manual logging will not be performed")
+    elif model_type == "catboost":
+        mlflow.catboost.log_model(cb_model=model, artifact_path="model", input_example=sample_input)
+    else:
+        raise ValueError(f"{model_type=} is not supported")
 
 
 def main() -> None:
@@ -459,7 +299,7 @@ def main() -> None:
         mlflow.log_params(cfg.model_dump(mode="json"))
         _ = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
         model = model_factory(model_type=cfg.classifier, seed=cfg.seed)
-        run_training(
+        model, sample_input = run_training(
             train_data_dir=cfg.train_data_dir,
             dataset_fp=cfg.dataset_fp,
             columns_to_load=cfg.columns_to_load,
@@ -470,6 +310,7 @@ def main() -> None:
             seed=cfg.seed,
             explain_model=cfg.explain_model,
         )
+        log_model(model_type=cfg.classifier, model=model, sample_input=sample_input)
 
 
 if __name__ == "__main__":

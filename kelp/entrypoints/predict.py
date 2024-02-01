@@ -23,8 +23,8 @@ from kelp.models.segmentation import KelpForestSegmentationTask
 from kelp.utils.logging import get_logger
 
 _logger = get_logger(__name__)
-_IMG_SIZE = 350
-_META = {
+IMG_SIZE = 350
+META = {
     "driver": "GTiff",
     "dtype": "int8",
     "nodata": None,
@@ -150,8 +150,8 @@ def load_model(
 
 
 def predict(dm: pl.LightningDataModule, model: pl.LightningModule, train_cfg: TrainConfig, output_dir: Path) -> None:
-    padding_to_trim = (train_cfg.image_size - _IMG_SIZE) // 2
-    crop_upper_bound = _IMG_SIZE + padding_to_trim
+    padding_to_trim = (train_cfg.image_size - IMG_SIZE) // 2
+    crop_upper_bound = IMG_SIZE + padding_to_trim
 
     with torch.no_grad():
         trainer = pl.Trainer(**train_cfg.trainer_kwargs, logger=False)
@@ -164,7 +164,7 @@ def predict(dm: pl.LightningDataModule, model: pl.LightningModule, train_cfg: Tr
                 tile_id = sample["tile_id"]
                 prediction = sample["prediction"]
                 dest: DatasetWriter
-                with rasterio.open(output_dir / f"{tile_id}_kelp.tif", "w", **_META) as dest:
+                with rasterio.open(output_dir / f"{tile_id}_kelp.tif", "w", **META) as dest:
                     prediction_arr = prediction.detach().cpu().numpy()
                     prediction_arr = prediction_arr[padding_to_trim:crop_upper_bound, padding_to_trim:crop_upper_bound]
                     dest.write(prediction_arr, 1)

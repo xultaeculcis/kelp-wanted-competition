@@ -699,3 +699,9 @@ Findings:
 | 9     | sincere_pear  | icy_market               | 0.85242       | 0.85168       |
 
 * Best score on public LB: **0.7169** - using val/dice scores as weights + dt=0.5
+
+## 2024-02-01
+
+* Fiddling with `xgboost` and `catboost`
+* Add predict and submit scripts for tree based models, need to refactor the code for NN stuff later to match
+* Issues with predictions after moving stuff to different modules... need to debug

@@ -2089,3 +2089,6 @@ SPECTRAL_INDEX_LOOKUP = {
     "NDAVI": AppendNDAVI,
     "WAVI": AppendWAVI,
 }
+
+BASE_BANDS = consts.data.ORIGINAL_BANDS + ["DEMWM"]
+BAND_INDEX_LOOKUP = {band_name: index for index, band_name in enumerate(BASE_BANDS)}

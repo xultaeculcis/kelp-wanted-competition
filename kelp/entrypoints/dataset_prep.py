@@ -16,15 +16,14 @@ from tqdm import tqdm
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
-from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
-from kelp.entrypoints.calculate_band_stats import BAND_INDEX_LOOKUP, AppendDEMWM
+from kelp.core.device import DEVICE
+from kelp.data.indices import BAND_INDEX_LOOKUP, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
 from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(
     action="ignore",
     category=NotGeoreferencedWarning,
 )
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _logger = get_logger(__name__)
 _transforms = K.AugmentationSequential(
     AppendDEMWM(  # type: ignore

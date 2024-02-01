@@ -1,32 +1,25 @@
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Optional
 
 import yaml
-from pydantic import model_validator
 
-from kelp.entrypoints.predict import PredictConfig, build_prediction_arg_parser, run_prediction
 from kelp.entrypoints.preview_submission import plot_first_n_samples
 from kelp.entrypoints.submission import create_submission_tar
+from kelp.trees.inference.predict import PredictConfig, build_prediction_arg_parser, run_prediction
 
 
 class PredictAndSubmitConfig(PredictConfig):
     preview_submission: bool = False
+    submission_preview_output_dir: Optional[Path] = None
     preview_first_n: int = 10
-
-    @model_validator(mode="before")
-    def validate_cfg(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if values["preview_submission"] and values.get("test_data_dir", None) is None:
-            raise ValueError("Please provide test_data_dir param if running submission preview!")
-        if values["preview_submission"] and values.get("submission_preview_output_dir", None) is None:
-            raise ValueError("Please provide submission_preview_output_dir param if running submission preview!")
-        return values
 
 
 def parse_args() -> PredictAndSubmitConfig:
     parser = build_prediction_arg_parser()
     parser.add_argument("--preview_submission", action="store_true")
+    parser.add_argument("--submission_preview_output_dir", type=str)
     parser.add_argument("--preview_first_n", type=int, default=10)
     args = parser.parse_args()
     cfg = PredictAndSubmitConfig(**vars(args))
@@ -49,12 +42,9 @@ def main() -> None:
     run_prediction(
         data_dir=cfg.data_dir,
         output_dir=preds_dir,
-        model_checkpoint=cfg.model_checkpoint,
-        use_mlflow=cfg.use_mlflow,
-        train_cfg=cfg.training_config,
-        tta=cfg.tta,
-        tta_merge_mode=cfg.tta_merge_mode,
-        decision_threshold=cfg.decision_threshold,
+        model_type=cfg.training_config.classifier,
+        model_dir=cfg.model_path,
+        spectral_indices=cfg.training_config.spectral_indices,
     )
     create_submission_tar(
         preds_dir=preds_dir,

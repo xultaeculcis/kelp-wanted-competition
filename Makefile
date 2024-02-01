@@ -222,7 +222,7 @@ predict-and-submit:
 		--dataset_stats_dir=data/processed \
 		--output_dir data/submissions \
 		--run_dir $(RUN_DIR) \
-		--decision_threshold 0.45 \
+		--decision_threshold 0.48 \
 		--precision bf16-mixed
 
 .PHONY: eval  ## Runs evaluation for selected run
@@ -241,7 +241,7 @@ average-predictions:
 	python ./kelp/entrypoints/average_predictions.py \
 		--predictions_dir=data/predictions/v1 \
 		--output_dir=data/submissions/avg \
-		--decision_threshold=0.45 \
+		--decision_threshold=0.48 \
 		--fold_0_weight=1.0 \
 		--fold_1_weight=1.0 \
 		--fold_2_weight=1.0 \
