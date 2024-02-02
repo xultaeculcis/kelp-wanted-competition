@@ -33,10 +33,10 @@ Checklist:
 - [x] ResNeXt
 - [x] SwinV2-B - not supported by `segmentation-models-pytorch`
 - [x] Model Ensemble
-- [ ] Mask post-processing
-- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
+- [x] Mask post-processing
+- [x] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
-- [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
+- [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
@@ -79,6 +79,7 @@ Checklist:
 * TTA (for leaderboard)
 * LR Schedulers other than `OneCycleLR`
 * Random split
+* XGBoost and other tree based models predicting on pixel level
 
 ## 2023-12-02
 
@@ -705,3 +706,11 @@ Findings:
 * Fiddling with `xgboost` and `catboost`
 * Add predict and submit scripts for tree based models, need to refactor the code for NN stuff later to match
 * Issues with predictions after moving stuff to different modules... need to debug
+
+## 2024-02-02
+
+* Fixed issues with empty predictions - train config `spectral_indices` resolution logic was the source of issues
+* Added eval script
+* Removed models other than `XGBClassifier`
+* New submission with XGB - dice = 0.5 on public LB - abandoning this approach
+* Going back to NNs
