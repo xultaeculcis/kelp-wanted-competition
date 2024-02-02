@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from typing import Callable, List
+
+import kornia.augmentation as K
 import numpy as np
 import torch
 from torch import Tensor, nn
 
 from kelp import consts
+from kelp.core.device import DEVICE
+from kelp.data.indices import BAND_INDEX_LOOKUP, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
 
 
 class MinMaxNormalize(nn.Module):
@@ -65,3 +70,41 @@ def min_max_normalize(arr: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
     arr = (arr - vmin) / (vmax - vmin + consts.data.EPS)
     arr = arr.clip(0, 1)
     return arr
+
+
+def quantile_min_max_normalize(
+    x: np.ndarray,  # type: ignore[type-arg]
+    q_lower: float = 0.01,
+    q_upper: float = 0.99,
+) -> np.ndarray:  # type: ignore[type-arg]
+    vmin = np.expand_dims(np.expand_dims(np.quantile(x, q=q_lower, axis=(1, 2)), 1), 2)
+    vmax = np.expand_dims(np.expand_dims(np.quantile(x, q=q_upper, axis=(1, 2)), 1), 2)
+    return (x - vmin) / (vmax - vmin + consts.data.EPS)  # type: ignore[no-any-return]
+
+
+def build_append_index_transforms(spectral_indices: List[str]) -> Callable[[Tensor], Tensor]:
+    transforms = K.AugmentationSequential(
+        AppendDEMWM(  # type: ignore
+            index_dem=BAND_INDEX_LOOKUP["DEM"],
+            index_qa=BAND_INDEX_LOOKUP["QA"],
+        ),
+        *[
+            SPECTRAL_INDEX_LOOKUP[index_name](
+                index_swir=BAND_INDEX_LOOKUP["SWIR"],
+                index_nir=BAND_INDEX_LOOKUP["NIR"],
+                index_red=BAND_INDEX_LOOKUP["R"],
+                index_green=BAND_INDEX_LOOKUP["G"],
+                index_blue=BAND_INDEX_LOOKUP["B"],
+                index_dem=BAND_INDEX_LOOKUP["DEM"],
+                index_qa=BAND_INDEX_LOOKUP["QA"],
+                index_water_mask=BAND_INDEX_LOOKUP["DEMWM"],
+                mask_using_qa=not index_name.endswith("WM"),
+                mask_using_water_mask=not index_name.endswith("WM"),
+                fill_val=torch.nan,
+            )
+            for index_name in spectral_indices
+            if index_name != "DEMWM"
+        ],
+        data_keys=["input"],
+    ).to(DEVICE)
+    return transforms  # type: ignore[no-any-return]

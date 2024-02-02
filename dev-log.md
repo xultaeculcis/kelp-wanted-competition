@@ -32,11 +32,11 @@ Checklist:
 - [x] EfficientNet v1/v2
 - [x] ResNeXt
 - [x] SwinV2-B - not supported by `segmentation-models-pytorch`
-- [ ] Model Ensemble
-- [ ] Mask post-processing
-- [ ] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
+- [x] Model Ensemble
+- [x] Mask post-processing
+- [x] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
-- [ ] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
+- [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
@@ -64,6 +64,7 @@ Checklist:
 * Test Time Augmentations (only local runs)
 * Decision threshold change to 0.45-0.48
 * `OneCycleLR`
+* 10-fold CV
 
 ## What did not work
 
@@ -77,6 +78,8 @@ Checklist:
 * Bunch of different index combinations
 * TTA (for leaderboard)
 * LR Schedulers other than `OneCycleLR`
+* Random split
+* XGBoost and other tree based models predicting on pixel level
 
 ## 2023-12-02
 
@@ -150,7 +153,7 @@ Findings:
 * Add factory methods to `KelpForestDataModule`
 * `TrainConfig` now has dedicated properties for data module, model and trainer kwargs
 * Prediction script works, preds look ok
-* Tried to install lightning-bolts for torch ORT support - PL ends up being downgraded since bolts require it to be
+* Tried to install `lightning-bolts` for torch ORT support - PL ends up being downgraded since bolts require it to be
   less than 2.0
 * Needed to bring the images to original shape because of padding necessary by unet -> hacked ugly solution to remove
   the padding
@@ -645,7 +648,7 @@ Findings:
 * Unet++ is not deterministic for some reason...
 * Different results each time the training is run
 * Tried to submit preds with a model that had the best looking confusion matrix instead (checkpoint with DICE=0.829)
-vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
+  vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Add FCN - model collapses
 * Try out a bunch of `--benchmark` experiments
 
@@ -658,11 +661,11 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 
 * Added option to ignore folds if weight=0.0
 * Added option to automatically plot submission samples after prediction using
-`predict_and_submit.py` and `average_predictions.py`
+  `predict_and_submit.py` and `average_predictions.py`
 * New submission:
-  * Top 3 folds on Public Leaderboard, DT=0.5: no improvement
-  * Top 3 folds on Public Leaderboard, DT=0.1: no improvement
-  * Top 6 folds on Public Leaderboard, DT=0.5: no improvement
+    * Top 3 folds on Public Leaderboard, DT=0.5: no improvement
+    * Top 3 folds on Public Leaderboard, DT=0.1: no improvement
+    * Top 6 folds on Public Leaderboard, DT=0.5: no improvement
 
 ## 2024-01-27
 
@@ -670,3 +673,44 @@ vs best checkpoint (DICE=0.846). No improvement -> public dice=0.7055
 * Best submission **dice=0.7090** bf16 + dt=0.45
 * Did not work very well compared to fold=8
 * WIP. training for longer
+* Added data prep script for pixel level training
+* Added training script for Random Forest and Gradient Boosting Trees classifiers form `scikit-learn`
+* Trained on 0.05% of data -> **dice=0.673**
+* Forgot to remove samples with corrupted masks...
+
+## 2024-01-28
+
+* Log more plots and metrics during evaluation
+* Fixing dataset
+* Add support for xgboost, lightgbm and catboost
+* Log sample predictions after training
+* Training for longer results (50 epochs):
+
+| split | 10 epochs exp | 50 epochs exp            | 10 epoch dice | 50 epoch dice |
+|-------|---------------|--------------------------|---------------|---------------|
+| 0     | serene_nose   | strong_door              | 0.84391       | 0.84374       |
+| 1     | teal_pea      | keen_evening             | 0.85083       | 0.84871       |
+| 2     | jovial_neck   | hungry_loquat            | 0.84419       | 0.84723       |
+| 3     | joyful_chain  | elated_atemoya           | 0.85997       | 0.86425       |
+| 4     | brave_ticket  | nice_cheetah             | 0.85506       | 0.85540       |
+| 5     | willing_pin   | gentle_stamp             | 0.84931       | 0.85120       |
+| 6     | boring_eye    | dev_kelp_training_exp_67 | 0.85854       | 0.85985       |
+| 7     | strong_star   | dev_kelp_training_exp_65 | 0.86937       | 0.87241       |
+| 8     | sleepy_feijoa | yellow_evening           | 0.84312       | 0.84425       |
+| 9     | sincere_pear  | icy_market               | 0.85242       | 0.85168       |
+
+* Best score on public LB: **0.7169** - using val/dice scores as weights + dt=0.5
+
+## 2024-02-01
+
+* Fiddling with `xgboost` and `catboost`
+* Add predict and submit scripts for tree based models, need to refactor the code for NN stuff later to match
+* Issues with predictions after moving stuff to different modules... need to debug
+
+## 2024-02-02
+
+* Fixed issues with empty predictions - train config `spectral_indices` resolution logic was the source of issues
+* Added eval script
+* Removed models other than `XGBClassifier`
+* New submission with XGB - dice = 0.5 on public LB - abandoning this approach
+* Going back to NNs

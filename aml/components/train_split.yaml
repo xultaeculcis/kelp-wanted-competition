@@ -70,11 +70,10 @@ command: >-
   --loss dice
   --tta
   --tta_merge_mode max
-  --strategy no-freeze
   --monitor_metric val/dice
   --save_top_k 1
-  --early_stopping_patience 7
+  --early_stopping_patience 50
   --precision 16-mixed
-  --epochs 10
+  --epochs 50
 
 is_deterministic: false

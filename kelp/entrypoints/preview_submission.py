@@ -46,8 +46,7 @@ def parse_args() -> PreviewSubmissionConfig:
 
 
 def plot_first_n_samples(data_dir: Path, submission_dir: Path, output_dir: Path, n: int = 10) -> None:
-    out_dir = output_dir / submission_dir.name
-    out_dir.mkdir(exist_ok=True, parents=True)
+    output_dir.mkdir(exist_ok=True, parents=True)
     for fp in tqdm(sorted(list(data_dir.glob("*.tif")))[:n], "Plotting predictions"):
         tile = fp.stem.split("_")[0]
         with rasterio.open(data_dir / f"{tile}_satellite.tif") as src:
@@ -59,7 +58,7 @@ def plot_first_n_samples(data_dir: Path, submission_dir: Path, output_dir: Path,
             predictions_arr=prediction,
             suptitle=tile,
         )
-        fig.savefig(out_dir / f"{fp.stem}.png")
+        fig.savefig(output_dir / f"{fp.stem}.png")
         plt.close(fig)
 
 
@@ -68,7 +67,7 @@ def main() -> None:
     plot_first_n_samples(
         data_dir=cfg.test_data_dir,
         submission_dir=cfg.submission_dir,
-        output_dir=cfg.output_dir,
+        output_dir=cfg.output_dir / cfg.submission_dir.name,
         n=cfg.first_n,
     )
 

@@ -133,7 +133,7 @@ calculate-band-stats:
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-cv  ## Runs train-val-test split using cross validation
-train-val-test-split:
+train-val-test-split-cv:
 	python ./kelp/entrypoints/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
 		--split_strategy cross_val \
@@ -142,7 +142,7 @@ train-val-test-split:
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-random  ## Runs train-val-test split using random split
-train-val-test-split:
+train-val-test-split-random:
 	python ./kelp/entrypoints/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
 		--split_strategy random_split \
@@ -157,7 +157,7 @@ train:
 		--output_dir mlruns \
 		--metadata_fp data/processed/train_val_test_dataset.parquet \
 		--dataset_stats_fp data/processed/2023-12-31T20:30:39-stats-fill_value=nan-mask_using_qa=True-mask_using_water_mask=True.json \
-		--cv_split 6 \
+		--cv_split 8 \
 		--batch_size 32 \
 		--num_workers 6 \
 		--band_order 2,3,4,0,1,5,6 \
@@ -177,22 +177,19 @@ train:
 		--dem_zero_pixels_pct_importance_factor -1 \
 		--normalization_strategy quantile \
 		--architecture unet \
-		--encoder resnet50 \
+		--encoder tu-efficientnet_b5 \
 		--pretrained \
 		--encoder_weights imagenet \
 		--lr 3e-4 \
 		--optimizer adamw \
 		--weight_decay 1e-4 \
 		--lr_scheduler onecycle \
-		--pct_start 0.1 \
-		--div_factor 2 \
-		--final_div_factor 1e2 \
+		--onecycle_pct_start 0.1 \
+		--onecycle_div_factor 2 \
+		--onecycle_final_div_factor 1e2 \
 		--loss dice \
-		--ce_smooth_factor 0.1 \
-		--ce_class_weights 0.4,0.6 \
 		--tta \
 		--tta_merge_mode max \
-		--strategy no-freeze \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
 		--early_stopping_patience 7 \
@@ -222,7 +219,7 @@ predict-and-submit:
 		--dataset_stats_dir=data/processed \
 		--output_dir data/submissions \
 		--run_dir $(RUN_DIR) \
-		--decision_threshold 0.45 \
+		--decision_threshold 0.48 \
 		--precision bf16-mixed
 
 .PHONY: eval  ## Runs evaluation for selected run
@@ -233,39 +230,51 @@ eval:
 		--dataset_stats_dir data/processed \
 		--run_dir $(RUN_DIR) \
 		--output_dir mlruns \
+		--precision bf16-mixed \
 		--experiment_name model-eval-exp
 
-.PHONY: average-predicitons  ## Runs prediction averaging
+.PHONY: average-predictions  ## Runs prediction averaging
 average-predictions:
-	python ./kelp/entrpoint/average_predictions.py \
+	python ./kelp/entrypoints/average_predictions.py \
 		--predictions_dir=data/predictions/v1 \
 		--output_dir=data/submissions/avg \
-		--decision_threshold=0.5 \
-		--fold_0_weight=0.711 \
-		--fold_1_weight=0.7086 \
-		--fold_2_weight=0.711 \
-		--fold_3_weight=0.7139 \
-		--fold_4_weight=0.7106 \
-		--fold_5_weight=0.711 \
-		--fold_6_weight=0.7119 \
-		--fold_7_weight=0.7105 \
-		--fold_8_weight=0.7153 \
-		--fold_9_weight=0.7049 \
+		--decision_threshold=0.48 \
+		--fold_0_weight=1.0 \
+		--fold_1_weight=1.0 \
+		--fold_2_weight=1.0 \
+		--fold_3_weight=1.0 \
+		--fold_4_weight=1.0 \
+		--fold_5_weight=1.0 \
+		--fold_6_weight=1.0 \
+		--fold_7_weight=1.0 \
+		--fold_8_weight=1.0 \
+		--fold_9_weight=1.0 \
 		--preview_submission \
 		--test_data_dir=data/raw/test/images \
-		--submission_preview_output_dir=data/interim/submission-previews/avg \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	make predict RUN_DIR=data/aml/Job_serene_nose_xhks3350_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=0
-	make predict RUN_DIR=data/aml/Job_teal_pea_pkhl66m8_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=1
-	make predict RUN_DIR=data/aml/Job_jovial_neck_xjgtp32h_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=2
-	make predict RUN_DIR=data/aml/Job_joyful_chain_lplz87r6_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=3
-	make predict RUN_DIR=data/aml/Job_brave_ticket_crnvjwth_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=4
-	make predict RUN_DIR=data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=5
-	make predict RUN_DIR=data/aml/Job_boring_eye_m813lsb8_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=6
-	make predict RUN_DIR=data/aml/Job_strong_star_lp3sn14h_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=7
-	make predict RUN_DIR=data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=8
-	make predict RUN_DIR=data/aml/Job_sincere_pear_pfkfmyhf_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v1/fold=9
-	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v1
+	make predict RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=0
+	make predict RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=1
+	make predict RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=2
+	make predict RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=3
+	make predict RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=4
+	make predict RUN_DIR=data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=5
+	make predict RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=6
+	make predict RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=7
+	make predict RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=8
+	make predict RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=9
+	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v2
+
+eval-many:
+	make eval RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=0
+	make eval RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=1
+	make eval RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=2
+	make eval RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=3
+	make eval RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=4
+	make eval RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=5
+	make eval RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=6
+	make eval RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=7
+	make eval RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=8
+	make eval RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=9

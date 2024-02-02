@@ -34,7 +34,6 @@ class AveragePredictionsConfig(ConfigBase):
     fold_9_weight: float = 1.0
     preview_submission: bool = False
     test_data_dir: Optional[Path] = None
-    submission_preview_output_dir: Optional[Path] = None
     preview_first_n: int = 10
 
     @property
@@ -56,8 +55,6 @@ class AveragePredictionsConfig(ConfigBase):
     def validate_cfg(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if values["preview_submission"] and values.get("test_data_dir", None) is None:
             raise ValueError("Please provide test_data_dir param if running submission preview!")
-        if values["preview_submission"] and values.get("submission_preview_output_dir", None) is None:
-            raise ValueError("Please provide submission_preview_output_dir param if running submission preview!")
         return values
 
 
@@ -78,7 +75,6 @@ def parse_args() -> AveragePredictionsConfig:
     parser.add_argument("--fold_9_weight", type=float, default=1.0)
     parser.add_argument("--preview_submission", action="store_true")
     parser.add_argument("--test_data_dir", type=str)
-    parser.add_argument("--submission_preview_output_dir", type=str)
     parser.add_argument("--preview_first_n", type=int, default=10)
     args = parser.parse_args()
     cfg = AveragePredictionsConfig(**vars(args))
@@ -155,7 +151,7 @@ def main() -> None:
         plot_first_n_samples(
             data_dir=cfg.test_data_dir,  # type: ignore[arg-type]
             submission_dir=out_dir,
-            output_dir=cfg.submission_preview_output_dir,  # type: ignore[arg-type]
+            output_dir=out_dir / "previews",
             n=cfg.preview_first_n,
         )
 

@@ -14,9 +14,8 @@ from dask.diagnostics import ProgressBar
 from rasterio.errors import NotGeoreferencedWarning
 from tqdm import tqdm
 
-from kelp import consts
 from kelp.core.configs import ConfigBase
-from kelp.data.indices import SPECTRAL_INDEX_LOOKUP, AppendDEMWM
+from kelp.data.indices import BAND_INDEX_LOOKUP, BASE_BANDS, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
 from kelp.utils.logging import get_logger
 
 warnings.filterwarnings(
@@ -24,8 +23,6 @@ warnings.filterwarnings(
     category=NotGeoreferencedWarning,
 )
 ProgressBar().register()
-BASE_BANDS = consts.data.ORIGINAL_BANDS + ["DEMWM"]
-BAND_INDEX_LOOKUP = {band_name: index for index, band_name in enumerate(BASE_BANDS)}
 _logger = get_logger(__name__)
 
 

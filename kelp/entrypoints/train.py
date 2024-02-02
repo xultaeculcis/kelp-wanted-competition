@@ -8,12 +8,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
+from kelp.utils.mlflow import get_mlflow_run_dir
+
 logging.basicConfig(level=logging.WARNING)
 
 import mlflow  # noqa: E402
 import pytorch_lightning as pl  # noqa: E402
 import torch  # noqa: E402
-from mlflow import ActiveRun  # noqa: E402
 from pydantic import field_validator, model_validator  # noqa: E402
 from pytorch_lightning import Callback  # noqa: E402
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint  # noqa: E402
@@ -789,10 +790,6 @@ def make_callbacks(
     )
     callbacks = [early_stopping, lr_monitor, checkpoint]
     return callbacks
-
-
-def get_mlflow_run_dir(current_run: ActiveRun, output_dir: Path) -> Path:
-    return Path(output_dir / str(current_run.info.experiment_id) / current_run.info.run_id)
 
 
 def main() -> None:
