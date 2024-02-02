@@ -4,7 +4,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Set, Tuple
 
-import kornia.augmentation as K
 import numpy as np
 import pandas as pd
 import rasterio
@@ -17,7 +16,8 @@ from tqdm import tqdm
 from kelp import consts
 from kelp.core.configs import ConfigBase
 from kelp.core.device import DEVICE
-from kelp.data.indices import BAND_INDEX_LOOKUP, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
+from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
+from kelp.data.transforms import build_append_index_transforms
 from kelp.utils.logging import get_logger, timed
 
 warnings.filterwarnings(
@@ -25,30 +25,7 @@ warnings.filterwarnings(
     category=NotGeoreferencedWarning,
 )
 _logger = get_logger(__name__)
-_transforms = K.AugmentationSequential(
-    AppendDEMWM(  # type: ignore
-        index_dem=BAND_INDEX_LOOKUP["DEM"],
-        index_qa=BAND_INDEX_LOOKUP["QA"],
-    ),
-    *[
-        append_index_transform(
-            index_swir=BAND_INDEX_LOOKUP["SWIR"],
-            index_nir=BAND_INDEX_LOOKUP["NIR"],
-            index_red=BAND_INDEX_LOOKUP["R"],
-            index_green=BAND_INDEX_LOOKUP["G"],
-            index_blue=BAND_INDEX_LOOKUP["B"],
-            index_dem=BAND_INDEX_LOOKUP["DEM"],
-            index_qa=BAND_INDEX_LOOKUP["QA"],
-            index_water_mask=BAND_INDEX_LOOKUP["DEMWM"],
-            mask_using_qa=not index_name.endswith("WM"),
-            mask_using_water_mask=not index_name.endswith("WM"),
-            fill_val=torch.nan,
-        )
-        for index_name, append_index_transform in SPECTRAL_INDEX_LOOKUP.items()
-        if index_name != "DEMWM"
-    ],
-    data_keys=["input"],
-).to(DEVICE)
+_transforms = build_append_index_transforms(list(SPECTRAL_INDEX_LOOKUP.keys()))
 
 
 class DataPrepConfig(ConfigBase):

@@ -1,6 +1,7 @@
+import json
 import warnings
 from pathlib import Path
-from typing import Dict, List, Literal, Tuple
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
@@ -12,13 +13,13 @@ from sklearn.inspection import permutation_importance
 from sklearn.metrics import ConfusionMatrixDisplay, PrecisionRecallDisplay, RocCurveDisplay, log_loss
 from torchmetrics import AUROC, Accuracy, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
 from tqdm import tqdm
+from xgboost import XGBClassifier
 
 from kelp import consts
 from kelp.core.device import DEVICE
 from kelp.data.plotting import plot_sample
-from kelp.trees.inference.predict import build_transforms, predict_on_single_image
-from kelp.trees.training.estimator import Estimator
-from kelp.trees.training.factories import model_factory
+from kelp.data.transforms import build_append_index_transforms
+from kelp.trees.inference.predict import predict_on_single_image
 from kelp.trees.training.options import parse_args
 from kelp.utils.logging import get_logger, timed
 from kelp.utils.mlflow import get_mlflow_run_dir
@@ -59,7 +60,7 @@ def load_data(
 @torch.inference_mode()
 @timed
 def calculate_metrics(
-    model: Estimator,
+    model: XGBClassifier,
     x: pd.DataFrame,
     y_true: pd.Series,
     y_pred: np.ndarray,  # type: ignore[type-arg]
@@ -88,6 +89,7 @@ def calculate_metrics(
         y_pred_prob = model.predict_proba(x)
         loss = log_loss(y_true, y_pred_prob)
         metrics_dict[f"{prefix}/log_loss"] = loss
+    _logger.info(f"{prefix.upper()} metrics: {json.dumps(metrics_dict, indent=4)}")
     return metrics_dict  # type: ignore[no-any-return]
 
 
@@ -145,26 +147,24 @@ def log_roc_curve(
 
 
 @timed
-def log_mdi_feature_importance(
-    model: Estimator,
+def log_model_feature_importance(
+    model: XGBClassifier,
     feature_names: List[str],
 ) -> None:
-    importances = model.feature_importances_
-    std = np.std([tree.feature_importances_ for tree in model.estimators_], axis=0)
-    forest_importances = pd.Series(importances, index=feature_names)
+    sorted_idx = model.feature_importances_.argsort()
     fig, ax = plt.subplots()
-    forest_importances.plot.bar(yerr=std, ax=ax)
-    ax.set_title("Feature importances using MDI")
+    ax.barh(feature_names[sorted_idx], model.feature_importances_[sorted_idx])
+    ax.set_title("XGB Feature importances")
     ax.set_xlabel("Feature")
-    ax.set_ylabel("Mean decrease in impurity")
+    ax.set_ylabel("XGB Feature Importance")
     fig.tight_layout()
-    mlflow.log_figure(figure=fig, artifact_file="images/feature_importances_mdi.png")
+    mlflow.log_figure(figure=fig, artifact_file="images/feature_importances_xgb.png")
     plt.close(fig)
 
 
 @timed
 def log_permutation_feature_importance(
-    model: Estimator,
+    model: XGBClassifier,
     x: pd.DataFrame,
     y_true: pd.Series,
     seed: int = consts.reproducibility.SEED,
@@ -184,7 +184,7 @@ def log_permutation_feature_importance(
 
 @timed
 def eval_model(
-    model: Estimator,
+    model: XGBClassifier,
     x: pd.DataFrame,
     y_true: pd.Series,
     prefix: str,
@@ -200,16 +200,16 @@ def eval_model(
     log_precision_recall_curve(y_true=y_true, y_pred=y_pred, prefix=prefix)
     log_roc_curve(y_true=y_true, y_pred=y_pred, prefix=prefix)
     if prefix == "test" and explain_model:  # calculate feature importance only once
-        log_mdi_feature_importance(model=model, feature_names=x.columns.tolist())
+        log_model_feature_importance(model=model, feature_names=x.columns.tolist())
         log_permutation_feature_importance(model=model, x=x, y_true=y_true, seed=seed)
 
 
 @timed
 def fit_model(
-    model: Estimator,
+    model: XGBClassifier,
     x: pd.DataFrame,
     y_true: pd.Series,
-) -> Estimator:
+) -> XGBClassifier:
     model.fit(x, y_true)
     return model
 
@@ -224,14 +224,14 @@ def min_max_normalize(x: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
 def log_sample_predictions(
     train_data_dir: Path,
     metadata: pd.DataFrame,
-    model: Estimator,
+    model: XGBClassifier,
     spectral_indices: List[str],
     sample_size: int = 10,
     seed: int = consts.reproducibility.SEED,
 ) -> None:
     sample_to_plot = metadata.sample(n=sample_size, random_state=seed)
     tile_ids = sample_to_plot["tile_id"].tolist()
-    transforms = build_transforms(spectral_indices)
+    transforms = build_append_index_transforms(spectral_indices)
     for tile in tqdm(tile_ids, desc="Plotting sample predictions"):
         with rasterio.open(train_data_dir / "images" / f"{tile}_satellite.tif") as src:
             input_arr = src.read()
@@ -251,13 +251,13 @@ def run_training(
     train_data_dir: Path,
     dataset_fp: Path,
     columns_to_load: List[str],
-    model: Estimator,
+    model: XGBClassifier,
     spectral_indices: List[str],
     sample_size: float = 1.0,
     plot_n_samples: int = 10,
     seed: int = consts.reproducibility.SEED,
     explain_model: bool = False,
-) -> Tuple[Estimator, pd.DataFrame]:
+) -> XGBClassifier:
     metadata = pd.read_parquet(dataset_fp, columns=columns_to_load)
     X_train, y_train, X_val, y_val, X_test, y_test = load_data(
         df=metadata.drop(["tile_id"], axis=1, errors="ignore"),
@@ -276,30 +276,20 @@ def run_training(
         )
     eval_model(model, X_val, y_val, prefix="val", seed=seed, explain_model=explain_model)
     eval_model(model, X_test, y_test, prefix="test", seed=seed, explain_model=explain_model)
-    return model, X_val.head(10)
-
-
-def log_model(
-    model_type: Literal["xgboost", "catboost", "lightgbm", "rf", "gbt"], model: Estimator, sample_input: pd.DataFrame
-) -> None:
-    if model_type in ["rf", "gbt", "xgboost", "lightgbm"]:
-        _logger.info("Model was auto logged. Manual logging will not be performed")
-    elif model_type == "catboost":
-        mlflow.catboost.log_model(cb_model=model, artifact_path="model", input_example=sample_input)
-    else:
-        raise ValueError(f"{model_type=} is not supported")
+    return model
 
 
 def main() -> None:
     cfg = parse_args()
+    mlflow.xgboost.autolog()
     mlflow.set_experiment(cfg.resolved_experiment_name)
     run = mlflow.start_run(run_id=cfg.run_id_from_context)
     with run:
         mlflow.log_dict(cfg.model_dump(mode="json"), artifact_file="config.yaml")
         mlflow.log_params(cfg.model_dump(mode="json"))
         _ = get_mlflow_run_dir(current_run=run, output_dir=cfg.output_dir)
-        model = model_factory(model_type=cfg.classifier, seed=cfg.seed)
-        model, sample_input = run_training(
+        model = XGBClassifier(**cfg.xgboost_model_params)
+        run_training(
             train_data_dir=cfg.train_data_dir,
             dataset_fp=cfg.dataset_fp,
             columns_to_load=cfg.columns_to_load,
@@ -310,7 +300,6 @@ def main() -> None:
             seed=cfg.seed,
             explain_model=cfg.explain_model,
         )
-        log_model(model_type=cfg.classifier, model=model, sample_input=sample_input)
 
 
 if __name__ == "__main__":

@@ -10,12 +10,6 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--dataset_fp", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--spectral_indices", type=str)
-    parser.add_argument(
-        "--classifier",
-        type=str,
-        choices=["xgboost", "catboost", "lightgbm", "rf", "gbt"],
-        default="rf",
-    )
     parser.add_argument("--sample_size", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=consts.reproducibility.SEED)
     parser.add_argument("--plot_n_samples", type=int, default=10)

@@ -157,7 +157,7 @@ train:
 		--output_dir mlruns \
 		--metadata_fp data/processed/train_val_test_dataset.parquet \
 		--dataset_stats_fp data/processed/2023-12-31T20:30:39-stats-fill_value=nan-mask_using_qa=True-mask_using_water_mask=True.json \
-		--cv_split 6 \
+		--cv_split 8 \
 		--batch_size 32 \
 		--num_workers 6 \
 		--band_order 2,3,4,0,1,5,6 \
@@ -177,22 +177,19 @@ train:
 		--dem_zero_pixels_pct_importance_factor -1 \
 		--normalization_strategy quantile \
 		--architecture unet \
-		--encoder resnet50 \
+		--encoder tu-efficientnet_b5 \
 		--pretrained \
 		--encoder_weights imagenet \
 		--lr 3e-4 \
 		--optimizer adamw \
 		--weight_decay 1e-4 \
 		--lr_scheduler onecycle \
-		--pct_start 0.1 \
-		--div_factor 2 \
-		--final_div_factor 1e2 \
+		--onecycle_pct_start 0.1 \
+		--onecycle_div_factor 2 \
+		--onecycle_final_div_factor 1e2 \
 		--loss dice \
-		--ce_smooth_factor 0.1 \
-		--ce_class_weights 0.4,0.6 \
 		--tta \
 		--tta_merge_mode max \
-		--strategy no-freeze \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
 		--early_stopping_patience 7 \

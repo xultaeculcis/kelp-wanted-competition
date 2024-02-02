@@ -42,7 +42,6 @@ def main() -> None:
     run_prediction(
         data_dir=cfg.data_dir,
         output_dir=preds_dir,
-        model_type=cfg.training_config.classifier,
         model_dir=cfg.model_path,
         spectral_indices=cfg.training_config.spectral_indices,
     )

@@ -1,13 +1,13 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import field_validator
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
-from kelp.data.indices import SPECTRAL_INDEX_LOOKUP
+from kelp.data.indices import ALL_INDICES, SPECTRAL_INDEX_LOOKUP
 from kelp.utils.logging import get_logger
 
 _logger = get_logger(__name__)
@@ -18,22 +18,24 @@ class TrainConfig(ConfigBase):
     train_data_dir: Path
     output_dir: Path
     spectral_indices: List[str]
-    classifier: Literal["xgboost", "catboost", "lightgbm", "rf", "gbt"]
     sample_size: float = 1.0
     seed: int = consts.reproducibility.SEED
     plot_n_samples: int = 10
-    experiment: str = "train-tree-clf-exp"
+    experiment: str = "train-xgb-clf-exp"
     explain_model: bool = False
+
+    xgb_learning_rate: float = 0.1
+    xgb_n_estimators: int = 1000
 
     @field_validator("spectral_indices", mode="before")
     def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
         if not value:
             return ["DEMWM", "NDVI"]
 
-        if value == "all":
-            indices = list(SPECTRAL_INDEX_LOOKUP.keys())
-        else:
-            indices = value if isinstance(value, list) else [index.strip() for index in value.split(",")]
+        if value == "all" or value == ALL_INDICES:
+            return ALL_INDICES
+
+        indices = value if isinstance(value, list) else [index.strip() for index in value.split(",")]
 
         if "DEMWM" in indices:
             _logger.warning("DEMWM is automatically added during training. No need to add it twice.")
@@ -47,7 +49,7 @@ class TrainConfig(ConfigBase):
         if unknown_indices:
             raise ValueError(
                 f"Unknown spectral indices were provided: {', '.join(unknown_indices)}. "
-                f"Please provide at most 5 comma separated indices: {', '.join(SPECTRAL_INDEX_LOOKUP.keys())}."
+                f"Please provide comma separated indices. Valid choices are: {', '.join(SPECTRAL_INDEX_LOOKUP.keys())}."
             )
 
         return ["DEMWM", "NDVI"] + indices
@@ -71,3 +73,35 @@ class TrainConfig(ConfigBase):
     @property
     def model_input_columns(self) -> List[str]:
         return consts.data.ORIGINAL_BANDS + self.spectral_indices
+
+    @property
+    def random_forest_model_params(self) -> Dict[str, Any]:
+        return {
+            "random_state": self.seed,
+        }
+
+    @property
+    def gradient_boosting_tree_model_params(self) -> Dict[str, Any]:
+        return {
+            "random_state": self.seed,
+        }
+
+    @property
+    def catboost_model_params(self) -> Dict[str, Any]:
+        return {
+            "random_state": self.seed,
+        }
+
+    @property
+    def xgboost_model_params(self) -> Dict[str, Any]:
+        return {
+            "n_estimators": self.xgb_n_estimators,
+            "learning_rate": self.xgb_learning_rate,
+            "random_state": self.seed,
+        }
+
+    @property
+    def lightgbm_model_params(self) -> Dict[str, Any]:
+        return {
+            "random_state": self.seed,
+        }

@@ -1,29 +1,30 @@
 import argparse
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal
+from typing import Any, Callable, Dict, List
 
-import kornia.augmentation as K
 import mlflow.catboost
 import numpy as np
 import pandas as pd
 import rasterio
 import torch
 import yaml
-from pydantic import model_validator
+from pydantic import ConfigDict, model_validator
 from rasterio.io import DatasetWriter
 from torch import Tensor
 from tqdm import tqdm
+from xgboost import XGBClassifier
 
 from kelp import consts
 from kelp.core.configs import ConfigBase
 from kelp.core.device import DEVICE
-from kelp.data.indices import BAND_INDEX_LOOKUP, SPECTRAL_INDEX_LOOKUP
+from kelp.data.transforms import build_append_index_transforms
 from kelp.entrypoints.predict import META
 from kelp.trees.training.cfg import TrainConfig
-from kelp.trees.training.estimator import Estimator
 
 
 class PredictConfig(ConfigBase):
+    model_config = ConfigDict(protected_namespaces=())
+
     data_dir: Path
     original_training_config_fp: Path
     model_path: Path
@@ -69,63 +70,30 @@ def parse_args() -> PredictConfig:
     return cfg
 
 
-def load_model(
-    model_path: Path,
-    model_type: Literal["xgboost", "catboost", "lightgbm", "rf", "gbt"],
-) -> Estimator:
-    if model_type == "xgboost":
-        model = mlflow.xgboost.load_model(model_path.as_posix())
-    elif model_type == "catboost":
-        model = mlflow.catboost.load_model(model_path.as_posix())
-    elif model_type in ["rf", "gbt"]:
-        model = mlflow.sklearn.load_model(model_path.as_posix())
-    elif model_type == "lightgbm":
-        model = mlflow.lightgbm.load_model(model_path.as_posix())
-    else:
-        raise ValueError(f"{model_type=} is not supported")
-    return model  # type: ignore[no-any-return]
-
-
-def build_transforms(spectral_indices: List[str]) -> Callable[[Tensor], Tensor]:
-    transforms = K.AugmentationSequential(
-        *[
-            SPECTRAL_INDEX_LOOKUP[idx](
-                index_swir=BAND_INDEX_LOOKUP["SWIR"],
-                index_nir=BAND_INDEX_LOOKUP["NIR"],
-                index_red=BAND_INDEX_LOOKUP["R"],
-                index_green=BAND_INDEX_LOOKUP["G"],
-                index_blue=BAND_INDEX_LOOKUP["B"],
-                index_dem=BAND_INDEX_LOOKUP["DEM"],
-                index_qa=BAND_INDEX_LOOKUP["QA"],
-                index_water_mask=BAND_INDEX_LOOKUP["DEMWM"],
-                mask_using_qa=not idx.endswith("WM"),
-                mask_using_water_mask=not idx.endswith("WM"),
-                fill_val=torch.nan,
-            )
-            for idx in spectral_indices
-        ],
-        data_keys=["input"],
-    ).to(DEVICE)
-    return transforms  # type: ignore[no-any-return]
+def load_model(model_path: Path) -> XGBClassifier:
+    return mlflow.xgboost.load_model(model_path.as_posix())
 
 
 @torch.inference_mode()
 def predict_on_single_image(
-    model: Estimator,
+    model: XGBClassifier,
     x: np.ndarray,  # type: ignore[type-arg]
     transforms: Callable[[Tensor], Tensor],
     columns: List[str],
+    decision_threshold: float = 0.5,
 ) -> np.ndarray:  # type: ignore[type-arg]
     tensor = torch.tensor(x, dtype=torch.float32, device=DEVICE).unsqueeze(0)
     tensor = torch.flatten(transforms(tensor), start_dim=2).squeeze().T
     df = pd.DataFrame(tensor.detach().cpu().numpy(), columns=columns).replace({np.nan: -32768.0})
-    prediction = model.predict(df).reshape(x.shape[1], x.shape[2])
+    prediction = model.predict_proba(df)
+    prediction = np.where(prediction[:, 1] >= decision_threshold, 1, 0)
+    prediction = prediction.reshape(x.shape[1], x.shape[2])
     return prediction  # type: ignore[no-any-return]
 
 
-def predict(input_dir: Path, model: Estimator, spectral_indices: List[str], output_dir: Path) -> None:
+def predict(input_dir: Path, model: XGBClassifier, spectral_indices: List[str], output_dir: Path) -> None:
     fps = sorted(list(input_dir.glob("*.tif")))
-    transforms = build_transforms(spectral_indices)
+    transforms = build_append_index_transforms(spectral_indices)
     for fp in tqdm(fps, "Predicting"):
         tile_id = fp.name.split("_")[0]
         with rasterio.open(fp) as src:
@@ -142,10 +110,9 @@ def run_prediction(
     data_dir: Path,
     output_dir: Path,
     model_dir: Path,
-    model_type: Literal["xgboost", "catboost", "lightgbm", "rf", "gbt"],
     spectral_indices: List[str],
 ) -> None:
-    model = load_model(model_path=model_dir, model_type=model_type)
+    model = load_model(model_path=model_dir)
     predict(
         input_dir=data_dir,
         model=model,
@@ -160,7 +127,6 @@ def main() -> None:
         data_dir=cfg.data_dir,
         output_dir=cfg.output_dir,
         model_dir=cfg.model_path,
-        model_type=cfg.training_config.classifier,
         spectral_indices=cfg.training_config.spectral_indices,
     )
 
