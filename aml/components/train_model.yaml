@@ -38,7 +38,7 @@ resources:
 code: ../..
 command: >-
   PYTHONPATH=$PYTHONPATH:. ; export PYTHONPATH ;
-  python ./kelp/entrypoints/train.py
+  python ./kelp/nn/training/train.py
   --data_dir ${{inputs.data_dir}}
   --output_dir ${{outputs.output_dir}}
   --metadata_fp ${{inputs.metadata_file}}

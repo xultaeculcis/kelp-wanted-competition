@@ -105,14 +105,14 @@ clean:
 
 .PHONY: sample-plotting  ## Runs tile plotting
 sample-plotting:
-	python ./kelp/entrypoints/sample_plotting.py \
+	python ./kelp/data_prep/sample_plotting.py \
  		--data_dir data/raw \
 		--metadata_fp data/raw/metadata_fTq0l2T.csv \
 		--output_dir data/processed
 
 .PHONY: aoi-grouping  ## Runs AOI grouping
 aoi-grouping:
-	python ./kelp/entrypoints/aoi_grouping.py \
+	python ./kelp/data_prep/aoi_grouping.py \
 		--dem_dir data/processed/dem \
  		--output_dir data/processed/grouped_aoi_results \
  		--metadata_fp data/processed/stats/metadata_fTq0l2T.csv \
@@ -121,20 +121,20 @@ aoi-grouping:
 
 .PHONY: eda  ## Runs EDA
 eda:
-	python ./kelp/entrypoints/eda.py \
+	python ./kelp/data_prep/eda.py \
  		--data_dir data/raw \
 		--metadata_fp data/processed/grouped_aoi_results/metadata.parquet \
 		--output_dir data/processed
 
 .PHONY: calculate-band-stats  ## Runs band statistics calculation
 calculate-band-stats:
-	python ./kelp/entrypoints/calculate_band_stats.py \
+	python ./kelp/data_prep/calculate_band_stats.py \
  		--data_dir data/raw \
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-cv  ## Runs train-val-test split using cross validation
 train-val-test-split-cv:
-	python ./kelp/entrypoints/train_val_test_split.py \
+	python ./kelp/data_prep/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
 		--split_strategy cross_val \
 		--seed 42 \
@@ -143,7 +143,7 @@ train-val-test-split-cv:
 
 .PHONY: train-val-test-split-random  ## Runs train-val-test split using random split
 train-val-test-split-random:
-	python ./kelp/entrypoints/train_val_test_split.py \
+	python ./kelp/data_prep/train_val_test_split.py \
 		--dataset_metadata_fp data/processed/stats/dataset_stats.parquet \
 		--split_strategy random_split \
 		--random_split_train_size 0.98 \
@@ -152,7 +152,7 @@ train-val-test-split-random:
 
 .PHONY: train  ## Trains single CV split
 train:
-	python ./kelp/entrypoints/train.py \
+	python ./kelp/nn/training/train.py \
  		--data_dir data/raw \
 		--output_dir mlruns \
 		--metadata_fp data/processed/train_val_test_dataset.parquet \
@@ -198,7 +198,7 @@ train:
 
 .PHONY: predict  ## Runs prediction
 predict:
-	python ./kelp/entrypoints/predict.py \
+	python ./kelp/nn/inference/predict.py \
 		--data_dir data/raw/test/images \
 		--dataset_stats_dir=data/processed \
 		--output_dir $(PREDS_OUTPUT_DIR) \
@@ -208,13 +208,13 @@ predict:
 
 .PHONY: submission  ## Generates submission file
 submission:
-	python ./kelp/entrypoints/submission.py \
+	python ./kelp/core/submission.py \
 		--predictions_dir data/predictions \
 		--output_dir data/submissions
 
 .PHONY: predict-and-submit  ## Runs inference and generates submission file
 predict-and-submit:
-	python ./kelp/entrypoints/predict_and_submit.py \
+	python ./kelp/nn/inference/predict_and_submit.py \
 		--data_dir data/raw/test/images \
 		--dataset_stats_dir=data/processed \
 		--output_dir data/submissions \
@@ -224,7 +224,7 @@ predict-and-submit:
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:
-	python ./kelp/entrypoints/eval.py \
+	python ./kelp/nn/inference/eval.py \
 		--data_dir data/raw \
 		--metadata_dir data/processed \
 		--dataset_stats_dir data/processed \
@@ -235,7 +235,7 @@ eval:
 
 .PHONY: average-predictions  ## Runs prediction averaging
 average-predictions:
-	python ./kelp/entrypoints/average_predictions.py \
+	python ./kelp/nn/inference/average_predictions.py \
 		--predictions_dir=data/predictions/v1 \
 		--output_dir=data/submissions/avg \
 		--decision_threshold=0.48 \
