@@ -1,9 +1,9 @@
 import pytest
 import torch
 
-from kelp.models.efficientunetplusplus.model import EfficientUnetPlusPlus
-from kelp.models.resunet.model import ResUnet
-from kelp.models.resunetplusplus.model import ResUnetPlusPlus
+from kelp.nn.models.efficientunetplusplus.model import EfficientUnetPlusPlus
+from kelp.nn.models.resunet.model import ResUnet
+from kelp.nn.models.resunetplusplus.model import ResUnetPlusPlus
 
 _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
