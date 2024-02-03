@@ -19,9 +19,12 @@ inputs:
     path: azureml:dataset_stats_file:2
   cv_split: 8
   batch_size: 32
-  num_workers: 6
-  band_order: 2,3,4,0,1,5,6
+  num_workers: 8
+  bands: SWIR,NIR,R,G,B,QA,DEM
+  spectral_indices: DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   image_size: 352
+  resize_strategy: pad
+  interpolation: nearest
   samples_per_epoch: 10240
   has_kelp_importance_factor: 1
   kelp_pixels_pct_importance_factor: 1

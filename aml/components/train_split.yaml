@@ -39,11 +39,11 @@ command: >-
   --output_dir ${{outputs.output_dir}}
   --metadata_fp ${{inputs.metadata_file}}
   --dataset_stats_fp ${{inputs.dataset_stats_file}}
-  --spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --cv_split ${{inputs.cv_split}}
   --batch_size 32
   --num_workers 4
-  --band_order 2,3,4,0,1,5,6
+  --bands SWIR,NIR,R,G,B,QA,DEM
+  --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
   --image_size 352
   --fill_missing_pixels_with_torch_nan

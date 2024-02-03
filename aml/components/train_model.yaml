@@ -46,16 +46,16 @@ command: >-
   --cv_split 8
   --batch_size 32
   --num_workers 4
-  --band_order 2,3,4,0,1,5,6
-  --spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+  --bands SWIR,NIR,R,G,B,QA,DEM
+  --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --image_size 352
   --resize_strategy pad
   --fill_missing_pixels_with_torch_nan
   --mask_using_qa
   --mask_using_water_mask
   --use_weighted_sampler
-  --architecture unet
-  --encoder tu-efficientnet_b5
+  --architecture ${{inputs.architecture}}
+  --encoder ${{inputs.encoder}}
   --pretrained
   --encoder_weights imagenet
   --optimizer adamw
@@ -65,6 +65,5 @@ command: >-
   --epochs 10
   --decision_threshold 0.48
   --experiment model-hparam-search-exp
-  --benchmark
 
 is_deterministic: false
