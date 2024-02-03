@@ -36,7 +36,6 @@ class FigureGrids:
     prediction: Optional[plt.Figure] = None
     qa: Optional[plt.Figure] = None
     dem: Optional[plt.Figure] = None
-    ndvi: Optional[plt.Figure] = None
     spectral_indices: Optional[Dict[str, plt.Figure]] = None
 
 
@@ -159,10 +158,8 @@ class KelpForestSegmentationDataset(Dataset):
         plot_spectral_indices: bool = False,
         plot_qa_grid: bool = False,
         plot_dem_grid: bool = False,
-        plot_ndvi_grid: bool = False,
         plot_mask_grid: bool = False,
         plot_prediction_grid: bool = False,
-        ndvi_cmap: str = "RdYlGn",
         dem_cmap: str = "viridis",
         spectral_indices_cmap: str = "viridis",
         qa_mask_cmap: str = "gray",
@@ -173,6 +170,7 @@ class KelpForestSegmentationDataset(Dataset):
                 "Mask grid cannot be plotted. No 'mask' key is present in the batch. "
                 f"Found following keys: {list(batch.keys())}"
             )
+
         if plot_prediction_grid and "prediction" not in batch:
             raise ValueError(
                 "Prediction grid cannot be plotted. No 'prediction' key is present in the batch. "
@@ -184,73 +182,50 @@ class KelpForestSegmentationDataset(Dataset):
         vmax = torch.amax(image, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         normalized = (image - vmin) / (vmax - vmin + consts.data.EPS)
 
-        indices_true_color = (band_index_lookup["R"], band_index_lookup["G"], band_index_lookup["B"])
-        indices_color_infrared = (band_index_lookup["NIR"], band_index_lookup["R"], band_index_lookup["G"])
-        indices_short_wave_infrared = (band_index_lookup["SWIR"], band_index_lookup["NIR"], band_index_lookup["R"])
-
         image_grid = make_grid(normalized, nrow=samples_per_row)
-        true_color_grid = image_grid[indices_true_color, :, :] if plot_true_color else None
-        color_infrared_grid = image_grid[indices_color_infrared, :, :] if plot_color_infrared_grid else None
-        short_wave_infrared_grid = (
-            image_grid[indices_short_wave_infrared, :, :] if plot_short_wave_infrared_grid else None
-        )
-        qa_grid = image_grid[band_index_lookup["QA"], :, :] if plot_qa_grid else None
-        dem_grid = image_grid[band_index_lookup["DEM"], :, :] if plot_dem_grid else None
-        ndvi_grid = image_grid[band_index_lookup["NDVI"], :, :] if plot_ndvi_grid else None
-
-        mask_grid = make_grid(batch["mask"].unsqueeze(1), nrow=samples_per_row)[0, :, :] if plot_mask_grid else None
-        prediction_grid = (
-            make_grid(batch["prediction"].unsqueeze(1), nrow=samples_per_row)[0, :, :] if plot_prediction_grid else None
-        )
 
         return FigureGrids(
             true_color=KelpForestSegmentationDataset._plot_tensor(
-                tensor=true_color_grid,
+                tensor=image_grid[(band_index_lookup["R"], band_index_lookup["G"], band_index_lookup["B"]), :, :],
             )
             if plot_true_color
             else None,
             color_infrared=KelpForestSegmentationDataset._plot_tensor(
-                tensor=color_infrared_grid,
+                tensor=image_grid[(band_index_lookup["NIR"], band_index_lookup["R"], band_index_lookup["G"]), :, :],
             )
             if plot_color_infrared_grid
             else None,
             short_wave_infrared=KelpForestSegmentationDataset._plot_tensor(
-                tensor=short_wave_infrared_grid,
+                tensor=image_grid[(band_index_lookup["SWIR"], band_index_lookup["NIR"], band_index_lookup["R"]), :, :],
             )
             if plot_short_wave_infrared_grid
             else None,
             mask=KelpForestSegmentationDataset._plot_tensor(
-                tensor=mask_grid,
+                tensor=make_grid(batch["mask"].unsqueeze(1), nrow=samples_per_row)[0, :, :],
                 interpolation="none",
                 cmap=mask_cmap,
             )
             if plot_mask_grid
             else None,
             prediction=KelpForestSegmentationDataset._plot_tensor(
-                tensor=prediction_grid,
+                tensor=make_grid(batch["prediction"].unsqueeze(1), nrow=samples_per_row)[0, :, :],
                 interpolation="none",
                 cmap=mask_cmap,
             )
             if plot_prediction_grid
             else None,
             qa=KelpForestSegmentationDataset._plot_tensor(
-                tensor=qa_grid,
+                tensor=image_grid[band_index_lookup["QA"], :, :],
                 interpolation="none",
                 cmap=qa_mask_cmap,
             )
             if plot_qa_grid
             else None,
             dem=KelpForestSegmentationDataset._plot_tensor(
-                tensor=dem_grid,
+                tensor=image_grid[band_index_lookup["DEM"], :, :],
                 cmap=dem_cmap,
             )
             if plot_dem_grid
-            else None,
-            ndvi=KelpForestSegmentationDataset._plot_tensor(
-                tensor=ndvi_grid,
-                cmap=ndvi_cmap,
-            )
-            if plot_ndvi_grid
             else None,
             spectral_indices={
                 band_name: KelpForestSegmentationDataset._plot_tensor(
@@ -259,7 +234,7 @@ class KelpForestSegmentationDataset(Dataset):
                     cmap=qa_mask_cmap if band_name.endswith("WM") else spectral_indices_cmap,
                 )
                 for band_name, band_number in band_index_lookup.items()
-                if band_name not in ["SWIR", "NIR", "R", "G", "B", "QA", "DEM"]
+                if band_name not in consts.data.ORIGINAL_BANDS
             }
             if plot_spectral_indices
             else None,

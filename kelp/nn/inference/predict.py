@@ -19,7 +19,7 @@ from kelp.core.configs import ConfigBase
 from kelp.nn.data.datamodule import KelpForestDataModule
 from kelp.nn.data.utils import unbind_samples
 from kelp.nn.models.segmentation import KelpForestSegmentationTask
-from kelp.nn.training.train import TrainConfig
+from kelp.nn.training.config import TrainConfig
 from kelp.utils.logging import get_logger
 
 _logger = get_logger(__name__)

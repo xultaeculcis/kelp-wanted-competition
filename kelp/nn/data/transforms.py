@@ -5,14 +5,15 @@ from typing import Callable, List
 import kornia.augmentation as K
 import numpy as np
 import torch
-from torch import Tensor, nn
+from torch import Tensor
+from torch.nn import Module
 
 from kelp import consts
 from kelp.core.device import DEVICE
 from kelp.core.indices import BAND_INDEX_LOOKUP, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
 
 
-class MinMaxNormalize(nn.Module):
+class MinMaxNormalize(Module):
     def __init__(self, min_vals: Tensor, max_vals: Tensor) -> None:
         super().__init__()
         self.mins = min_vals.view(1, -1, 1, 1)
@@ -26,14 +27,14 @@ class MinMaxNormalize(nn.Module):
         return x
 
 
-class PerSampleMinMaxNormalize(nn.Module):
+class PerSampleMinMaxNormalize(Module):
     def forward(self, x: Tensor) -> Tensor:
         vmin = torch.amin(x, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         vmax = torch.amax(x, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         return (x - vmin) / (vmax - vmin + consts.data.EPS)
 
 
-class PerSampleQuantileNormalize(nn.Module):
+class PerSampleQuantileNormalize(Module):
     def __init__(self, q_low: float, q_high: float) -> None:
         super().__init__()
         self.q_low = q_low
@@ -48,7 +49,7 @@ class PerSampleQuantileNormalize(nn.Module):
         return x
 
 
-class RemoveNaNs(nn.Module):
+class RemoveNaNs(Module):
     def __init__(self, min_vals: Tensor, max_vals: Tensor) -> None:
         super().__init__()
         self.mins = min_vals.view(1, -1, 1, 1)
