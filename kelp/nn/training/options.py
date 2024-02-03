@@ -133,10 +133,10 @@ def parse_args() -> TrainConfig:
         help="A comma separated list of spectral indices to append to the samples during training",
     )
     parser.add_argument(
-        "--band_order",
+        "--bands",
         type=str,
-        help="A comma separated list of band indices to reorder. Use it to shift input data channels. "
-        f"Must have length of {len(consts.data.ORIGINAL_BANDS)} if specified.",
+        help="A comma separated list of band names to reorder. Use it to shift input data channels. "
+        f"Must be a subset of {consts.data.ORIGINAL_BANDS} if specified.",
     )
     parser.add_argument(
         "--output_dir",

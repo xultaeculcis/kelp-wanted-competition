@@ -23,8 +23,8 @@ class TrainConfig(ConfigBase):
     metadata_fp: Path
     dataset_stats_fp: Path
     cv_split: int = 0
+    bands: List[str]
     spectral_indices: List[str]
-    band_order: List[int]
     image_size: int = 352
     resize_strategy: Literal["pad", "resize"] = "pad"
     batch_size: int = 32
@@ -171,15 +171,15 @@ class TrainConfig(ConfigBase):
 
         return values
 
-    @field_validator("band_order", mode="before")
-    def validate_channel_order(cls, value: Optional[Union[str, List[int]]] = None) -> List[int]:
-        all_bands = list(range(len(consts.data.ORIGINAL_BANDS)))
+    @field_validator("bands", mode="before")
+    def validate_bands(cls, value: Optional[Union[str, List[str]]] = None) -> List[str]:
+        all_bands = list(consts.data.ORIGINAL_BANDS)
         if value is None:
             return all_bands
-        band_order = value if isinstance(value, list) else [int(band_idx.strip()) for band_idx in value.split(",")]
-        if set(band_order).issubset(all_bands):
-            return band_order
-        raise ValueError(f"{band_order=} should be a subset of {all_bands=}")
+        bands = value if isinstance(value, list) else [band.strip() for band in value.split(",")]
+        if set(bands).issubset(all_bands):
+            return bands
+        raise ValueError(f"{bands=} should be a subset of {all_bands=}")
 
     @field_validator("spectral_indices", mode="before")
     def validate_spectral_indices(cls, value: Union[str, Optional[List[str]]] = None) -> List[str]:
@@ -239,8 +239,8 @@ class TrainConfig(ConfigBase):
             "metadata_fp": self.metadata_fp,
             "dataset_stats": self.dataset_stats,
             "cv_split": self.cv_split,
+            "bands": self.bands,
             "spectral_indices": self.spectral_indices,
-            "band_order": self.band_order,
             "image_size": self.image_size,
             "resize_strategy": self.resize_strategy,
             "batch_size": self.batch_size,

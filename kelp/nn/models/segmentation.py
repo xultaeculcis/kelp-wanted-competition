@@ -125,7 +125,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         step = self.global_step
         if batch_idx < self.hyperparams["plot_n_batches"] and step:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-            band_index_lookup = {band: idx for idx, band in enumerate(datamodule.reordered_bands)}
+            band_index_lookup = {band: idx for idx, band in enumerate(datamodule.bands_to_use)}
             can_plot_true_color = all(band in band_index_lookup for band in ["R", "G", "B"])
             can_plot_color_infrared_color = all(band in band_index_lookup for band in ["NIR", "R", "G"])
             can_plot_shortwave_infrared_color = all(band in band_index_lookup for band in ["SWIR", "NIR", "R"])

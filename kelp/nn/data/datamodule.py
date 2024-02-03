@@ -62,7 +62,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         test_masks: Optional[List[Path]] = None,
         predict_images: Optional[List[Path]] = None,
         spectral_indices: Optional[List[str]] = None,
-        band_order: Optional[List[int]] = None,
+        bands: Optional[List[str]] = None,
         missing_pixels_fill_value: float = 0.0,
         batch_size: int = 32,
         num_workers: int = 0,
@@ -83,8 +83,13 @@ class KelpForestDataModule(pl.LightningDataModule):
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
-        band_order = self._guard_against_invalid_band_order_config(band_order)
-        spectral_indices = self._guard_against_invalid_spectral_indices_config(band_order, spectral_indices)
+        bands = self._guard_against_invalid_bands_config(bands)
+        spectral_indices = self._guard_against_invalid_spectral_indices_config(
+            bands_to_use=bands,
+            spectral_indices=spectral_indices,
+            mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+        )
         self.dataset_stats = dataset_stats
         self.train_images = train_images or []
         self.train_masks = train_masks or []
@@ -94,9 +99,10 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.test_masks = test_masks or []
         self.predict_images = predict_images or []
         self.spectral_indices = spectral_indices
-        self.band_order = band_order
-        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + self.spectral_indices
-        self.band_index_lookup = {band: idx for idx, band in enumerate(self.reordered_bands)}
+        self.bands = bands
+        self.band_order = [self.base_bands.index(band) for band in self.bands]
+        self.bands_to_use = self.bands + self.spectral_indices
+        self.band_index_lookup = {band: idx for idx, band in enumerate(self.bands_to_use)}
         self.missing_pixels_fill_value = missing_pixels_fill_value
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -118,38 +124,34 @@ class KelpForestDataModule(pl.LightningDataModule):
             image_size=image_size,
         )
 
-    def _guard_against_invalid_band_order_config(self, band_order: Optional[List[int]]) -> List[int]:
-        all_bands = list(range(len(self.base_bands)))
+    def _guard_against_invalid_bands_config(self, bands: Optional[List[str]]) -> List[str]:
+        if not bands:
+            return self.base_bands
 
-        if not band_order:
-            return all_bands
+        if set(bands).issubset(set(self.base_bands)):
+            return bands
 
-        if set(band_order).issubset(set(all_bands)):
-            return band_order
-
-        raise ValueError(f"{band_order=} should be a subset of {all_bands=}")
+        raise ValueError(f"{bands=} should be a subset of {self.base_bands=}")
 
     def _guard_against_invalid_spectral_indices_config(
         self,
-        band_order: List[int],
+        bands_to_use: List[str],
         spectral_indices: Optional[List[str]] = None,
         mask_using_qa: bool = False,
         mask_using_water_mask: bool = False,
     ) -> List[str]:
-        bands_to_use = [self.base_bands[idx] for idx in band_order]
-
         if not spectral_indices:
             return []
 
         if "DEM" not in bands_to_use and "DEMWM" in spectral_indices:
             raise ValueError(
-                f"You specified 'DEMWM' as one of spectral indices but 'DEM' is not in {band_order=}, "
+                f"You specified 'DEMWM' as one of spectral indices but 'DEM' is not in {bands_to_use=}, "
                 f"which corresponds to {bands_to_use=}"
             )
 
         if "QA" not in bands_to_use and mask_using_qa:
             raise ValueError(
-                f"You specified {mask_using_qa=} but 'QA' is not in {band_order=}, "
+                f"You specified {mask_using_qa=} but 'QA' is not in {bands_to_use=}, "
                 f"which corresponds to {bands_to_use=}"
             )
 
@@ -240,7 +242,7 @@ class KelpForestDataModule(pl.LightningDataModule):
             )
 
     def _resolve_normalization_stats(self) -> Tuple[BandStats, int]:
-        band_stats = {band: self.dataset_stats[band] for band in self.reordered_bands}
+        band_stats = {band: self.dataset_stats[band] for band in self.bands_to_use}
         mean = [val["mean"] for val in band_stats.values()]
         std = [val["std"] for val in band_stats.values()]
         vmin = [val["min"] for val in band_stats.values()]

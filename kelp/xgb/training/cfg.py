@@ -72,7 +72,7 @@ class TrainConfig(ConfigBase):
 
     @property
     def model_input_columns(self) -> List[str]:
-        return consts.data.ORIGINAL_BANDS + self.spectral_indices
+        return list(consts.data.ORIGINAL_BANDS) + self.spectral_indices
 
     @property
     def random_forest_model_params(self) -> Dict[str, Any]:

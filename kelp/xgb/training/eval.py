@@ -82,7 +82,7 @@ def eval(
             model=model,
             x=input_arr,
             transforms=transforms,
-            columns=consts.data.ORIGINAL_BANDS + spectral_indices,
+            columns=list(consts.data.ORIGINAL_BANDS) + spectral_indices,
             decision_threshold=decision_threshold,
         )
         metrics(
