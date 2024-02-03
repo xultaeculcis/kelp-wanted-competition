@@ -27,6 +27,7 @@ class TrainConfig(ConfigBase):
     spectral_indices: List[str]
     image_size: int = 352
     resize_strategy: Literal["pad", "resize"] = "pad"
+    interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest"
     batch_size: int = 32
     num_workers: int = 4
     normalization_strategy: Literal[
@@ -243,6 +244,7 @@ class TrainConfig(ConfigBase):
             "spectral_indices": self.spectral_indices,
             "image_size": self.image_size,
             "resize_strategy": self.resize_strategy,
+            "interpolation": self.interpolation,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
             "normalization_strategy": self.normalization_strategy,

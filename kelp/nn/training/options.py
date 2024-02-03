@@ -31,7 +31,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--cv_split",
         type=int,
-        default=0,
+        default=8,
     )
     parser.add_argument(
         "--batch_size",
@@ -53,6 +53,12 @@ def parse_args() -> TrainConfig:
         type=str,
         choices=["pad", "resize"],
         default="pad",
+    )
+    parser.add_argument(
+        "--interpolation",
+        type=str,
+        choices=["nearest", "nearest-exact", "bilinear", "bicubic"],
+        default="nearest",
     )
     parser.add_argument(
         "--normalization_strategy",

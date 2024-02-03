@@ -68,6 +68,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         num_workers: int = 0,
         image_size: int = 352,
         resize_strategy: Literal["pad", "resize"] = "pad",
+        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
         normalization_strategy: Literal[
             "min-max",
             "quantile",
@@ -119,9 +120,17 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.val_augmentations = self._resolve_transforms(stage="val")
         self.test_augmentations = self._resolve_transforms(stage="test")
         self.predict_augmentations = self._resolve_transforms(stage="predict")
-        self.resize_tf = self._resolve_resize_transform(
+        self.image_resize_tf = self._resolve_resize_transform(
+            image_or_mask="image",
             resize_strategy=resize_strategy,
             image_size=image_size,
+            interpolation=interpolation,
+        )
+        self.mask_resize_tf = self._resolve_resize_transform(
+            image_or_mask="mask",
+            resize_strategy=resize_strategy,
+            image_size=image_size,
+            interpolation=interpolation,
         )
 
     def _guard_against_invalid_bands_config(self, bands: Optional[List[str]]) -> List[str]:
@@ -195,9 +204,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         return batch
 
     def _common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        sample["image"] = self.resize_tf(sample["image"])
+        sample["image"] = self.image_resize_tf(sample["image"])
         if "mask" in sample:
-            sample["mask"] = self.resize_tf(sample["mask"].unsqueeze(0)).squeeze()
+            sample["mask"] = self.mask_resize_tf(sample["mask"].unsqueeze(0)).squeeze()
         return sample
 
     def _resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
@@ -275,9 +284,17 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def _resolve_resize_transform(
         self,
+        image_or_mask: Literal["image", "mask"],
         resize_strategy: Literal["pad", "resize"] = "pad",
         image_size: int = 352,
+        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
     ) -> Callable[[Tensor], Tensor]:
+        interpolation_lookup = {
+            "nearest": InterpolationMode.NEAREST,
+            "nearest-exact": InterpolationMode.NEAREST_EXACT,
+            "bilinear": InterpolationMode.BILINEAR,
+            "bicubic": InterpolationMode.BICUBIC,
+        }
         if resize_strategy == "pad":
             if image_size < 352:
                 raise ValueError(
@@ -293,7 +310,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         elif resize_strategy == "resize":
             return T.Resize(  # type: ignore[no-any-return]
                 size=(image_size, image_size),
-                interpolation=InterpolationMode.NEAREST,
+                interpolation=interpolation_lookup[interpolation]
+                if image_or_mask == "image"
+                else InterpolationMode.NEAREST,
                 antialias=False,
             )
         else:
