@@ -714,3 +714,15 @@ Findings:
 * Removed models other than `XGBClassifier`
 * New submission with XGB - dice = 0.5 on public LB - abandoning this approach
 * Going back to NNs
+
+## 2024-02-03
+
+* Allow for training with reduced number of bands
+* Refactor training stuff a bit (split `train.py` into smaller files)
+* Use band names instead of indices for band order
+* Add option to specify interpolation mode
+* Update training pipelines
+
+## 2024-02-04
+
+* Add mask post predict resize transforms with accordance with predict transforms

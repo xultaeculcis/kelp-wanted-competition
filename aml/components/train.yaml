@@ -18,7 +18,7 @@ inputs:
     description: The dataset stats file.
   cv_split:
     type: integer
-    default: 6
+    default: 8
     description: The CV split.
   batch_size:
     type: integer
@@ -36,14 +36,18 @@ inputs:
     type: string
     default: pad
     description: The image resize strategy - one of [pad, resize].
+  interpolation:
+    type: string
+    default: nearest
+    description: The image resize strategy - one of [nearest, nearest-exact, bilinear, bicubic].
+  bands:
+    type: string
+    default: SWIR,NIR,R,G,B,QA,DEM
+    description: The band order.
   spectral_indices:
     type: string
-    default: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+    default: DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
     description: The spectral indices to append to input.
-  band_order:
-    type: string
-    default: 2,3,4,0,1,5,6
-    description: The band order.
   samples_per_epoch:
     type: integer
     default: 10240
@@ -86,7 +90,7 @@ inputs:
     description: The network architecture.
   encoder:
     type: string
-    default: resnet50
+    default: tu-efficientnet_b5
     description: The network encoder.
   encoder_weights:
     type: string
@@ -182,10 +186,11 @@ command: >-
   --cv_split ${{inputs.cv_split}}
   --batch_size ${{inputs.batch_size}}
   --num_workers ${{inputs.num_workers}}
+  --bands ${{inputs.bands}}
   --spectral_indices ${{inputs.spectral_indices}}
-  --band_order ${{inputs.band_order}}
   --image_size ${{inputs.image_size}}
   --resize_strategy ${{inputs.resize_strategy}}
+  --interpolation ${{inputs.interpolation}}
   --fill_missing_pixels_with_torch_nan
   --mask_using_qa
   --mask_using_water_mask

@@ -1,4 +1,4 @@
-from torch import nn as nn
+from torch import nn
 
 
 class PreActivatedConv2dReLU(nn.Sequential):

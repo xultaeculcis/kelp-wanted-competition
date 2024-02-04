@@ -2,34 +2,38 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 import mlflow
 import pytorch_lightning as pl
 import rasterio
 import torch
+import torchvision.transforms as T
 import yaml
 from affine import Affine
 from pydantic import ConfigDict, model_validator
 from rasterio.io import DatasetWriter
 from torch import Tensor
+from torchvision.transforms import InterpolationMode
 from tqdm import tqdm
 
 from kelp.core.configs import ConfigBase
 from kelp.nn.data.datamodule import KelpForestDataModule
+from kelp.nn.data.transforms import RemovePadding
 from kelp.nn.data.utils import unbind_samples
 from kelp.nn.models.segmentation import KelpForestSegmentationTask
-from kelp.nn.training.train import TrainConfig
+from kelp.nn.training.config import TrainConfig
 from kelp.utils.logging import get_logger
 
+torch.set_float32_matmul_precision("medium")
 _logger = get_logger(__name__)
 IMG_SIZE = 350
 META = {
     "driver": "GTiff",
     "dtype": "int8",
     "nodata": None,
-    "width": 350,
-    "height": 350,
+    "width": IMG_SIZE,
+    "height": IMG_SIZE,
     "count": 1,
     "crs": None,
     "transform": Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),
@@ -149,15 +153,17 @@ def load_model(
     return model
 
 
-def predict(dm: pl.LightningDataModule, model: pl.LightningModule, train_cfg: TrainConfig, output_dir: Path) -> None:
-    padding_to_trim = (train_cfg.image_size - IMG_SIZE) // 2
-    crop_upper_bound = IMG_SIZE + padding_to_trim
-
+@torch.inference_mode()
+def predict(
+    dm: pl.LightningDataModule,
+    model: pl.LightningModule,
+    train_cfg: TrainConfig,
+    output_dir: Path,
+    resize_tf: Callable[[Tensor], Tensor],
+) -> None:
     with torch.no_grad():
         trainer = pl.Trainer(**train_cfg.trainer_kwargs, logger=False)
-
         preds: List[Dict[str, Union[Tensor, str]]] = trainer.predict(model=model, datamodule=dm)
-
         for prediction_batch in tqdm(preds, "Saving prediction batches"):
             individual_samples = unbind_samples(prediction_batch)
             for sample in individual_samples:
@@ -165,9 +171,26 @@ def predict(dm: pl.LightningDataModule, model: pl.LightningModule, train_cfg: Tr
                 prediction = sample["prediction"]
                 dest: DatasetWriter
                 with rasterio.open(output_dir / f"{tile_id}_kelp.tif", "w", **META) as dest:
-                    prediction_arr = prediction.detach().cpu().numpy()
-                    prediction_arr = prediction_arr[padding_to_trim:crop_upper_bound, padding_to_trim:crop_upper_bound]
+                    prediction_arr = resize_tf(prediction.unsqueeze(0)).detach().cpu().numpy().squeeze()
                     dest.write(prediction_arr, 1)
+
+
+def resolve_post_predict_resize_transform(
+    resize_strategy: Literal["resize", "pad"],
+    source_image_size: int,
+    target_image_size: int,
+) -> Callable[[Tensor], Tensor]:
+    if resize_strategy == "resize":
+        resize_tf = T.Resize(
+            size=(target_image_size, target_image_size),
+            interpolation=InterpolationMode.NEAREST,
+            antialias=False,
+        )
+    elif resize_strategy == "pad":
+        resize_tf = RemovePadding(image_size=target_image_size, padded_image_size=source_image_size)
+    else:
+        raise ValueError(f"{resize_strategy=} is not supported")
+    return resize_tf  # type: ignore[no-any-return]
 
 
 def run_prediction(
@@ -188,7 +211,18 @@ def run_prediction(
         tta_merge_mode=tta_merge_mode,
         decision_threshold=decision_threshold,
     )
-    predict(dm=dm, model=model, train_cfg=train_cfg, output_dir=output_dir)
+    resize_tf = resolve_post_predict_resize_transform(
+        resize_strategy=train_cfg.resize_strategy,
+        source_image_size=train_cfg.image_size,
+        target_image_size=IMG_SIZE,
+    )
+    predict(
+        dm=dm,
+        model=model,
+        train_cfg=train_cfg,
+        output_dir=output_dir,
+        resize_tf=resize_tf,
+    )
 
 
 def main() -> None:

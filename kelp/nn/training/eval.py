@@ -9,7 +9,8 @@ import pytorch_lightning as pl
 
 from kelp.nn.data.datamodule import KelpForestDataModule
 from kelp.nn.inference.predict import PredictConfig, build_prediction_arg_parser, load_model
-from kelp.nn.training.train import TrainConfig, make_callbacks, make_loggers
+from kelp.nn.training.config import TrainConfig
+from kelp.nn.training.train import make_callbacks, make_loggers
 from kelp.utils.gpu import set_gpu_power_limit_if_needed
 from kelp.utils.logging import get_logger
 from kelp.utils.mlflow import get_mlflow_run_dir

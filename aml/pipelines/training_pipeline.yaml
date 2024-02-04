@@ -19,17 +19,20 @@ inputs:
     path: azureml:dataset_stats_file:2
   cv_split: 8
   batch_size: 32
-  num_workers: 6
-  band_order: 2,3,4,0,1,5,6
+  num_workers: 8
+  bands: SWIR,NIR,R,G,B,QA,DEM
+  spectral_indices: DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   image_size: 352
+  resize_strategy: pad
+  interpolation: nearest
   samples_per_epoch: 10240
-  has_kelp_importance_factor: 1
-  kelp_pixels_pct_importance_factor: 1
-  qa_ok_importance_factor: 1
-  qa_corrupted_pixels_pct_importance_factor: 1
-  almost_all_water_importance_factor: 1
-  dem_nan_pixels_pct_importance_factor: 1
-  dem_zero_pixels_pct_importance_factor: 1
+  has_kelp_importance_factor: 3
+  kelp_pixels_pct_importance_factor: 0.2
+  qa_ok_importance_factor: 0
+  qa_corrupted_pixels_pct_importance_factor: -1
+  almost_all_water_importance_factor: 0.5
+  dem_nan_pixels_pct_importance_factor: 0.25
+  dem_zero_pixels_pct_importance_factor: -1
   normalization_strategy: quantile
   architecture: unet
   encoder: resnet50
@@ -72,8 +75,10 @@ jobs:
       cv_split: ${{parent.inputs.cv_split}}
       batch_size: ${{parent.inputs.batch_size}}
       num_workers: ${{parent.inputs.num_workers}}
-      band_order: ${{parent.inputs.band_order}}
+      bands: ${{parent.inputs.bands}}
       image_size: ${{parent.inputs.image_size}}
+      resize_strategy: ${{parent.inputs.resize_strategy}}
+      interpolation: ${{parent.inputs.interpolation}}
       samples_per_epoch: ${{parent.inputs.samples_per_epoch}}
       has_kelp_importance_factor: ${{parent.inputs.has_kelp_importance_factor}}
       kelp_pixels_pct_importance_factor: ${{parent.inputs.kelp_pixels_pct_importance_factor}}

@@ -160,7 +160,7 @@ train:
 		--cv_split 8 \
 		--batch_size 32 \
 		--num_workers 6 \
-		--band_order 2,3,4,0,1,5,6 \
+		--bands R,G,B,SWIR,NIR,QA,DEM \
 		--spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG \
 		--image_size 352 \
 		--fill_missing_pixels_with_torch_nan \

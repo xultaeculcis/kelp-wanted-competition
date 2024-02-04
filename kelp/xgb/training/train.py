@@ -238,7 +238,7 @@ def log_sample_predictions(
         with rasterio.open(train_data_dir / "masks" / f"{tile}_kelp.tif") as src:
             mask_arr = src.read(1)
         prediction = predict_on_single_image(
-            model=model, x=input_arr, transforms=transforms, columns=consts.data.ORIGINAL_BANDS + spectral_indices
+            model=model, x=input_arr, transforms=transforms, columns=list(consts.data.ORIGINAL_BANDS) + spectral_indices
         )
         input_arr = min_max_normalize(input_arr)
         fig = plot_sample(input_arr=input_arr, target_arr=mask_arr, predictions_arr=prediction, suptitle=tile)

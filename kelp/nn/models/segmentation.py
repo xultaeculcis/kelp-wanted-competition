@@ -125,19 +125,22 @@ class KelpForestSegmentationTask(pl.LightningModule):
         step = self.global_step
         if batch_idx < self.hyperparams["plot_n_batches"] and step:
             datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-            band_index_lookup = {band: idx for idx, band in enumerate(datamodule.reordered_bands)}
+            band_index_lookup = {band: idx for idx, band in enumerate(datamodule.bands_to_use)}
+            can_plot_true_color = all(band in band_index_lookup for band in ["R", "G", "B"])
+            can_plot_color_infrared_color = all(band in band_index_lookup for band in ["NIR", "R", "G"])
+            can_plot_shortwave_infrared_color = all(band in band_index_lookup for band in ["SWIR", "NIR", "R"])
             batch["prediction"] = y_hat_hard
             for key in ["image", "mask", "prediction"]:
                 batch[key] = batch[key].cpu()
             fig_grids = datamodule.plot_batch(
                 batch=batch,
                 band_index_lookup=band_index_lookup,
-                plot_true_color=epoch == 0,
-                plot_color_infrared_grid=epoch == 0,
-                plot_short_wave_infrared_grid=epoch == 0,
+                plot_true_color=epoch == 0 and can_plot_true_color,
+                plot_color_infrared_grid=epoch == 0 and can_plot_color_infrared_color,
+                plot_short_wave_infrared_grid=epoch == 0 and can_plot_shortwave_infrared_color,
                 plot_spectral_indices=epoch == 0,
-                plot_qa_grid=epoch == 0,
-                plot_dem_grid=epoch == 0,
+                plot_qa_grid=epoch == 0 and "QA" in band_index_lookup,
+                plot_dem_grid=epoch == 0 and "DEM" in band_index_lookup,
                 plot_mask_grid=epoch == 0,
                 plot_prediction_grid=True,
             )

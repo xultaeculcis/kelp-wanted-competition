@@ -99,7 +99,10 @@ def predict(input_dir: Path, model: XGBClassifier, spectral_indices: List[str], 
         with rasterio.open(fp) as src:
             input_arr = src.read()
         prediction = predict_on_single_image(
-            model=model, x=input_arr, transforms=transforms, columns=consts.data.ORIGINAL_BANDS + spectral_indices
+            model=model,
+            x=input_arr,
+            transforms=transforms,
+            columns=list(consts.data.ORIGINAL_BANDS) + spectral_indices,
         )
         dest: DatasetWriter
         with rasterio.open(output_dir / f"{tile_id}_kelp.tif", "w", **META) as dest:

@@ -49,14 +49,23 @@ parameters:
     values:
       - pad
       - resize
+  - name: interpolation
+    type: string
+    displayName: Interpolation
+    default: nearest
+    values:
+      - nearest
+      - nearest-exact
+      - bilinear
+      - bicubic
+  - name: bands
+    type: string
+    displayName: Bands
+    default: SWIR,NIR,R,G,B,QA,DEM
   - name: spectral_indices
     type: string
     displayName: Spectral indices
-    default: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
-  - name: band_order
-    type: string
-    displayName: Band order
-    default: 2,3,4,0,1,5,6
+    default: DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   - name: samples_per_epoch
     type: number
     displayName: Number of samples per epoch
@@ -122,7 +131,7 @@ parameters:
       - unet++
   - name: encoder
     type: string
-    default: resnet50
+    default: tu-efficientnet_b5
     displayName: Encoder
   - name: encoder_weights
     type: string
@@ -268,7 +277,7 @@ stages:
                   settings.default_compute=${{parameters.default_compute}} \
                   inputs.cv_split=${{parameters.cv_split}} \
                   inputs.spectral_indices=${{parameters.spectral_indices}} \
-                  inputs.band_order=${{parameters.band_order}} \
+                  inputs.bands=${{parameters.bands}} \
                   inputs.image_size=${{parameters.image_size}} \
                   inputs.resize_strategy=${{parameters.resize_strategy}} \
                   inputs.batch_size=${{parameters.batch_size}} \

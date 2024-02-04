@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import kornia.augmentation as K
 import pandas as pd
@@ -62,12 +62,13 @@ class KelpForestDataModule(pl.LightningDataModule):
         test_masks: Optional[List[Path]] = None,
         predict_images: Optional[List[Path]] = None,
         spectral_indices: Optional[List[str]] = None,
-        band_order: Optional[List[int]] = None,
+        bands: Optional[List[str]] = None,
         missing_pixels_fill_value: float = 0.0,
         batch_size: int = 32,
         num_workers: int = 0,
         image_size: int = 352,
         resize_strategy: Literal["pad", "resize"] = "pad",
+        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
         normalization_strategy: Literal[
             "min-max",
             "quantile",
@@ -83,11 +84,13 @@ class KelpForestDataModule(pl.LightningDataModule):
         **kwargs: Any,
     ) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
-        assert image_size >= TILE_SIZE, f"Image size must be larger than {TILE_SIZE}"
-        if band_order is not None and len(band_order) != len(self.base_bands):
-            raise ValueError(
-                f"channel_order should have exactly {len(self.base_bands)} elements, you passed {len(band_order)}"
-            )
+        bands = self._guard_against_invalid_bands_config(bands)
+        spectral_indices = self._guard_against_invalid_spectral_indices_config(
+            bands_to_use=bands,
+            spectral_indices=spectral_indices,
+            mask_using_qa=mask_using_qa,
+            mask_using_water_mask=mask_using_water_mask,
+        )
         self.dataset_stats = dataset_stats
         self.train_images = train_images or []
         self.train_masks = train_masks or []
@@ -96,10 +99,11 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.test_images = test_images or []
         self.test_masks = test_masks or []
         self.predict_images = predict_images or []
-        self.spectral_indices = self.cleanup_spectral_indices(spectral_indices)
-        self.band_order = band_order or list(range(len(self.base_bands)))
-        self.reordered_bands = [self.base_bands[i] for i in self.band_order] + self.spectral_indices
-        self.band_index_lookup = {band: idx for idx, band in enumerate(self.reordered_bands)}
+        self.spectral_indices = spectral_indices
+        self.bands = bands
+        self.band_order = [self.base_bands.index(band) for band in self.bands]
+        self.bands_to_use = self.bands + self.spectral_indices
+        self.band_index_lookup = {band: idx for idx, band in enumerate(self.bands_to_use)}
         self.missing_pixels_fill_value = missing_pixels_fill_value
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -110,34 +114,72 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.use_weighted_sampler = use_weighted_sampler
         self.samples_per_epoch = samples_per_epoch
         self.image_weights = image_weights or [1.0 for _ in self.train_images]
-        self.band_stats, self.in_channels = self.resolve_normalization_stats()
-        self.normalization_transform = self.resolve_normalization_transform()
-        self.train_augmentations = self.resolve_transforms(stage="train")
-        self.val_augmentations = self.resolve_transforms(stage="val")
-        self.test_augmentations = self.resolve_transforms(stage="test")
-        self.predict_augmentations = self.resolve_transforms(stage="predict")
-        self.image_resize_tf = self.resolve_resize_transform(
+        self.band_stats, self.in_channels = self._resolve_normalization_stats()
+        self.normalization_transform = self._resolve_normalization_transform()
+        self.train_augmentations = self._resolve_transforms(stage="train")
+        self.val_augmentations = self._resolve_transforms(stage="val")
+        self.test_augmentations = self._resolve_transforms(stage="test")
+        self.predict_augmentations = self._resolve_transforms(stage="predict")
+        self.image_resize_tf = self._resolve_resize_transform(
             image_or_mask="image",
             resize_strategy=resize_strategy,
             image_size=image_size,
+            interpolation=interpolation,
         )
-        self.mask_resize_tf = self.resolve_resize_transform(
+        self.mask_resize_tf = self._resolve_resize_transform(
             image_or_mask="mask",
             resize_strategy=resize_strategy,
             image_size=image_size,
+            interpolation=interpolation,
         )
 
-    def build_dataset(self, images: List[Path], masks: Optional[List[Path]] = None) -> KelpForestSegmentationDataset:
+    def _guard_against_invalid_bands_config(self, bands: Optional[List[str]]) -> List[str]:
+        if not bands:
+            return self.base_bands
+
+        if set(bands).issubset(set(self.base_bands)):
+            return bands
+
+        raise ValueError(f"{bands=} should be a subset of {self.base_bands=}")
+
+    def _guard_against_invalid_spectral_indices_config(
+        self,
+        bands_to_use: List[str],
+        spectral_indices: Optional[List[str]] = None,
+        mask_using_qa: bool = False,
+        mask_using_water_mask: bool = False,
+    ) -> List[str]:
+        if not spectral_indices:
+            return []
+
+        if "DEM" not in bands_to_use and "DEMWM" in spectral_indices:
+            raise ValueError(
+                f"You specified 'DEMWM' as one of spectral indices but 'DEM' is not in {bands_to_use=}, "
+                f"which corresponds to {bands_to_use=}"
+            )
+
+        if "QA" not in bands_to_use and mask_using_qa:
+            raise ValueError(
+                f"You specified {mask_using_qa=} but 'QA' is not in {bands_to_use=}, "
+                f"which corresponds to {bands_to_use=}"
+            )
+
+        if mask_using_water_mask and "DEMWM" not in spectral_indices:
+            raise ValueError(f"You specified {mask_using_water_mask=} but 'DEMWM' is not in {spectral_indices=}")
+
+        return spectral_indices
+
+    def _build_dataset(self, images: List[Path], masks: Optional[List[Path]] = None) -> KelpForestSegmentationDataset:
         ds = KelpForestSegmentationDataset(
             image_fps=images,
             mask_fps=masks,
-            transforms=self.common_transforms,
+            transforms=self._common_transforms,
             band_order=self.band_order,
             fill_value=self.missing_pixels_fill_value,
         )
         return ds
 
-    def apply_transform(
+    def _apply_transform(
         self,
         transforms: Callable[[Tensor, Tensor], Tuple[Tensor, Tensor]],
         batch: Dict[str, Tensor],
@@ -151,7 +193,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         batch["mask"] = y.squeeze(1).long()
         return batch
 
-    def apply_predict_transform(
+    def _apply_predict_transform(
         self,
         transforms: Callable[[Tensor], Tensor],
         batch: Dict[str, Tensor],
@@ -160,6 +202,121 @@ class KelpForestDataModule(pl.LightningDataModule):
         x = transforms(x)
         batch["image"] = x
         return batch
+
+    def _common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        sample["image"] = self.image_resize_tf(sample["image"])
+        if "mask" in sample:
+            sample["mask"] = self.mask_resize_tf(sample["mask"].unsqueeze(0)).squeeze()
+        return sample
+
+    def _resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
+        common_transforms = []
+
+        for index_name in self.spectral_indices:
+            common_transforms.append(
+                SPECTRAL_INDEX_LOOKUP[index_name](
+                    index_swir=self.band_index_lookup["SWIR"],
+                    index_nir=self.band_index_lookup["NIR"],
+                    index_red=self.band_index_lookup["R"],
+                    index_green=self.band_index_lookup["G"],
+                    index_blue=self.band_index_lookup["B"],
+                    index_dem=self.band_index_lookup["DEM"],
+                    index_qa=self.band_index_lookup["QA"],
+                    index_water_mask=self.band_index_lookup["DEMWM"],
+                    mask_using_qa=False if index_name.endswith("WM") else self.mask_using_qa,
+                    mask_using_water_mask=False if index_name.endswith("WM") else self.mask_using_water_mask,
+                    fill_val=torch.nan,
+                )
+            )
+
+        common_transforms.extend(
+            [
+                RemoveNaNs(min_vals=self.band_stats.min, max_vals=self.band_stats.max),
+                self.normalization_transform,
+            ]
+        )
+
+        if stage == "train":
+            return K.AugmentationSequential(
+                *common_transforms,
+                K.RandomRotation(p=0.5, degrees=90),
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomVerticalFlip(p=0.5),
+                data_keys=["input", "mask"],
+            )
+        else:
+            return K.AugmentationSequential(
+                *common_transforms,
+                data_keys=["input"] if stage == "predict" else ["input", "mask"],
+            )
+
+    def _resolve_normalization_stats(self) -> Tuple[BandStats, int]:
+        band_stats = {band: self.dataset_stats[band] for band in self.bands_to_use}
+        mean = [val["mean"] for val in band_stats.values()]
+        std = [val["std"] for val in band_stats.values()]
+        vmin = [val["min"] for val in band_stats.values()]
+        vmax = [val["max"] for val in band_stats.values()]
+        q01 = [val["q01"] for val in band_stats.values()]
+        q99 = [val["q99"] for val in band_stats.values()]
+        stats = BandStats(
+            mean=torch.tensor(mean),
+            std=torch.tensor(std),
+            min=torch.tensor(vmin),
+            max=torch.tensor(vmax),
+            q01=torch.tensor(q01),
+            q99=torch.tensor(q99),
+        )
+        return stats, len(band_stats)
+
+    def _resolve_normalization_transform(self) -> Union[_AugmentationBase, nn.Module]:
+        if self.normalization_strategy == "z-score":
+            return K.Normalize(self.band_stats.mean, self.band_stats.std)  # type: ignore[no-any-return]
+        elif self.normalization_strategy == "min-max":
+            return MinMaxNormalize(min_vals=self.band_stats.min, max_vals=self.band_stats.max)
+        elif self.normalization_strategy == "quantile":
+            return MinMaxNormalize(min_vals=self.band_stats.q01, max_vals=self.band_stats.q99)
+        elif self.normalization_strategy == "per-sample-quantile":
+            return PerSampleQuantileNormalize(q_low=0.01, q_high=0.99)
+        elif self.normalization_strategy == "per-sample-min-max":
+            return PerSampleMinMaxNormalize()
+        else:
+            raise ValueError(f"{self.normalization_strategy} is not supported!")
+
+    def _resolve_resize_transform(
+        self,
+        image_or_mask: Literal["image", "mask"],
+        resize_strategy: Literal["pad", "resize"] = "pad",
+        image_size: int = 352,
+        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
+    ) -> Callable[[Tensor], Tensor]:
+        interpolation_lookup = {
+            "nearest": InterpolationMode.NEAREST,
+            "nearest-exact": InterpolationMode.NEAREST_EXACT,
+            "bilinear": InterpolationMode.BILINEAR,
+            "bicubic": InterpolationMode.BICUBIC,
+        }
+        if resize_strategy == "pad":
+            if image_size < 352:
+                raise ValueError(
+                    "Invalid resize strategy. Padding is only applicable when image size is greater than 352."
+                )
+            return T.Pad(  # type: ignore[no-any-return]
+                padding=[
+                    (image_size - TILE_SIZE) // 2,
+                ],
+                fill=0,
+                padding_mode="constant",
+            )
+        elif resize_strategy == "resize":
+            return T.Resize(  # type: ignore[no-any-return]
+                size=(image_size, image_size),
+                interpolation=interpolation_lookup[interpolation]
+                if image_or_mask == "image"
+                else InterpolationMode.NEAREST,
+                antialias=False,
+            )
+        else:
+            raise ValueError(f"{resize_strategy=} is not supported!")
 
     def on_after_batch_transfer(self, batch: Dict[str, Any], batch_idx: int) -> Dict[str, Any]:
         """Apply batch augmentations after batch is transferred to the device.
@@ -177,24 +334,18 @@ class KelpForestDataModule(pl.LightningDataModule):
             and hasattr(self.trainer, "training")
             and self.trainer.training
         ):
-            batch = self.apply_transform(self.train_augmentations, batch)
+            batch = self._apply_transform(self.train_augmentations, batch)
         elif (
             hasattr(self, "trainer")
             and self.trainer is not None
             and hasattr(self.trainer, "predicting")
             and self.trainer.predicting
         ):
-            batch = self.apply_predict_transform(self.predict_augmentations, batch)
+            batch = self._apply_predict_transform(self.predict_augmentations, batch)
         else:
-            batch = self.apply_transform(self.val_augmentations, batch)
+            batch = self._apply_transform(self.val_augmentations, batch)
 
         return batch
-
-    def common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        sample["image"] = self.image_resize_tf(sample["image"])
-        if "mask" in sample:
-            sample["mask"] = self.mask_resize_tf(sample["mask"].unsqueeze(0)).squeeze()
-        return sample
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -205,13 +356,13 @@ class KelpForestDataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         if self.train_images:
-            self.train_dataset = self.build_dataset(self.train_images, self.train_masks)
+            self.train_dataset = self._build_dataset(self.train_images, self.train_masks)
         if self.val_images:
-            self.val_dataset = self.build_dataset(self.val_images, self.val_masks)
+            self.val_dataset = self._build_dataset(self.val_images, self.val_masks)
         if self.test_images:
-            self.test_dataset = self.build_dataset(self.test_images, self.test_masks)
+            self.test_dataset = self._build_dataset(self.test_images, self.test_masks)
         if self.predict_images:
-            self.predict_dataset = self.build_dataset(self.predict_images)
+            self.predict_dataset = self._build_dataset(self.predict_images)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -272,113 +423,12 @@ class KelpForestDataModule(pl.LightningDataModule):
         )
 
     def plot_sample(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`kelp.nn.data.dataset.KelpForestSegmentationDataset.plot_sample`."""
+        """Run :meth:`kelp.lit.data.dataset.KelpForestSegmentationDataset.plot_sample`."""
         return self.val_dataset.plot_sample(*args, **kwargs)
 
     def plot_batch(self, *args: Any, **kwargs: Any) -> FigureGrids:
-        """Run :meth:`kelp.nn.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
+        """Run :meth:`kelp.lit.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
-
-    def cleanup_spectral_indices(self, spectral_indices: Optional[List[str]] = None) -> List[str]:
-        if not spectral_indices:
-            # Should never happen if the config validation worked, but alas here we are anyway...
-            return ["DEMWM", "NDVI"]
-        return spectral_indices
-
-    def resolve_resize_transform(
-        self,
-        image_or_mask: Literal["image", "mask"],
-        resize_strategy: Literal["pad", "resize"] = "pad",
-        image_size: int = 352,
-    ) -> Callable[[Tensor], Tensor]:
-        if resize_strategy == "pad":
-            return T.Pad(  # type: ignore[no-any-return]
-                padding=[
-                    (image_size - TILE_SIZE) // 2,
-                ],
-                fill=0,
-                padding_mode="constant",
-            )
-        elif resize_strategy == "resize":
-            return T.Resize(  # type: ignore[no-any-return]
-                size=image_size,
-                interpolation=InterpolationMode.BILINEAR if image_or_mask == "image" else InterpolationMode.NEAREST,
-                antialias=False,
-            )
-        raise ValueError(f"{resize_strategy=} is not supported!")
-
-    def resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
-        common_transforms = []
-
-        for index_name in self.spectral_indices:
-            common_transforms.append(
-                SPECTRAL_INDEX_LOOKUP[index_name](
-                    index_swir=self.band_index_lookup["SWIR"],
-                    index_nir=self.band_index_lookup["NIR"],
-                    index_red=self.band_index_lookup["R"],
-                    index_green=self.band_index_lookup["G"],
-                    index_blue=self.band_index_lookup["B"],
-                    index_dem=self.band_index_lookup["DEM"],
-                    index_qa=self.band_index_lookup["QA"],
-                    index_water_mask=self.band_index_lookup["DEMWM"],
-                    mask_using_qa=False if index_name.endswith("WM") else self.mask_using_qa,
-                    mask_using_water_mask=False if index_name.endswith("WM") else self.mask_using_water_mask,
-                    fill_val=torch.nan,
-                )
-            )
-
-        common_transforms.extend(
-            [
-                RemoveNaNs(min_vals=self.band_stats.min, max_vals=self.band_stats.max),
-                self.normalization_transform,
-            ]
-        )
-
-        if stage == "train":
-            return K.AugmentationSequential(
-                *common_transforms,
-                K.RandomRotation(p=0.5, degrees=90),
-                K.RandomHorizontalFlip(p=0.5),
-                K.RandomVerticalFlip(p=0.5),
-                data_keys=["input", "mask"],
-            )
-        else:
-            return K.AugmentationSequential(
-                *common_transforms,
-                data_keys=["input"] if stage == "predict" else ["input", "mask"],
-            )
-
-    def resolve_normalization_stats(self) -> Tuple[BandStats, int]:
-        band_stats = {band: self.dataset_stats[band] for band in self.reordered_bands}
-        mean = [val["mean"] for val in band_stats.values()]
-        std = [val["std"] for val in band_stats.values()]
-        vmin = [val["min"] for val in band_stats.values()]
-        vmax = [val["max"] for val in band_stats.values()]
-        q01 = [val["q01"] for val in band_stats.values()]
-        q99 = [val["q99"] for val in band_stats.values()]
-        stats = BandStats(
-            mean=torch.tensor(mean),
-            std=torch.tensor(std),
-            min=torch.tensor(vmin),
-            max=torch.tensor(vmax),
-            q01=torch.tensor(q01),
-            q99=torch.tensor(q99),
-        )
-        return stats, len(band_stats)
-
-    def resolve_normalization_transform(self) -> _AugmentationBase | nn.Module:
-        if self.normalization_strategy == "z-score":
-            return K.Normalize(self.band_stats.mean, self.band_stats.std)  # type: ignore[no-any-return]
-        elif self.normalization_strategy == "min-max":
-            return MinMaxNormalize(min_vals=self.band_stats.min, max_vals=self.band_stats.max)
-        elif self.normalization_strategy == "quantile":
-            return MinMaxNormalize(min_vals=self.band_stats.q01, max_vals=self.band_stats.q99)
-        elif self.normalization_strategy == "per-sample-quantile":
-            return PerSampleQuantileNormalize(q_low=0.01, q_high=0.99)
-        elif self.normalization_strategy == "per-sample-min-max":
-            return PerSampleMinMaxNormalize()
-        else:
-            raise ValueError(f"{self.normalization_strategy} is not supported!")
 
     @classmethod
     def resolve_file_paths(
@@ -405,7 +455,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         return image_paths, mask_paths
 
     @classmethod
-    def calculate_image_weights(
+    def _calculate_image_weights(
         cls,
         df: pd.DataFrame,
         has_kelp_importance_factor: float = 1.0,
@@ -446,7 +496,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         return df
 
     @classmethod
-    def resolve_image_weights(cls, df: pd.DataFrame, image_paths: List[Path]) -> List[float]:
+    def _resolve_image_weights(cls, df: pd.DataFrame, image_paths: List[Path]) -> List[float]:
         tile_ids = [fp.stem.split("_")[0] for fp in image_paths]
         weights = df[df["tile_id"].isin(tile_ids)].sort_values("tile_id")["weight"].tolist()
         return weights  # type: ignore[no-any-return]
@@ -467,7 +517,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         dem_zero_pixels_pct_importance_factor: float = -1.0,
         **kwargs: Any,
     ) -> KelpForestDataModule:
-        metadata = cls.calculate_image_weights(
+        metadata = cls._calculate_image_weights(
             df=pd.read_parquet(metadata_fp),
             has_kelp_importance_factor=has_kelp_importance_factor,
             kelp_pixels_pct_importance_factor=kelp_pixels_pct_importance_factor,
@@ -486,7 +536,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         test_images, test_masks = cls.resolve_file_paths(
             data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL
         )
-        image_weights = cls.resolve_image_weights(df=metadata, image_paths=train_images)
+        image_weights = cls._resolve_image_weights(df=metadata, image_paths=train_images)
         return cls(
             train_images=train_images,
             train_masks=train_masks,
