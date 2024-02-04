@@ -726,3 +726,15 @@ Findings:
 ## 2024-02-04
 
 * Add mask post predict resize transforms with accordance with predict transforms
+* Testing out a few transformer-based encoders - did not work - they do not support features only mode
+* A few new submissions with single model - retrained with:
+  ```shell
+  --has_kelp_importance_factor 2
+  --kelp_pixels_pct_importance_factor 0.5
+  --qa_ok_importance_factor 0.5
+  --qa_corrupted_pixels_pct_importance_factor -0.5
+  --almost_all_water_importance_factor -1
+  --dem_nan_pixels_pct_importance_factor 0
+  --dem_zero_pixels_pct_importance_factor -0.25
+  ```
+* Single model dice score in public LB improved from **0.7153** -> **0.7155**

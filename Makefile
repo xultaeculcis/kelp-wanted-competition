@@ -159,22 +159,24 @@ train:
 		--dataset_stats_fp data/processed/2023-12-31T20:30:39-stats-fill_value=nan-mask_using_qa=True-mask_using_water_mask=True.json \
 		--cv_split 8 \
 		--batch_size 32 \
-		--num_workers 6 \
+		--num_workers 4 \
 		--bands R,G,B,SWIR,NIR,QA,DEM \
-		--spectral_indices ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG \
+		--spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG \
 		--image_size 352 \
+		--resize_strategy pad \
+		--interpolation nearest \
 		--fill_missing_pixels_with_torch_nan \
 		--mask_using_qa \
 		--mask_using_water_mask \
 		--use_weighted_sampler \
 		--samples_per_epoch 10240 \
-		--has_kelp_importance_factor 3.0 \
-		--kelp_pixels_pct_importance_factor 0.2 \
-		--qa_ok_importance_factor 0 \
-		--qa_corrupted_pixels_pct_importance_factor -1 \
-		--almost_all_water_importance_factor 0.5 \
-		--dem_nan_pixels_pct_importance_factor 0.25 \
-		--dem_zero_pixels_pct_importance_factor -1 \
+		--has_kelp_importance_factor 2.0 \
+		--kelp_pixels_pct_importance_factor 0.5 \
+		--qa_ok_importance_factor 0.5 \
+		--qa_corrupted_pixels_pct_importance_factor -0.5 \
+		--almost_all_water_importance_factor -1.0 \
+		--dem_nan_pixels_pct_importance_factor 0.0 \
+		--dem_zero_pixels_pct_importance_factor -0.25 \
 		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder tu-efficientnet_b5 \
