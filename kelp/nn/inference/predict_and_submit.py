@@ -1,27 +1,20 @@
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
 
+import torch
 import yaml
-from pydantic import model_validator
 
 from kelp.core.submission import create_submission_tar
 from kelp.nn.inference.predict import PredictConfig, build_prediction_arg_parser, run_prediction
 from kelp.nn.inference.preview_submission import plot_first_n_samples
 
+torch.set_float32_matmul_precision("medium")
+
 
 class PredictAndSubmitConfig(PredictConfig):
     preview_submission: bool = False
     preview_first_n: int = 10
-
-    @model_validator(mode="before")
-    def validate_cfg(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if values["preview_submission"] and values.get("test_data_dir", None) is None:
-            raise ValueError("Please provide test_data_dir param if running submission preview!")
-        if values["preview_submission"] and values.get("submission_preview_output_dir", None) is None:
-            raise ValueError("Please provide submission_preview_output_dir param if running submission preview!")
-        return values
 
 
 def parse_args() -> PredictAndSubmitConfig:

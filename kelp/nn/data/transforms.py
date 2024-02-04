@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Callable, List
+from typing import Any, Callable, List
 
 import kornia.augmentation as K
 import numpy as np
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn import Module
 
 from kelp import consts
@@ -61,6 +61,18 @@ class RemoveNaNs(Module):
         x = torch.where(torch.isnan(x), mins, x)
         x = torch.where(torch.isneginf(x), mins, x)
         x = torch.where(torch.isinf(x), maxs, x)
+        return x
+
+
+class RemovePadding(nn.Module):
+    def __init__(self, image_size: int, padded_image_size: int, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.padding_to_trim = (padded_image_size - image_size) // 2
+        self.crop_upper_bound = image_size + self.padding_to_trim
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = x.squeeze()
+        x = x[self.padding_to_trim : self.crop_upper_bound, self.padding_to_trim : self.crop_upper_bound]
         return x
 
 
