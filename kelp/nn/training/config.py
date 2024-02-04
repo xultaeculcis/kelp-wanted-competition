@@ -166,10 +166,18 @@ class TrainConfig(ConfigBase):
                 values["pretrained"] = False
                 values["encoder_weights"] = None
 
-        if "384" in values["encoder"] and values["image_size"] != 384:
-            _logger.warning("Encoder requires image_size=384. Forcing training with adjusted image size.")
-            values["image_size"] = 384
-
+        for img_size, bs in zip([224, 256, 336, 384, 448, 512], [32, 32, 32, 16, 4, 4]):
+            if f"{img_size}" in values["encoder"] and values["image_size"] != img_size:
+                _logger.warning(f"Encoder requires image_size={img_size}. Forcing training with adjusted image size.")
+                values["image_size"] = img_size
+                values["batch_size"] = min(bs, values["batch_size"])
+                values["accumulate_grad_batches"] = max(1, 32 // bs)
+                _logger.info(
+                    f"Adjusted image_size={img_size}, "
+                    f"batch_size={values['batch_size']}, "
+                    f"accumulate_grad_batches={values['accumulate_grad_batches']}"
+                )
+                break
         return values
 
     @field_validator("bands", mode="before")
