@@ -96,3 +96,6 @@ mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae;random;0.87097;0.7090
 ???;all;???;0.7164;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.45, weights -> 1.0, retrain @50 epochs
 ???;all;???;0.7169;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0, retrain @50 epochs
 mlruns/989535101499025198/980d209750c24bd1bc91de9879bcd865;random;0.80254;0.5125;xgboost, sample_size=0.2, all indices
+mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7155;effnet-b5 + bf16 + dt=0.48 + new sampler weights
+mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7143;effnet-b5 + bf16 + new sampler weights
+mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7155;effnet-b5 + bf16 + dt=0.45 + new sampler weights
