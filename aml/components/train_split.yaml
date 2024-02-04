@@ -74,6 +74,6 @@ command: >-
   --save_top_k 1
   --early_stopping_patience 50
   --precision 16-mixed
-  --epochs 50
+  --epochs 10
 
 is_deterministic: false
