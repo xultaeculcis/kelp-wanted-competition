@@ -42,7 +42,7 @@ command: >-
   --cv_split ${{inputs.cv_split}}
   --batch_size 32
   --num_workers 4
-  --bands SWIR,NIR,R,G,B,QA,DEM
+  --bands R,G,B,SWIR,NIR,QA,DEM
   --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
   --image_size 352
