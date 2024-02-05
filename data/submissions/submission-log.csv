@@ -99,3 +99,6 @@ mlruns/989535101499025198/980d209750c24bd1bc91de9879bcd865;random;0.80254;0.5125
 mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7155;effnet-b5 + bf16 + dt=0.48 + new sampler weights
 mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7143;effnet-b5 + bf16 + new sampler weights
 mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7155;effnet-b5 + bf16 + dt=0.45 + new sampler weights
+???;all;???;0.7169;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0 + new sampler weights
+???;all;???;0.7170;tu-efficientnet_b5 + bf16 + dt=0.40, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + new sampler weights
+???;all;???;0.7165;tu-efficientnet_b5 + bf16 + dt=0.40, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for 4 worst splits + new sampler weights

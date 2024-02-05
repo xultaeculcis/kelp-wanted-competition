@@ -226,13 +226,14 @@ predict-and-submit:
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:
-	python ./kelp/nn/inference/eval.py \
+	python ./kelp/nn/training/eval.py \
 		--data_dir data/raw \
 		--metadata_dir data/processed \
 		--dataset_stats_dir data/processed \
 		--run_dir $(RUN_DIR) \
 		--output_dir mlruns \
 		--precision bf16-mixed \
+		--decision_threshold=0.48 \
 		--experiment_name model-eval-exp
 
 .PHONY: average-predictions  ## Runs prediction averaging
@@ -241,42 +242,62 @@ average-predictions:
 		--predictions_dir=data/predictions/v1 \
 		--output_dir=data/submissions/avg \
 		--decision_threshold=0.48 \
-		--fold_0_weight=1.0 \
-		--fold_1_weight=1.0 \
-		--fold_2_weight=1.0 \
-		--fold_3_weight=1.0 \
-		--fold_4_weight=1.0 \
-		--fold_5_weight=1.0 \
-		--fold_6_weight=1.0 \
-		--fold_7_weight=1.0 \
+		--fold_0_weight=0.666 \
+		--fold_1_weight=0.5 \
+		--fold_2_weight=0.666 \
+		--fold_3_weight=0.88 \
+		--fold_4_weight=0.637 \
+		--fold_5_weight=0.59 \
+		--fold_6_weight=0.733 \
+		--fold_7_weight=0.63 \
 		--fold_8_weight=1.0 \
-		--fold_9_weight=1.0 \
+		--fold_9_weight=0.2 \
+		--preview_submission \
+		--test_data_dir=data/raw/test/images \
+		--preview_first_n=10
+
+.PHONY: average-predictions2  ## Runs prediction averaging
+average-predictions2:
+	python ./kelp/nn/inference/average_predictions.py \
+		--predictions_dir=data/predictions/v1 \
+		--output_dir=data/submissions/avg \
+		--decision_threshold=0.48 \
+		--fold_0_weight=0.666 \
+		--fold_1_weight=0 \
+		--fold_2_weight=0.666 \
+		--fold_3_weight=0.88 \
+		--fold_4_weight=0.637 \
+		--fold_5_weight=0 \
+		--fold_6_weight=0.733 \
+		--fold_7_weight=0 \
+		--fold_8_weight=1.0 \
+		--fold_9_weight=0 \
 		--preview_submission \
 		--test_data_dir=data/raw/test/images \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	make predict RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=0
-	make predict RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=1
-	make predict RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=2
-	make predict RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=3
-	make predict RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=4
-	make predict RUN_DIR=data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=5
-	make predict RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=6
-	make predict RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=7
-	make predict RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=8
-	make predict RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=9
-	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v2
+	make predict RUN_DIR=data/aml/Job_frank_key_k8b7jv40_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=0
+	make predict RUN_DIR=data/aml/Job_bold_street_rcrzx0xq_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=1
+	make predict RUN_DIR=data/aml/Job_green_soca_fxt5lbcm_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=2
+	make predict RUN_DIR=data/aml/Job_neat_snake_bgbxxg7d_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=3
+	make predict RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=4
+	make predict RUN_DIR=data/aml/Job_salmon_worm_fkc38xhc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=5
+	make predict RUN_DIR=data/aml/Job_kind_sugar_xmpt108y_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=6
+	make predict RUN_DIR=data/aml/Job_bubbly_store_bdp54r2f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=7
+	make predict RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=8
+	make predict RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v3/fold=9
+	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v3
 
 eval-many:
-	make eval RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=0
-	make eval RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=1
-	make eval RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=2
-	make eval RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=3
-	make eval RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=4
-	make eval RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=5
-	make eval RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=6
-	make eval RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=7
-	make eval RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=8
-	make eval RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v2/fold=9
+	make eval RUN_DIR=data/aml/Job_frank_key_k8b7jv40_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_bold_street_rcrzx0xq_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_green_soca_fxt5lbcm_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_neat_snake_bgbxxg7d_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_salmon_worm_fkc38xhc_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_kind_sugar_xmpt108y_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_bubbly_store_bdp54r2f_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
+	make eval RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
