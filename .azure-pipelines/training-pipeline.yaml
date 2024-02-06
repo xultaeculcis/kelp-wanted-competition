@@ -61,7 +61,7 @@ parameters:
   - name: bands
     type: string
     displayName: Bands
-    default: SWIR,NIR,R,G,B,QA,DEM
+    default: R,G,B,SWIR,NIR,QA,DEM
   - name: spectral_indices
     type: string
     displayName: Spectral indices
