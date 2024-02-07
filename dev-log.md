@@ -37,6 +37,8 @@ Checklist:
 - [x] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
 - [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
+- [x] Soft labels
+- [ ] Model weights averaging
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
@@ -760,3 +762,4 @@ Findings:
 * New submissions with a mixture of models - selected best model for each split that was ever produced: **0.7024**
 * Best dice was for 8 models in total - fold=1 and fold=9 weights were set to 0.0
 as they are the worst on LB individually
+* Add support for soft labels - I can now use weighted average of probabilities instead of hard labels

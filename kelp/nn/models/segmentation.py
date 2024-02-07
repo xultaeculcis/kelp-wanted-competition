@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import math
-from typing import Any, Dict, Literal, Tuple, cast
+from typing import Any, Dict, Literal, Optional, Tuple, cast
 
 import pytorch_lightning as pl
 import torch
@@ -195,7 +195,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             )
             plt.close(fig)
 
-    def _predict_with_tta_if_necessary(self, x: Tensor) -> Tuple[Tensor, Tensor]:
+    def _predict_with_extra_steps_if_necessary(self, x: Tensor) -> Tuple[Tensor, Tensor, Optional[Tensor]]:
         if self.hyperparams.get("tta", False):
             tta_model = tta.SegmentationTTAWrapper(
                 model=self.model,
@@ -213,7 +213,12 @@ class KelpForestSegmentationTask(pl.LightningModule):
         else:
             y_hat_hard = y_hat.argmax(dim=1)
 
-        return y_hat, y_hat_hard
+        if self.hyperparams.get("soft_labels", False):
+            y_hat_soft = y_hat.sigmoid()[:, 1, :, :].float()
+        else:
+            y_hat_soft = None
+
+        return y_hat, y_hat_hard, y_hat_soft
 
     def _guard_against_nan(self, x: Tensor) -> None:
         if torch.isnan(x):
@@ -266,7 +271,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
+        y_hat, y_hat_hard, _ = self._predict_with_extra_steps_if_necessary(x)
         loss = self.loss(y_hat, y)
         self._guard_against_nan(loss)
         self.log("test/loss", loss, on_step=False, on_epoch=True, batch_size=x.shape[0])
@@ -286,8 +291,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
         batch = args[0]
         x = batch.pop("image")
-        y_hat, y_hat_hard = self._predict_with_tta_if_necessary(x)
-        batch["prediction"] = y_hat_hard
+        y_hat, y_hat_hard, y_hat_soft = self._predict_with_extra_steps_if_necessary(x)
+        batch["prediction"] = y_hat_soft if self.hyperparams.get("soft_labels", False) else y_hat_hard
         return batch
 
     def configure_optimizers(self) -> Dict[str, Any]:

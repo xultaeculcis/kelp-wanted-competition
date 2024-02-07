@@ -28,15 +28,23 @@ from kelp.utils.logging import get_logger
 torch.set_float32_matmul_precision("medium")
 _logger = get_logger(__name__)
 IMG_SIZE = 350
+PIXEL_SIZE_DEGREES = 30 / 111320  # approximate size of the pixel size at the equator for Landsat
 META = {
     "driver": "GTiff",
     "dtype": "int8",
     "nodata": None,
-    "width": IMG_SIZE,
-    "height": IMG_SIZE,
+    "width": 350,
+    "height": 350,
     "count": 1,
-    "crs": None,
-    "transform": Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),
+    "crs": "EPSG:4326",
+    "transform": Affine(
+        PIXEL_SIZE_DEGREES,
+        0.0,
+        0.0,
+        0.0,
+        -PIXEL_SIZE_DEGREES,
+        0.0,
+    ),
 }
 
 
@@ -50,6 +58,7 @@ class PredictConfig(ConfigBase):
     run_dir: Path
     output_dir: Path
     tta: bool = False
+    soft_labels: bool = False
     tta_merge_mode: str = "max"
     decision_threshold: Optional[float] = None
     precision: Optional[
@@ -109,6 +118,7 @@ def build_prediction_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset_stats_dir", type=str, required=True)
     parser.add_argument("--run_dir", type=str, required=True)
     parser.add_argument("--tta", action="store_true")
+    parser.add_argument("--soft_labels", action="store_true")
     parser.add_argument("--tta_merge_mode", type=str, default="max")
     parser.add_argument("--decision_threshold", type=float)
     parser.add_argument(
@@ -138,6 +148,7 @@ def load_model(
     model_path: Path,
     use_mlflow: bool,
     tta: bool = False,
+    soft_labels: bool = False,
     tta_merge_mode: str = "mean",
     decision_threshold: Optional[float] = None,
 ) -> pl.LightningModule:
@@ -146,6 +157,7 @@ def load_model(
     else:
         model = KelpForestSegmentationTask.load_from_checkpoint(model_path)
     model.hyperparams["tta"] = tta
+    model.hyperparams["soft_labels"] = soft_labels
     model.hyperparams["tta_merge_mode"] = tta_merge_mode
     model.hyperparams["decision_threshold"] = decision_threshold
     model.eval()
@@ -169,6 +181,8 @@ def predict(
             for sample in individual_samples:
                 tile_id = sample["tile_id"]
                 prediction = sample["prediction"]
+                if model.hyperparams.get("soft_labels", False):
+                    META["dtype"] = "float32"
                 dest: DatasetWriter
                 with rasterio.open(output_dir / f"{tile_id}_kelp.tif", "w", **META) as dest:
                     prediction_arr = resize_tf(prediction.unsqueeze(0)).detach().cpu().numpy().squeeze()
@@ -200,6 +214,7 @@ def run_prediction(
     use_mlflow: bool,
     train_cfg: TrainConfig,
     tta: bool = False,
+    soft_labels: bool = False,
     tta_merge_mode: str = "max",
     decision_threshold: Optional[float] = None,
 ) -> None:
@@ -208,6 +223,7 @@ def run_prediction(
         model_path=model_checkpoint,
         use_mlflow=use_mlflow,
         tta=tta,
+        soft_labels=soft_labels,
         tta_merge_mode=tta_merge_mode,
         decision_threshold=decision_threshold,
     )
@@ -234,6 +250,7 @@ def main() -> None:
         use_mlflow=cfg.use_mlflow,
         train_cfg=cfg.training_config,
         tta=cfg.tta,
+        soft_labels=cfg.soft_labels,
         tta_merge_mode=cfg.tta_merge_mode,
         decision_threshold=cfg.decision_threshold,
     )
