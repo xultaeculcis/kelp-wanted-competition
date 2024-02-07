@@ -42,7 +42,7 @@ inputs:
     description: The image resize strategy - one of [nearest, nearest-exact, bilinear, bicubic].
   bands:
     type: string
-    default: SWIR,NIR,R,G,B,QA,DEM
+    default: R,G,B,SWIR,NIR,QA,DEM
     description: The band order.
   spectral_indices:
     type: string

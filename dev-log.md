@@ -726,3 +726,37 @@ Findings:
 ## 2024-02-04
 
 * Add mask post predict resize transforms with accordance with predict transforms
+* Testing out a few transformer-based encoders - did not work - they do not support features only mode
+* A few new submissions with single model - retrained with:
+  ```shell
+  --has_kelp_importance_factor 2
+  --kelp_pixels_pct_importance_factor 0.5
+  --qa_ok_importance_factor 0.5
+  --qa_corrupted_pixels_pct_importance_factor -0.5
+  --almost_all_water_importance_factor -1
+  --dem_nan_pixels_pct_importance_factor 0
+  --dem_zero_pixels_pct_importance_factor -0.25
+  ```
+* Single model dice score in public LB improved from **0.7153** -> **0.7155**
+
+## 2024-02-05
+
+* A few new submissions - no change in public LB - best one is **0.7170**
+
+## 2024-02-06
+
+* Just found a bug in Makefile... Was submitting stuff based on predictions from the first model ensemble...
+* Last two model changes were never submitted - the one with training for 50 epochs and the one with updated sampler weights...
+* Fuck my life...
+* New scores are:
+  * Training for 50 epochs, all weights = 1.0: **0.7197**
+  * Training for 50 epochs, weights rescaled based on scores on historical LB using min-max scaler: **0.7200**
+  * New sampler weights: **0.7169**
+* Will build new ensemble of all best models for all splits, regardless of training method
+* New ideas: model weight averaging, weighting probabilities instead of decisions as it is now
+
+## 2024-02-07
+
+* New submissions with a mixture of models - selected best model for each split that was ever produced: **0.7024**
+* Best dice was for 8 models in total - fold=1 and fold=9 weights were set to 0.0
+as they are the worst on LB individually
