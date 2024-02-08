@@ -37,6 +37,9 @@ Checklist:
 - [x] Build parquet dataset for training Tree-based models -> all `kelp` pixels, few-pixel buffer around them,
   and random sample of 1000 `non-kelp` pixels per image
 - [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
+- [x] Soft labels
+- [ ] Model weights averaging
+- [ ] SAHI
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
@@ -65,6 +68,9 @@ Checklist:
 * Decision threshold change to 0.45-0.48
 * `OneCycleLR`
 * 10-fold CV
+* Training for 50 epochs
+* Mixing models with best dice per split in the ensemble
+* Soft labels
 
 ## What did not work
 
@@ -757,6 +763,13 @@ Findings:
 
 ## 2024-02-07
 
-* New submissions with a mixture of models - selected best model for each split that was ever produced: **0.7024**
+* New submissions with a mixture of models - selected best model for each split that was ever produced: **0.7204**
 * Best dice was for 8 models in total - fold=1 and fold=9 weights were set to 0.0
 as they are the worst on LB individually
+* Add support for soft labels - I can now use weighted average of probabilities instead of hard labels
+
+## 2024-02-08
+
+* Submissions with soft labels - public LB: **0.7206** not much but is something...
+* Need to add some validation for the ensemble scores locally - otherwise the submissions are just wasted
+* New idea: SAHI -> train on 128x128 crops, inference on sliding window with overlaps and padding, then stitch the preds

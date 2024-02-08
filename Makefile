@@ -10,6 +10,7 @@ DATA_DIR=data
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
+AVG_PREDS_VERSION=v5
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 
@@ -205,7 +206,7 @@ predict:
 		--dataset_stats_dir=data/processed \
 		--output_dir $(PREDS_OUTPUT_DIR) \
 		--run_dir $(RUN_DIR) \
-		--decision_threshold 0.48 \
+		--soft_labels \
 		--precision bf16-mixed
 
 .PHONY: submission  ## Generates submission file
@@ -239,11 +240,11 @@ eval:
 .PHONY: average-predictions  ## Runs prediction averaging
 average-predictions:
 	python ./kelp/nn/inference/average_predictions.py \
-		--predictions_dir=data/predictions/v4 \
+		--predictions_dir=data/predictions/$(AVG_PREDS_VERSION) \
 		--output_dir=data/submissions/avg \
 		--decision_threshold=0.48 \
 		--fold_0_weight=0.666 \
-		--fold_1_weight=0.0 \
+		--fold_1_weight=0.5 \
 		--fold_2_weight=0.666 \
 		--fold_3_weight=0.88 \
 		--fold_4_weight=0.637 \
@@ -251,24 +252,24 @@ average-predictions:
 		--fold_6_weight=0.733 \
 		--fold_7_weight=0.63 \
 		--fold_8_weight=1.0 \
-		--fold_9_weight=0.0 \
+		--fold_9_weight=0.2 \
 		--preview_submission \
 		--test_data_dir=data/raw/test/images \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	make predict RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=0
-	make predict RUN_DIR=data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=1
-	make predict RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=2
-	make predict RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=3
-	make predict RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=4
-	make predict RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=5
-	make predict RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=6
-	make predict RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=7
-	make predict RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=8
-	make predict RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/v4/fold=9
-	make average-predictions PREDS_OUTPUT_DIR=data/predictions/v4
+	make predict RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
+	make predict RUN_DIR=data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
+	make predict RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
+	make predict RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
+	make predict RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
+	make predict RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
+	make predict RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
+	make predict RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
+	make predict RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
+	make predict RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
+	make average-predictions PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)
 
 eval-many:
 	make eval RUN_DIR=data/aml/Job_frank_key_k8b7jv40_OutputsAndLogs
