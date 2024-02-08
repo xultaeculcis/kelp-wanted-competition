@@ -39,6 +39,7 @@ Checklist:
 - [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [x] Soft labels
 - [ ] Model weights averaging
+- [ ] SAHI
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
@@ -771,3 +772,4 @@ as they are the worst on LB individually
 
 * Submissions with soft labels - public LB: **0.7206** not much but is something...
 * Need to add some validation for the ensemble scores locally - otherwise the submissions are just wasted
+* New idea: SAHI -> train on 128x128 crops, inference on sliding window with overlaps and padding, then stitch the preds
