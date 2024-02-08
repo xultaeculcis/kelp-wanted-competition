@@ -27,7 +27,6 @@ warnings.filterwarnings(
     category=UserWarning,
     message="Default grid_sample and affine_grid behavior has changed to align_corners=False",
 )
-TILE_SIZE = 350
 
 
 @dataclass
@@ -302,7 +301,7 @@ class KelpForestDataModule(pl.LightningDataModule):
                 )
             return T.Pad(  # type: ignore[no-any-return]
                 padding=[
-                    (image_size - TILE_SIZE) // 2,
+                    (image_size - consts.data.TILE_SIZE) // 2,
                 ],
                 fill=0,
                 padding_mode="constant",
