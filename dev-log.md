@@ -762,7 +762,7 @@ Findings:
 
 ## 2024-02-07
 
-* New submissions with a mixture of models - selected best model for each split that was ever produced: **0.7024**
+* New submissions with a mixture of models - selected best model for each split that was ever produced: **0.7204**
 * Best dice was for 8 models in total - fold=1 and fold=9 weights were set to 0.0
 as they are the worst on LB individually
 * Add support for soft labels - I can now use weighted average of probabilities instead of hard labels
