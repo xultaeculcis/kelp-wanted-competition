@@ -17,6 +17,7 @@ from torch import Tensor
 from torchvision.transforms import InterpolationMode
 from tqdm import tqdm
 
+from kelp import consts
 from kelp.core.configs import ConfigBase
 from kelp.nn.data.datamodule import KelpForestDataModule
 from kelp.nn.data.transforms import RemovePadding
@@ -27,14 +28,13 @@ from kelp.utils.logging import get_logger
 
 torch.set_float32_matmul_precision("medium")
 _logger = get_logger(__name__)
-IMG_SIZE = 350
 PIXEL_SIZE_DEGREES = 30 / 111320  # approximate size of the pixel size at the equator for Landsat
 META = {
     "driver": "GTiff",
     "dtype": "int8",
     "nodata": None,
-    "width": 350,
-    "height": 350,
+    "width": consts.data.TILE_SIZE,
+    "height": consts.data.TILE_SIZE,
     "count": 1,
     "crs": "EPSG:4326",
     "transform": Affine(
@@ -230,7 +230,7 @@ def run_prediction(
     resize_tf = resolve_post_predict_resize_transform(
         resize_strategy=train_cfg.resize_strategy,
         source_image_size=train_cfg.image_size,
-        target_image_size=IMG_SIZE,
+        target_image_size=consts.data.TILE_SIZE,
     )
     predict(
         dm=dm,

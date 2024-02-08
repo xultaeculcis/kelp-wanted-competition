@@ -16,3 +16,5 @@ NUM_CLASSES = len(CLASSES)
 ORIGINAL_BANDS = ("SWIR", "NIR", "R", "G", "B", "QA", "DEM")
 
 CMAP = ListedColormap(["black", "lightseagreen"])
+
+TILE_SIZE = 350
