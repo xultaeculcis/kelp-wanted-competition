@@ -67,6 +67,9 @@ Checklist:
 * Decision threshold change to 0.45-0.48
 * `OneCycleLR`
 * 10-fold CV
+* Training for 50 epochs
+* Mixing models with best dice per split in the ensemble
+* Soft labels
 
 ## What did not work
 
@@ -763,3 +766,8 @@ Findings:
 * Best dice was for 8 models in total - fold=1 and fold=9 weights were set to 0.0
 as they are the worst on LB individually
 * Add support for soft labels - I can now use weighted average of probabilities instead of hard labels
+
+## 2024-02-08
+
+* Submissions with soft labels - public LB: **0.7206** not much but is something...
+* Need to add some validation for the ensemble scores locally - otherwise the submissions are just wasted
