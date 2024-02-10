@@ -7,10 +7,35 @@ mypy = mypy .
 pre-commit = pre-commit run --all-files
 
 DATA_DIR=data
+PREDS_INPUT_DIR=data/raw/test/images
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 AVG_PREDS_VERSION=v5
+AVG_PREDS_OUTPUT_DIR=data/submissions/avg
+
+FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
+FOLD_1_RUN_DIR=data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs
+FOLD_2_RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs
+FOLD_3_RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs
+FOLD_4_RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs
+FOLD_5_RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs
+FOLD_6_RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs
+FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
+FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
+FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
+
+FOLD_0_WEIGHT=0.666
+FOLD_1_WEIGHT=0.5
+FOLD_2_WEIGHT=0.666
+FOLD_3_WEIGHT=0.88
+FOLD_4_WEIGHT=0.637
+FOLD_5_WEIGHT=0.59
+FOLD_6_WEIGHT=0.733
+FOLD_7_WEIGHT=0.63
+FOLD_8_WEIGHT=1.0
+FOLD_9_WEIGHT=0.2
+
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 
@@ -202,11 +227,12 @@ train:
 .PHONY: predict  ## Runs prediction
 predict:
 	python ./kelp/nn/inference/predict.py \
-		--data_dir data/raw/test/images \
+		--data_dir $(PREDS_INPUT_DIR) \
 		--dataset_stats_dir=data/processed \
 		--output_dir $(PREDS_OUTPUT_DIR) \
 		--run_dir $(RUN_DIR) \
 		--soft_labels \
+		--tta_merge_mode=mean \
 		--precision bf16-mixed
 
 .PHONY: submission  ## Generates submission file
@@ -241,35 +267,35 @@ eval:
 average-predictions:
 	python ./kelp/nn/inference/average_predictions.py \
 		--predictions_dir=data/predictions/$(AVG_PREDS_VERSION) \
-		--output_dir=data/submissions/avg \
+		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
 		--decision_threshold=0.48 \
-		--fold_0_weight=0.666 \
-		--fold_1_weight=0.5 \
-		--fold_2_weight=0.666 \
-		--fold_3_weight=0.88 \
-		--fold_4_weight=0.637 \
-		--fold_5_weight=0.59 \
-		--fold_6_weight=0.733 \
-		--fold_7_weight=0.63 \
-		--fold_8_weight=1.0 \
-		--fold_9_weight=0.2 \
+		--fold_0_weight=$(FOLD_0_WEIGHT) \
+		--fold_1_weight=$(FOLD_1_WEIGHT) \
+		--fold_2_weight=$(FOLD_2_WEIGHT) \
+		--fold_3_weight=$(FOLD_3_WEIGHT) \
+		--fold_4_weight=$(FOLD_4_WEIGHT) \
+		--fold_5_weight=$(FOLD_5_WEIGHT) \
+		--fold_6_weight=$(FOLD_6_WEIGHT) \
+		--fold_7_weight=$(FOLD_7_WEIGHT) \
+		--fold_8_weight=$(FOLD_8_WEIGHT) \
+		--fold_9_weight=$(FOLD_9_WEIGHT) \
 		--preview_submission \
-		--test_data_dir=data/raw/test/images \
+		--test_data_dir=$(PREDS_INPUT_DIR) \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	make predict RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
-	make predict RUN_DIR=data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
-	make predict RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
-	make predict RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
-	make predict RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
-	make predict RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
-	make predict RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
-	make predict RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
-	make predict RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
-	make predict RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
-	make average-predictions PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)
+	make predict RUN_DIR=$(FOLD_0_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
+	make predict RUN_DIR=$(FOLD_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
+	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
+	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
+	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
+	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
+	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
+	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
+	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
+	make predict RUN_DIR=$(FOLD_9_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
+	make average-predictions
 
 eval-many:
 	make eval RUN_DIR=data/aml/Job_frank_key_k8b7jv40_OutputsAndLogs
@@ -282,3 +308,42 @@ eval-many:
 	make eval RUN_DIR=data/aml/Job_bubbly_store_bdp54r2f_OutputsAndLogs
 	make eval RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
 	make eval RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
+
+.PHONY: eval-from-folders  ## Runs evaluation by comparing predictions to ground truth mask
+eval-from-folders:
+	python kelp/nn/training/eval_from_folders.py \
+		--gt_dir=$(GT_DIR) \
+		--preds_dir=$(PREDS_DIR) \
+		--tags fold_0_run_dir=$(FOLD_0_RUN_DIR) \
+			fold_1_run_dir=$(FOLD_1_RUN_DIR) \
+			fold_2_run_dir=$(FOLD_2_RUN_DIR) \
+			fold_3_run_dir=$(FOLD_3_RUN_DIR) \
+			fold_4_run_dir=$(FOLD_4_RUN_DIR) \
+			fold_5_run_dir=$(FOLD_5_RUN_DIR) \
+			fold_6_run_dir=$(FOLD_6_RUN_DIR) \
+			fold_7_run_dir=$(FOLD_7_RUN_DIR) \
+			fold_8_run_dir=$(FOLD_8_RUN_DIR) \
+			fold_9_run_dir=$(FOLD_9_RUN_DIR) \
+			fold_0_weight=$(FOLD_0_WEIGHT) \
+			fold_1_weight=$(FOLD_1_WEIGHT) \
+			fold_2_weight=$(FOLD_2_WEIGHT) \
+			fold_3_weight=$(FOLD_3_WEIGHT) \
+			fold_4_weight=$(FOLD_4_WEIGHT) \
+			fold_5_weight=$(FOLD_5_WEIGHT) \
+			fold_6_weight=$(FOLD_6_WEIGHT) \
+			fold_7_weight=$(FOLD_7_WEIGHT) \
+			fold_8_weight=$(FOLD_8_WEIGHT) \
+			fold_9_weight=$(FOLD_9_WEIGHT) \
+			soft_labels=True \
+			split_decision_threshold=None \
+			decision_threshold=0.48 \
+			tta=False \
+			tta_merge_mode=mean \
+			precision=bf16-mixed
+
+.PHONY: eval-ensemble
+eval-ensemble:
+	rm -rf data/predictions/eval_results
+	#make cv-predict AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
+	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
+	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
