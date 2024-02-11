@@ -11,7 +11,7 @@ PREDS_INPUT_DIR=data/raw/test/images
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
-AVG_PREDS_VERSION=v5
+AVG_PREDS_VERSION=v6
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
@@ -25,16 +25,16 @@ FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
 FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
 FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
 
-FOLD_0_WEIGHT=0.666
+FOLD_0_WEIGHT=0.0
 FOLD_1_WEIGHT=0.5
 FOLD_2_WEIGHT=0.666
 FOLD_3_WEIGHT=0.88
 FOLD_4_WEIGHT=0.637
-FOLD_5_WEIGHT=0.59
+FOLD_5_WEIGHT=0.0
 FOLD_6_WEIGHT=0.733
 FOLD_7_WEIGHT=0.63
 FOLD_8_WEIGHT=1.0
-FOLD_9_WEIGHT=0.2
+FOLD_9_WEIGHT=0.0
 
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
@@ -279,7 +279,6 @@ average-predictions:
 		--fold_7_weight=$(FOLD_7_WEIGHT) \
 		--fold_8_weight=$(FOLD_8_WEIGHT) \
 		--fold_9_weight=$(FOLD_9_WEIGHT) \
-		--preview_submission \
 		--test_data_dir=$(PREDS_INPUT_DIR) \
 		--preview_first_n=10
 
@@ -344,6 +343,6 @@ eval-from-folders:
 .PHONY: eval-ensemble
 eval-ensemble:
 	rm -rf data/predictions/eval_results
-	#make cv-predict AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
+	make cv-predict AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
