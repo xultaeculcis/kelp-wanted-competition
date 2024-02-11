@@ -131,6 +131,9 @@ class TrainConfig(ConfigBase):
     monitor_metric: str = "val/dice"
     monitor_mode: Literal["min", "max"] = "max"
     early_stopping_patience: int = 10
+    swa: bool = False
+    swa_epoch_start: float = 0.75
+    swa_annealing_epochs: int = 10
 
     # trainer params
     precision: Literal[
@@ -282,6 +285,9 @@ class TrainConfig(ConfigBase):
             "monitor_metric": self.monitor_metric,
             "monitor_mode": self.monitor_mode,
             "early_stopping_patience": self.early_stopping_patience,
+            "swa": self.swa,
+            "swa_epoch_start": self.swa_epoch_start,
+            "swa_annealing_epochs": self.swa_annealing_epochs,
         }
 
     @property

@@ -25,12 +25,23 @@ FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
 FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
 FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
 
+OLD_FOLD_0_WEIGHT=0.666
+OLD_FOLD_1_WEIGHT=0.5
+OLD_FOLD_2_WEIGHT=0.666
+OLD_FOLD_3_WEIGHT=0.88
+OLD_FOLD_4_WEIGHT=0.637
+OLD_FOLD_5_WEIGHT=0.59
+OLD_FOLD_6_WEIGHT=0.733
+OLD_FOLD_7_WEIGHT=0.63
+OLD_FOLD_8_WEIGHT=1.0
+OLD_FOLD_9_WEIGHT=0.2
+
 FOLD_0_WEIGHT=0.0
-FOLD_1_WEIGHT=0.5
+FOLD_1_WEIGHT=0.0
 FOLD_2_WEIGHT=0.666
 FOLD_3_WEIGHT=0.88
 FOLD_4_WEIGHT=0.637
-FOLD_5_WEIGHT=0.0
+FOLD_5_WEIGHT=0.59
 FOLD_6_WEIGHT=0.733
 FOLD_7_WEIGHT=0.63
 FOLD_8_WEIGHT=1.0
@@ -346,3 +357,36 @@ eval-ensemble:
 	make cv-predict AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
+
+t:
+	for fold_0_weight in 1.0 0.666 0.0 ; do \
+		for fold_1_weight in 1.0 0.5 0.0 ; do \
+			for fold_2_weight in 1.0 0.666 0.0 ; do \
+				for fold_3_weight in 1.0 0.88 0.0 ; do \
+					for fold_4_weight in 1.0 0.637 0.0 ; do \
+						for fold_5_weight in 1.0 0.59 0.0 ; do \
+							for fold_6_weight in 1.0 0.733 0.0 ; do \
+								for fold_7_weight in 1.0 0.63 0.0 ; do \
+									for fold_8_weight in 1.0 0.0 ; do \
+										for fold_9_weight in 1.0 0.2 0.0 ; do \
+											 make eval-ensemble \
+												FOLD_0_WEIGHT=$$fold_0_weight \
+												FOLD_1_WEIGHT=$$fold_1_weight\
+												FOLD_2_WEIGHT=$$fold_2_weight \
+												FOLD_3_WEIGHT=$$fold_3_weight \
+												FOLD_4_WEIGHT=$$fold_4_weight \
+												FOLD_5_WEIGHT=$$fold_5_weight \
+												FOLD_6_WEIGHT=$$fold_6_weight \
+												FOLD_7_WEIGHT=$$fold_7_weight \
+												FOLD_8_WEIGHT=$$fold_8_weight \
+												FOLD_9_WEIGHT=$$fold_9_weight; \
+										 done \
+									 done \
+								 done \
+							 done \
+						 done \
+					 done \
+				 done \
+			 done \
+		 done \
+    done

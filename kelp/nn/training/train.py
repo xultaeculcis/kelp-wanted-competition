@@ -10,7 +10,12 @@ import mlflow  # noqa: E402
 import pytorch_lightning as pl  # noqa: E402
 import torch  # noqa: E402
 from pytorch_lightning import Callback  # noqa: E402
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint  # noqa: E402
+from pytorch_lightning.callbacks import (  # noqa: E402
+    EarlyStopping,
+    LearningRateMonitor,
+    ModelCheckpoint,
+    StochasticWeightAveraging,
+)
 from pytorch_lightning.loggers import Logger, MLFlowLogger  # noqa: E402
 
 from kelp.nn.data.datamodule import KelpForestDataModule  # noqa: E402
@@ -44,6 +49,10 @@ def make_callbacks(
     save_top_k: int = 1,
     monitor_metric: str = "val/dice",
     monitor_mode: str = "max",
+    swa: bool = False,
+    swa_lr: float = 3e-4,
+    swa_epoch_start: float = 0.75,
+    swa_annealing_epochs: int = 10,
 ) -> List[Callback]:
     early_stopping = EarlyStopping(
         monitor=monitor_metric,
@@ -64,6 +73,14 @@ def make_callbacks(
         filename=filename_str,
     )
     callbacks = [early_stopping, lr_monitor, checkpoint]
+    if swa:
+        callbacks.append(
+            StochasticWeightAveraging(
+                swa_lrs=swa_lr,
+                swa_epoch_start=swa_epoch_start,
+                annealing_epochs=swa_annealing_epochs,
+            ),
+        )
     return callbacks
 
 

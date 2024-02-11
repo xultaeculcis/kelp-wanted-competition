@@ -349,6 +349,17 @@ def parse_args() -> TrainConfig:
         type=int,
         default=10,
     )
+    parser.add_argument("--swa", action="store_true")
+    parser.add_argument(
+        "--swa_epoch_start",
+        type=float,
+        default=0.75,
+    )
+    parser.add_argument(
+        "--swa_annealing_epochs",
+        type=int,
+        default=10,
+    )
     parser.add_argument(
         "--precision",
         type=str,
