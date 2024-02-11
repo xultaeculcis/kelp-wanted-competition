@@ -773,3 +773,18 @@ as they are the worst on LB individually
 * Submissions with soft labels - public LB: **0.7206** not much but is something...
 * Need to add some validation for the ensemble scores locally - otherwise the submissions are just wasted
 * New idea: SAHI -> train on 128x128 crops, inference on sliding window with overlaps and padding, then stitch the preds
+
+## 2024-02-10
+
+* Added logic to copy split val files to individual dirs
+* Added eval scripts for evaluating from folders with masks - evaluating ensemble is now easier
+* Tested ensemble with various settings: TTA, decision thresholds, soft labels, tta merge modes, various fold weights
+* Best combination:
+  * no TTA
+  * soft labels
+  * no decision threshold on fold level
+  * decision threshold = 0.48 for final ensemble
+  * weights as before -> MinMaxScaler(0.2, 1.0)
+  * fold=0 -> 0.0 fold=1 -> 0.0, fold=9 -> 0.0
+  * mix of best model per split
+* Public LB = **0.7208**
