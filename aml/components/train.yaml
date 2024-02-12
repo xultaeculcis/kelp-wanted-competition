@@ -226,4 +226,5 @@ command: >-
   --epochs ${{inputs.epochs}}
   --accumulate_grad_batches ${{inputs.accumulate_grad_batches}}
   --val_check_interval ${{inputs.val_check_interval}}
+  --swa
 is_deterministic: false

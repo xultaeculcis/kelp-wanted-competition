@@ -38,7 +38,7 @@ Checklist:
   and random sample of 1000 `non-kelp` pixels per image
 - [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [x] Soft labels
-- [ ] Model weights averaging
+- [x] Model weights averaging
 - [ ] SAHI
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
@@ -788,3 +788,8 @@ as they are the worst on LB individually
   * fold=0 -> 0.0 fold=1 -> 0.0, fold=9 -> 0.0
   * mix of best model per split
 * Public LB = **0.7208**
+
+## 2024-02-12
+
+* Added Stochastic Weight Averaging
+* Running new experiments for 25-50 epochs with SWA kicking in at 75% of epochs
