@@ -74,6 +74,9 @@ command: >-
   --save_top_k 1
   --early_stopping_patience 50
   --precision 16-mixed
-  --epochs 10
+  --epochs 50
+  --swa
+  --swa_epoch_start=0.75
+  --swa_annealing_epochs=10
 
 is_deterministic: false
