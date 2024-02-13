@@ -25,6 +25,7 @@ class TrainConfig(ConfigBase):
     cv_split: int = 0
     bands: List[str]
     spectral_indices: List[str]
+    sahi: bool = False
     image_size: int = 352
     resize_strategy: Literal["pad", "resize"] = "pad"
     interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest"
@@ -85,6 +86,7 @@ class TrainConfig(ConfigBase):
             "cosine_with_warm_restarts",
             "cyclic",
             "reduce_lr_on_plateau",
+            "none",
         ]
     ] = None
     lr: float = 3e-4
@@ -134,6 +136,7 @@ class TrainConfig(ConfigBase):
     swa: bool = False
     swa_epoch_start: float = 0.75
     swa_annealing_epochs: int = 10
+    swa_lr: float = 3e-5
 
     # trainer params
     precision: Literal[
@@ -229,6 +232,10 @@ class TrainConfig(ConfigBase):
 
         return weights
 
+    @field_validator("lr_scheduler", mode="before")
+    def validate_lr_scheduler(cls, value: Optional[str] = None) -> Optional[str]:
+        return None if value is None or value == "none" else value
+
     @property
     def resolved_experiment_name(self) -> str:
         return os.environ.get("MLFLOW_EXPERIMENT_NAME", self.experiment)
@@ -260,6 +267,7 @@ class TrainConfig(ConfigBase):
             "spectral_indices": self.spectral_indices,
             "image_size": self.image_size,
             "resize_strategy": self.resize_strategy,
+            "sahi": self.sahi,
             "interpolation": self.interpolation,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
@@ -288,6 +296,7 @@ class TrainConfig(ConfigBase):
             "swa": self.swa,
             "swa_epoch_start": self.swa_epoch_start,
             "swa_annealing_epochs": self.swa_annealing_epochs,
+            "swa_lr": self.swa_lr,
         }
 
     @property

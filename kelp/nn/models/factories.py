@@ -155,8 +155,10 @@ def resolve_lr_scheduler(
     num_training_steps: int,
     steps_per_epoch: int,
     hyperparams: Dict[str, Any],
-) -> torch.optim.lr_scheduler.LRScheduler:
-    if (lr_scheduler := hyperparams["lr_scheduler"]) == "onecycle":
+) -> Optional[torch.optim.lr_scheduler.LRScheduler]:
+    if (lr_scheduler := hyperparams["lr_scheduler"]) is None:
+        return None
+    elif lr_scheduler == "onecycle":
         scheduler = OneCycleLR(
             optimizer,
             max_lr=hyperparams["lr"],

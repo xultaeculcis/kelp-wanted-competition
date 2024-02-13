@@ -15,6 +15,7 @@ parameters:
     values:
       - azureml:gpu-4c-28g-t4-nc4ast4v3-spot
       - azureml:gpu-6c-112g-v100-nc6sv3-spot
+      - azureml:gpu-24c-220g-a100-nc24ads-spot
     default: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
   - name: pipeline_spec_file
     displayName: Pipeline spec file
@@ -66,6 +67,34 @@ parameters:
     type: string
     displayName: Spectral indices
     default: DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+  - name: use_weighted_sampler
+    type: string
+    default: True
+    values:
+      - False
+      - True
+    displayName: Weighted Random Sampler
+  - name: fill_missing_pixels_with_torch_nan
+    type: string
+    default: True
+    values:
+      - False
+      - True
+    displayName: Fill missing pixels with torch.nan
+  - name: mask_using_qa
+    type: string
+    default: True
+    values:
+      - False
+      - True
+    displayName: Mask corrupted pixels using QA band
+  - name: mask_using_water_mask
+    type: string
+    default: True
+    values:
+      - False
+      - True
+    displayName: Mask land pixels using DEM water mask
   - name: samples_per_epoch
     type: number
     displayName: Number of samples per epoch
@@ -133,6 +162,13 @@ parameters:
     type: string
     default: tu-efficientnet_b5
     displayName: Encoder
+  - name: pretrained
+    type: string
+    default: False
+    values:
+      - False
+      - True
+    displayName: Pretrained
   - name: encoder_weights
     type: string
     default: imagenet
@@ -163,6 +199,7 @@ parameters:
       - cyclic
       - cosine_with_warm_restarts
       - reduce_lr_on_plateau
+      - none
   - name: onecycle_pct_start
     type: number
     default: 0.1
@@ -187,6 +224,13 @@ parameters:
       - lovasz
       - tversky
       - soft_ce
+  - name: tta
+    type: string
+    default: False
+    values:
+      - False
+      - True
+    displayName: TTA
   - name: tta_merge_mode
     type: string
     default: max
@@ -236,6 +280,39 @@ parameters:
     type: number
     default: 1
     displayName: VAL check interval
+  - name: benchmark
+    type: string
+    default: False
+    values:
+      - False
+      - True
+    displayName: Value to set torch.backends.cudnn.benchmark to
+  - name: sahi
+    type: string
+    default: False
+    values:
+      - False
+      - True
+    displayName: SAHI
+  - name: swa
+    type: string
+    default: False
+    values:
+      - False
+      - True
+    displayName: Stochastic Weight Averaging
+  - name: swa_epoch_start
+    type: number
+    default: 0.5
+    displayName: When SWA should kick in as % of all epochs
+  - name: swa_annealing_epochs
+    type: number
+    default: 10
+    displayName: Number of epochs for SWA annealing LR
+  - name: swa_lr
+    type: number
+    default: 0.00003
+    displayName: Final LR for SWA annealing
 
 variables:
   - group: ${{parameters.runtime_env}}-vg
@@ -283,7 +360,11 @@ stages:
                   inputs.batch_size=${{parameters.batch_size}} \
                   inputs.num_workers=${{parameters.num_workers}} \
                   inputs.normalization_strategy=${{parameters.normalization_strategy}} \
+                  inputs.use_weighted_sampler=${{parameters.use_weighted_sampler}} \
                   inputs.samples_per_epoch=${{parameters.samples_per_epoch}} \
+                  inputs.fill_missing_pixels_with_torch_nan=${{parameters.fill_missing_pixels_with_torch_nan}} \
+                  inputs.mask_using_qa=${{parameters.mask_using_qa}} \
+                  inputs.mask_using_water_mask=${{parameters.mask_using_water_mask}} \
                   inputs.has_kelp_importance_factor=${{parameters.has_kelp_importance_factor}} \
                   inputs.kelp_pixels_pct_importance_factor=${{parameters.kelp_pixels_pct_importance_factor}} \
                   inputs.qa_ok_importance_factor=${{parameters.qa_ok_importance_factor}} \
@@ -294,6 +375,7 @@ stages:
                   inputs.architecture=${{parameters.architecture}} \
                   inputs.encoder=${{parameters.encoder}} \
                   inputs.encoder_weights=${{parameters.encoder_weights}} \
+                  inputs.pretrained=${{parameters.pretrained}} \
                   inputs.optimizer=${{parameters.optimizer}} \
                   inputs.weight_decay=${{parameters.weight_decay}} \
                   inputs.lr_scheduler=${{parameters.lr_scheduler}} \
@@ -302,6 +384,7 @@ stages:
                   inputs.onecycle_div_factor=${{parameters.onecycle_div_factor}} \
                   inputs.onecycle_final_div_factor=${{parameters.onecycle_final_div_factor}} \
                   inputs.loss=${{parameters.loss}} \
+                  inputs.tta=${{parameters.tta}} \
                   inputs.tta_merge_mode=${{parameters.tta_merge_mode}} \
                   inputs.decision_threshold=${{parameters.decision_threshold}} \
                   inputs.save_top_k=${{parameters.save_top_k}} \
@@ -311,6 +394,12 @@ stages:
                   inputs.epochs=${{parameters.epochs}} \
                   inputs.accumulate_grad_batches=${{parameters.accumulate_grad_batches}} \
                   inputs.val_check_interval=${{parameters.val_check_interval}} \
+                  inputs.benchmark=${{parameters.benchmark}} \
+                  inputs.swa=${{parameters.swa}} \
+                  inputs.swa_epoch_start=${{parameters.swa_epoch_start}} \
+                  inputs.swa_annealing_epochs=${{parameters.swa_annealing_epochs}} \
+                  inputs.swa_lr=${{parameters.swa_lr}} \
+                  inputs.sahi=${{parameters.sahi}} \
                   --query name -o tsv \
                 )
 

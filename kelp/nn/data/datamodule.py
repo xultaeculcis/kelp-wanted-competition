@@ -65,9 +65,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         missing_pixels_fill_value: float = 0.0,
         batch_size: int = 32,
         num_workers: int = 0,
+        sahi: bool = False,
         image_size: int = 352,
         resize_strategy: Literal["pad", "resize"] = "pad",
-        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
         normalization_strategy: Literal[
             "min-max",
             "quantile",
@@ -106,6 +106,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.missing_pixels_fill_value = missing_pixels_fill_value
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.sahi = sahi
         self.image_size = image_size
         self.normalization_strategy = normalization_strategy
         self.mask_using_qa = mask_using_qa
@@ -119,17 +120,10 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.val_augmentations = self._resolve_transforms(stage="val")
         self.test_augmentations = self._resolve_transforms(stage="test")
         self.predict_augmentations = self._resolve_transforms(stage="predict")
-        self.image_resize_tf = self._resolve_resize_transform(
-            image_or_mask="image",
+        self.resize_tf = self._resolve_resize_transform(
             resize_strategy=resize_strategy,
             image_size=image_size,
-            interpolation=interpolation,
-        )
-        self.mask_resize_tf = self._resolve_resize_transform(
-            image_or_mask="mask",
-            resize_strategy=resize_strategy,
-            image_size=image_size,
-            interpolation=interpolation,
+            sahi=sahi,
         )
 
     def _guard_against_invalid_bands_config(self, bands: Optional[List[str]]) -> List[str]:
@@ -203,9 +197,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         return batch
 
     def _common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        sample["image"] = self.image_resize_tf(sample["image"])
+        sample["image"] = self.resize_tf(sample["image"])
         if "mask" in sample:
-            sample["mask"] = self.mask_resize_tf(sample["mask"].unsqueeze(0)).squeeze()
+            sample["mask"] = self.resize_tf(sample["mask"].unsqueeze(0)).squeeze()
         return sample
 
     def _resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
@@ -283,17 +277,17 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def _resolve_resize_transform(
         self,
-        image_or_mask: Literal["image", "mask"],
         resize_strategy: Literal["pad", "resize"] = "pad",
         image_size: int = 352,
-        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
+        sahi: bool = False,
     ) -> Callable[[Tensor], Tensor]:
-        interpolation_lookup = {
-            "nearest": InterpolationMode.NEAREST,
-            "nearest-exact": InterpolationMode.NEAREST_EXACT,
-            "bilinear": InterpolationMode.BILINEAR,
-            "bicubic": InterpolationMode.BICUBIC,
-        }
+        if sahi:
+            if image_size >= consts.data.TILE_SIZE:
+                raise ValueError(
+                    "SAHI is only applicable if image size is lower than tile size. "
+                    f"You specified: {image_size=}, tile_size={consts.data.TILE_SIZE}"
+                )
+            return T.RandomCrop(size=(image_size, image_size))  # type: ignore[no-any-return]
         if resize_strategy == "pad":
             if image_size < 352:
                 raise ValueError(
@@ -309,9 +303,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         elif resize_strategy == "resize":
             return T.Resize(  # type: ignore[no-any-return]
                 size=(image_size, image_size),
-                interpolation=interpolation_lookup[interpolation]
-                if image_or_mask == "image"
-                else InterpolationMode.NEAREST,
+                interpolation=InterpolationMode.NEAREST,
                 antialias=False,
             )
         else:

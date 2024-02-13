@@ -115,3 +115,6 @@ mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f;8;0.84500;0.7155;effn
 ???;all;???;0.7196;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for worst 3 models + mix of best model per split
 ???;all;???;0.7208;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), fold=0 -> 0.0 fold=1 -> 0.0, fold=9 -> 0.0 + mix of best model per split
 ???;all;???;0.7203;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> all 1.0, fold=9 -> 0, fold=1 -> 0.0 + mix of best model per split
+mlruns/567580247645556359/68264618d78642099951352bba6aada8;8;0.84289;0.7147;tu-efficientnet_b5 + bf16 + SWA @25 epochs
+???;all;???;0.7202;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), fold=9 -> 0, fold=1 -> 0.0, fold=7 -> 0.0 + mix of best model per split
+???;all;???;0.7207;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,1,0.637,0.59,1,0.63,1,0] + mix of best model per split

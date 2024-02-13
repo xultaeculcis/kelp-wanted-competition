@@ -46,10 +46,10 @@ command: >-
   --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
   --image_size 352
-  --fill_missing_pixels_with_torch_nan
-  --mask_using_qa
-  --mask_using_water_mask
-  --use_weighted_sampler
+  --fill_missing_pixels_with_torch_nan True
+  --mask_using_qa True
+  --mask_using_water_mask True
+  --use_weighted_sampler True
   --samples_per_epoch 10240
   --has_kelp_importance_factor 3
   --kelp_pixels_pct_importance_factor 0.2
@@ -61,22 +61,24 @@ command: >-
   --normalization_strategy quantile
   --architecture unet
   --encoder tu-efficientnet_b5
-  --pretrained
+  --pretrained True
   --encoder_weights imagenet
   --lr 3e-4
   --optimizer adamw
   --weight_decay 1e-4
-  --lr_scheduler onecycle
+  --lr_scheduler none
   --loss dice
-  --tta
+  --tta False
   --tta_merge_mode max
+  --decision_threshold 0.48
   --monitor_metric val/dice
   --save_top_k 1
   --early_stopping_patience 50
-  --precision 16-mixed
-  --epochs 50
-  --swa
-  --swa_epoch_start=0.75
-  --swa_annealing_epochs=10
+  --precision bf16-mixed
+  --epochs 25
+  --swa True
+  --swa_epoch_start 0.5
+  --swa_annealing_epochs 10
+  --swa_lr 3e-5
 
 is_deterministic: false
