@@ -75,10 +75,10 @@ command: >-
   --save_top_k 1
   --early_stopping_patience 50
   --precision bf16-mixed
-  --epochs 25
+  --epochs 50
   --swa True
   --swa_epoch_start 0.5
-  --swa_annealing_epochs 10
+  --swa_annealing_epochs 25
   --swa_lr 3e-5
 
 is_deterministic: false
