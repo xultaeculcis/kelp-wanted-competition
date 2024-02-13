@@ -41,7 +41,7 @@ command: >-
   --dataset_stats_fp ${{inputs.dataset_stats_file}}
   --cv_split ${{inputs.cv_split}}
   --batch_size 32
-  --num_workers 4
+  --num_workers 16
   --bands R,G,B,SWIR,NIR,QA,DEM
   --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
