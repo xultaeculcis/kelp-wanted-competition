@@ -12,7 +12,7 @@ PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 
-AVG_PREDS_VERSION=v9swa
+AVG_PREDS_VERSION=v10
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
@@ -45,9 +45,9 @@ FOLD_1_WEIGHT=0.0
 FOLD_2_WEIGHT=0.666
 FOLD_3_WEIGHT=0.88
 FOLD_4_WEIGHT=0.637
-FOLD_5_WEIGHT=0.59
+FOLD_5_WEIGHT=0.3
 FOLD_6_WEIGHT=0.733
-FOLD_7_WEIGHT=0.63
+FOLD_7_WEIGHT=0.3
 FOLD_8_WEIGHT=1.0
 FOLD_9_WEIGHT=0.0
 
@@ -257,8 +257,9 @@ predict-and-submit:
 	python ./kelp/nn/inference/predict_and_submit.py \
 		--data_dir data/raw/test/images \
 		--dataset_stats_dir=data/processed \
-		--output_dir data/submissions \
+		--output_dir data/submissions/single-model \
 		--run_dir $(RUN_DIR) \
+		--preview_submission \
 		--decision_threshold 0.48 \
 		--precision bf16-mixed
 
@@ -279,7 +280,7 @@ average-predictions:
 	python ./kelp/nn/inference/average_predictions.py \
 		--predictions_dir=data/predictions/$(AVG_PREDS_VERSION) \
 		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
-		--decision_threshold=0.48 \
+		--decision_threshold=0.45 \
 		--fold_0_weight=$(FOLD_0_WEIGHT) \
 		--fold_1_weight=$(FOLD_1_WEIGHT) \
 		--fold_2_weight=$(FOLD_2_WEIGHT) \

@@ -198,7 +198,7 @@ class TrainConfig(ConfigBase):
                 )
                 break
 
-        channels_item = values["decoder_channels"]
+        channels_item = values.get("decoder_channels", "256,128,64,32,16")
         channels = (
             channels_item
             if isinstance(channels_item, list)

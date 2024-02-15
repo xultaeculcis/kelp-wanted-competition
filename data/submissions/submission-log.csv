@@ -121,3 +121,6 @@ mlruns/567580247645556359/68264618d78642099951352bba6aada8;8;0.84289;0.7147;tu-e
 ???;all;???;0.7149;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.59,0.733,0.63,1,0] + mix of best model per split, SWA, no soft labels (human error)
 ???;all;???;0.7193;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.59,0.733,0.63,1,0] + mix of updated best model per split
 ???;all;???;0.7159;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.59,0.733,0.63,1,0] + SWA
+???;all;???;0.7207;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.45, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.3,0.733,0.3,1,0] + mix of updated best model per split
+data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs;0;0.84391;0.7111;effnet-b5 + bf16 + dt=0.48
+data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs;0;0.85083;0.7089;effnet-b5 + bf16 + dt=0.48
