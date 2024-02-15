@@ -63,5 +63,6 @@ command: >-
   --decision_threshold 0.48
   --experiment model-hparam-search-exp
   --loss ${{inputs.loss}}
+  --ce_class_weights=0.4,0.6
 
 is_deterministic: false
