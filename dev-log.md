@@ -809,3 +809,6 @@ as they are the worst on LB individually
 ## 2024-02-15
 
 * Add support for providing custom `encoder_depth` and `decoder_channels`
+* Add support for more losses
+* New submissions - no improvement
+* Test out different `decoder_channels` configurations `512,256,128,64,32` seems to bump the performance a bit
