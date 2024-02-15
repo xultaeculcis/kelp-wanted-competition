@@ -59,7 +59,7 @@ command: >-
   --plot_n_batches 0
   --precision bf16-mixed
   --early_stopping_patience 50
-  --epochs 25
+  --epochs 10
   --decision_threshold 0.48
   --experiment model-hparam-search-exp
   --loss ${{inputs.loss}}
