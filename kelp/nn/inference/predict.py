@@ -55,6 +55,7 @@ class PredictConfig(ConfigBase):
     dataset_stats_dir: Path
     original_training_config_fp: Path
     model_checkpoint: Path
+    use_checkpoint: Literal["best", "latest"] = "best"
     run_dir: Path
     output_dir: Path
     tta: bool = False
@@ -84,11 +85,14 @@ class PredictConfig(ConfigBase):
         model_checkpoint = artifacts_dir / "model"
 
         if (checkpoints_root := (artifacts_dir / "model" / "checkpoints")).exists():
-            for checkpoint_dir in checkpoints_root.iterdir():
-                aliases = (checkpoint_dir / "aliases.txt").read_text()
-                if "'best'" in aliases:
-                    model_checkpoint = checkpoints_root / checkpoint_dir.name / f"{checkpoint_dir.name}.ckpt"
-                    break
+            if data["use_checkpoint"] == "latest":
+                model_checkpoint = checkpoints_root / "last" / "last.ckpt"
+            else:
+                for checkpoint_dir in sorted(list(checkpoints_root.iterdir())):
+                    aliases = (checkpoint_dir / "aliases.txt").read_text()
+                    if "'best'" in aliases:
+                        model_checkpoint = checkpoints_root / checkpoint_dir.name / f"{checkpoint_dir.name}.ckpt"
+                        break
 
         config_fp = artifacts_dir / "config.yaml"
         data["model_checkpoint"] = model_checkpoint
@@ -117,6 +121,7 @@ def build_prediction_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--dataset_stats_dir", type=str, required=True)
     parser.add_argument("--run_dir", type=str, required=True)
+    parser.add_argument("--use_checkpoint", choices=["latest", "best"], type=str, default="best")
     parser.add_argument("--tta", action="store_true")
     parser.add_argument("--soft_labels", action="store_true")
     parser.add_argument("--tta_merge_mode", type=str, default="max")
