@@ -63,11 +63,13 @@ command: >-
   --encoder tu-efficientnet_b5
   --pretrained True
   --encoder_weights imagenet
+  --decoder_channels 512,256,128,64,32
   --lr 3e-4
   --optimizer adamw
   --weight_decay 1e-4
-  --lr_scheduler none
-  --loss dice
+  --lr_scheduler onecycle
+  --loss jaccard
+  --ce_class_weights=0.4,0.6
   --tta False
   --tta_merge_mode max
   --decision_threshold 0.48
@@ -76,7 +78,7 @@ command: >-
   --early_stopping_patience 50
   --precision bf16-mixed
   --epochs 50
-  --swa True
+  --swa False
   --swa_epoch_start 0.5
   --swa_annealing_epochs 25
   --swa_lr 3e-5
