@@ -793,3 +793,15 @@ as they are the worst on LB individually
 
 * Added Stochastic Weight Averaging
 * Running new experiments for 25-50 epochs with SWA kicking in at 75% of epochs
+
+## 2024-02-13
+
+* Generated dataset for SAHI training
+* New submissions - no improvement with SWA
+
+## 2024-02-14
+
+* SAHI training - split=8, image_size=128, no overlap between tiles - locally has DICE=0.83 which is disappointing
+* XEDice loss - no improvement
+* Add option to predict using latest checkpoint instead of the best one
+*

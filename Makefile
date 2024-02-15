@@ -11,7 +11,8 @@ PREDS_INPUT_DIR=data/raw/test/images
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
-AVG_PREDS_VERSION=v6
+
+AVG_PREDS_VERSION=v9swa
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
@@ -26,6 +27,7 @@ FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
 FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
 
 FOLD_NUMBER=8
+CHECKPOINT=best
 
 OLD_FOLD_0_WEIGHT=0.666
 OLD_FOLD_1_WEIGHT=0.5
@@ -239,6 +241,7 @@ predict:
 		--dataset_stats_dir=data/processed \
 		--output_dir $(PREDS_OUTPUT_DIR) \
 		--run_dir $(RUN_DIR) \
+		--use_checkpoint $(CHECKPOINT) \
 		--soft_labels \
 		--tta_merge_mode=mean \
 		--precision bf16-mixed
@@ -288,6 +291,7 @@ average-predictions:
 		--fold_8_weight=$(FOLD_8_WEIGHT) \
 		--fold_9_weight=$(FOLD_9_WEIGHT) \
 		--test_data_dir=$(PREDS_INPUT_DIR) \
+		--preview_submission \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
@@ -354,7 +358,6 @@ eval-ensemble:
 	make cv-predict AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
-
 
 .PHONY: train-all-folds
 train-all-folds:

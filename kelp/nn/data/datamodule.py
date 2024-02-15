@@ -67,6 +67,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         num_workers: int = 0,
         sahi: bool = False,
         image_size: int = 352,
+        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
         resize_strategy: Literal["pad", "resize"] = "pad",
         normalization_strategy: Literal[
             "min-max",
@@ -108,6 +109,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.sahi = sahi
         self.image_size = image_size
+        self.interpolation = interpolation
         self.normalization_strategy = normalization_strategy
         self.mask_using_qa = mask_using_qa
         self.mask_using_water_mask = mask_using_water_mask
@@ -120,10 +122,17 @@ class KelpForestDataModule(pl.LightningDataModule):
         self.val_augmentations = self._resolve_transforms(stage="val")
         self.test_augmentations = self._resolve_transforms(stage="test")
         self.predict_augmentations = self._resolve_transforms(stage="predict")
-        self.resize_tf = self._resolve_resize_transform(
+        self.image_resize_tf = self._resolve_resize_transform(
+            image_or_mask="image",
             resize_strategy=resize_strategy,
             image_size=image_size,
-            sahi=sahi,
+            interpolation=interpolation,
+        )
+        self.mask_resize_tf = self._resolve_resize_transform(
+            image_or_mask="mask",
+            resize_strategy=resize_strategy,
+            image_size=image_size,
+            interpolation=interpolation,
         )
 
     def _guard_against_invalid_bands_config(self, bands: Optional[List[str]]) -> List[str]:
@@ -197,9 +206,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         return batch
 
     def _common_transforms(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        sample["image"] = self.resize_tf(sample["image"])
+        sample["image"] = self.image_resize_tf(sample["image"])
         if "mask" in sample:
-            sample["mask"] = self.resize_tf(sample["mask"].unsqueeze(0)).squeeze()
+            sample["mask"] = self.mask_resize_tf(sample["mask"].unsqueeze(0)).squeeze()
         return sample
 
     def _resolve_transforms(self, stage: Literal["train", "val", "test", "predict"]) -> K.AugmentationSequential:
@@ -277,17 +286,17 @@ class KelpForestDataModule(pl.LightningDataModule):
 
     def _resolve_resize_transform(
         self,
+        image_or_mask: Literal["image", "mask"],
         resize_strategy: Literal["pad", "resize"] = "pad",
         image_size: int = 352,
-        sahi: bool = False,
+        interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
     ) -> Callable[[Tensor], Tensor]:
-        if sahi:
-            if image_size >= consts.data.TILE_SIZE:
-                raise ValueError(
-                    "SAHI is only applicable if image size is lower than tile size. "
-                    f"You specified: {image_size=}, tile_size={consts.data.TILE_SIZE}"
-                )
-            return T.RandomCrop(size=(image_size, image_size))  # type: ignore[no-any-return]
+        interpolation_lookup = {
+            "nearest": InterpolationMode.NEAREST,
+            "nearest-exact": InterpolationMode.NEAREST_EXACT,
+            "bilinear": InterpolationMode.BILINEAR,
+            "bicubic": InterpolationMode.BICUBIC,
+        }
         if resize_strategy == "pad":
             if image_size < 352:
                 raise ValueError(
@@ -303,7 +312,9 @@ class KelpForestDataModule(pl.LightningDataModule):
         elif resize_strategy == "resize":
             return T.Resize(  # type: ignore[no-any-return]
                 size=(image_size, image_size),
-                interpolation=InterpolationMode.NEAREST,
+                interpolation=interpolation_lookup[interpolation]
+                if image_or_mask == "image"
+                else InterpolationMode.NEAREST,
                 antialias=False,
             )
         else:
@@ -428,18 +439,29 @@ class KelpForestDataModule(pl.LightningDataModule):
         metadata: pd.DataFrame,
         cv_split: int,
         split: str,
+        sahi: bool = False,
     ) -> Tuple[List[Path], List[Path]]:
         split_data = metadata[metadata[f"split_{cv_split}"] == split]
         img_folder = consts.data.TRAIN if split in [consts.data.TRAIN, consts.data.VAL] else consts.data.TEST
         image_paths = sorted(
             split_data.apply(
-                lambda row: data_dir / img_folder / "images" / f"{row['tile_id']}_satellite.tif",
+                lambda row: data_dir
+                / img_folder
+                / "images"
+                / (
+                    f"{row['tile_id']}_satellite_{row['j']}_{row['i']}.tif"
+                    if sahi
+                    else f"{row['tile_id']}_satellite.tif"
+                ),
                 axis=1,
             ).tolist()
         )
         mask_paths = sorted(
             split_data.apply(
-                lambda row: data_dir / img_folder / "masks" / f"{row['tile_id']}_kelp.tif",
+                lambda row: data_dir
+                / img_folder
+                / "masks"
+                / (f"{row['tile_id']}_kelp_{row['j']}_{row['i']}.tif" if sahi else f"{row['tile_id']}_kelp.tif"),
                 axis=1,
             ).tolist()
         )
@@ -456,13 +478,14 @@ class KelpForestDataModule(pl.LightningDataModule):
         almost_all_water_importance_factor: float = -1.0,
         dem_nan_pixels_pct_importance_factor: float = -1.0,
         dem_zero_pixels_pct_importance_factor: float = -1.0,
+        sahi: bool = False,
     ) -> pd.DataFrame:
         def resolve_weight(row: pd.Series) -> float:
             if row["original_split"] == "test":
                 return 0.0
 
-            has_kelp = int(row["has_kelp"])
-            kelp_pixels_pct = row["kelp_pixels_pct"]
+            has_kelp = int(row["kelp_pxls"] > 0) if sahi else int(row["has_kelp"])
+            kelp_pixels_pct = row["kelp_pct"] if sahi else row["kelp_pixels_pct"]
             qa_ok = int(row["qa_ok"])
             water_pixels_pct = row["water_pixels_pct"]
             qa_corrupted_pixels_pct = row["qa_corrupted_pixels_pct"]
@@ -506,6 +529,7 @@ class KelpForestDataModule(pl.LightningDataModule):
         qa_corrupted_pixels_pct_importance_factor: float = -1.0,
         dem_nan_pixels_pct_importance_factor: float = -1.0,
         dem_zero_pixels_pct_importance_factor: float = -1.0,
+        sahi: bool = False,
         **kwargs: Any,
     ) -> KelpForestDataModule:
         metadata = cls._calculate_image_weights(
@@ -517,15 +541,16 @@ class KelpForestDataModule(pl.LightningDataModule):
             almost_all_water_importance_factor=almost_all_water_importance_factor,
             dem_nan_pixels_pct_importance_factor=dem_nan_pixels_pct_importance_factor,
             dem_zero_pixels_pct_importance_factor=dem_zero_pixels_pct_importance_factor,
+            sahi=sahi,
         )
         train_images, train_masks = cls.resolve_file_paths(
-            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.TRAIN
+            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.TRAIN, sahi=sahi
         )
         val_images, val_masks = cls.resolve_file_paths(
-            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL
+            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL, sahi=sahi
         )
         test_images, test_masks = cls.resolve_file_paths(
-            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL
+            data_dir=data_dir, metadata=metadata, cv_split=cv_split, split=consts.data.VAL, sahi=sahi
         )
         image_weights = cls._resolve_image_weights(df=metadata, image_paths=train_images)
         return cls(
