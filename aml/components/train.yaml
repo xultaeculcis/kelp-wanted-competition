@@ -112,6 +112,10 @@ inputs:
     type: string
     default: imagenet
     description: The encoder weights.
+  decoder_channels:
+    type: string
+    default: 256,128,64,32,16
+    description: The decoder channels.
   pretrained:
     type: string
     default: True
@@ -256,6 +260,7 @@ command: >-
   --encoder ${{inputs.encoder}}
   --pretrained ${{inputs.pretrained}}
   --encoder_weights ${{inputs.encoder_weights}}
+  --decoder_channels ${{inputs.decoder_channels}}
   --lr ${{inputs.lr}}
   --optimizer ${{inputs.optimizer}}
   --weight_decay ${{inputs.weight_decay}}

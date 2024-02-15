@@ -173,6 +173,10 @@ parameters:
     type: string
     default: imagenet
     displayName: Encoder weights
+  - name: decoder_channels
+    type: string
+    default: 256,128,64,32,16
+    displayName: Decoder channels
   - name: lr
     type: number
     default: 0.0003
@@ -375,6 +379,7 @@ stages:
                   inputs.architecture=${{parameters.architecture}} \
                   inputs.encoder=${{parameters.encoder}} \
                   inputs.encoder_weights=${{parameters.encoder_weights}} \
+                  inputs.decoder_channels=${{parameters.decoder_channels}} \
                   inputs.pretrained=${{parameters.pretrained}} \
                   inputs.optimizer=${{parameters.optimizer}} \
                   inputs.weight_decay=${{parameters.weight_decay}} \

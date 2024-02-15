@@ -189,6 +189,16 @@ class TrainConfig(ConfigBase):
                     f"accumulate_grad_batches={values['accumulate_grad_batches']}"
                 )
                 break
+
+        channels_item = values["decoder_channels"]
+        channels = (
+            channels_item
+            if isinstance(channels_item, list)
+            else [int(index.strip()) for index in channels_item.split(",")]
+        )
+        values["decoder_channels"] = channels
+        values["encoder_depth"] = len(channels)
+
         return values
 
     @field_validator("bands", mode="before")
@@ -238,11 +248,6 @@ class TrainConfig(ConfigBase):
     @field_validator("lr_scheduler", mode="before")
     def validate_lr_scheduler(cls, value: Optional[str] = None) -> Optional[str]:
         return None if value is None or value == "none" else value
-
-    @field_validator("decoder_channels", mode="before")
-    def validate_decoder_channels(cls, value: Union[str, List[int]]) -> List[int]:
-        channels = value if isinstance(value, list) else [int(index.strip()) for index in value.split(",")]
-        return channels
 
     @property
     def resolved_experiment_name(self) -> str:

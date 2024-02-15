@@ -199,11 +199,10 @@ def parse_args() -> TrainConfig:
         type=str,
     )
     parser.add_argument(
-        "--encoder_depth",
-        type=int,
-        default=5,
+        "--decoder_channels",
+        type=str,
+        default="256,128,64,32,16",
     )
-    parser.add_argument("--decoder_channels", type=str, default="256,128,64,32,16")
     parser.add_argument(
         "--decoder_attention_type",
         type=str,
