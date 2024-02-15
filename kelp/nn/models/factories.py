@@ -21,6 +21,7 @@ from torch.optim.lr_scheduler import (
 from kelp import consts
 from kelp.nn.models.efficientunetplusplus.model import EfficientUnetPlusPlus
 from kelp.nn.models.fcn.model import FCN
+from kelp.nn.models.losses import XEDiceLoss
 from kelp.nn.models.resunet.model import ResUnet
 from kelp.nn.models.resunetplusplus.model import ResUnetPlusPlus
 
@@ -83,6 +84,8 @@ def resolve_loss(
         )
     elif loss_fn == "soft_ce":
         loss = smp.losses.SoftCrossEntropyLoss(ignore_index=ignore_index, smooth_factor=ce_smooth_factor)
+    elif loss_fn == "xedice":
+        loss = XEDiceLoss(mode="multiclass", ce_class_weights=torch.tensor(ce_class_weights, device=device))
     else:
         raise ValueError(f"{loss_fn=} is not supported.")
     return loss

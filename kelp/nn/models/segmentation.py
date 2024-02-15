@@ -264,7 +264,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             f"val/iou_{consts.data.CLASSES[idx]}": iou_score for idx, iou_score in enumerate(per_class_iou)
         }
         metrics.update(per_class_iou_score_dict)
-        self.log_dict(metrics, on_step=False, on_epoch=True)
+        self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:

@@ -317,6 +317,7 @@ def parse_args() -> TrainConfig:
             "focal",
             "lovasz",
             "soft_ce",
+            "xedice",
         ],
         default="dice",
     )
