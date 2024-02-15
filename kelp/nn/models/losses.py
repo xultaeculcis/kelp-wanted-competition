@@ -76,13 +76,10 @@ class LogCoshDiceLoss(nn.Module):
         self.use_softmax = use_softmax
 
     def forward(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
-        num_classes = y_pred.shape[1]
         # Apply softmax to the output to present it in probability.
         if self.use_softmax:
-            y_pred = nn.Softmax(dim=1)(y_pred[0])[:, 1, ...]
-        one_hot_target = (
-            F.one_hot(y_true.to(torch.int64), num_classes=num_classes).permute((0, 3, 1, 2)).to(torch.float)
-        )
+            y_pred = nn.Softmax(dim=1)(y_pred)
+        one_hot_target = F.one_hot(y_true.to(torch.int64), num_classes=2).permute((0, 3, 1, 2)).to(torch.float)
         assert y_pred.shape == one_hot_target.shape
         numerator = 2.0 * torch.sum(y_pred * one_hot_target, dim=(-2, -1))
         denominator = torch.sum(y_pred + one_hot_target, dim=(-2, -1))
