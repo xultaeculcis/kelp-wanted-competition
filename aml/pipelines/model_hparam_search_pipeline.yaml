@@ -49,7 +49,6 @@ jobs:
           - xedice
           - focal_tversky
           - log_cosh_dice
-          - hausdorff
           - t_loss
           - combo
           - exp_log_loss

@@ -58,7 +58,6 @@ def resolve_loss(
     if loss_fn in ["jaccard", "dice"]:
         loss_kwargs = {
             "mode": "multiclass",
-            "ignore_index": ignore_index,
             "classes": list(range(num_classes)) if objective != "binary" else None,
         }
     elif loss_fn == "ce":
