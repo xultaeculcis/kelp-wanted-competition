@@ -69,6 +69,8 @@ class TrainConfig(ConfigBase):
     ] = "unet"
     encoder: str = "tu-efficientnet_b5"
     encoder_weights: Optional[str] = None
+    encoder_depth: int = 5
+    decoder_channels: List[int] = [256, 128, 64, 32, 16]
     decoder_attention_type: Optional[str] = None
     pretrained: bool = False
     num_classes: int = 2
@@ -237,6 +239,11 @@ class TrainConfig(ConfigBase):
     def validate_lr_scheduler(cls, value: Optional[str] = None) -> Optional[str]:
         return None if value is None or value == "none" else value
 
+    @field_validator("decoder_channels", mode="before")
+    def validate_decoder_channels(cls, value: Union[str, List[int]]) -> List[int]:
+        channels = value if isinstance(value, list) else [int(index.strip()) for index in value.split(",")]
+        return channels
+
     @property
     def resolved_experiment_name(self) -> str:
         return os.environ.get("MLFLOW_EXPERIMENT_NAME", self.experiment)
@@ -307,6 +314,8 @@ class TrainConfig(ConfigBase):
             "encoder": self.encoder,
             "pretrained": self.pretrained,
             "encoder_weights": self.encoder_weights,
+            "encoder_depth": self.encoder_depth,
+            "decoder_channels": self.decoder_channels,
             "decoder_attention_type": self.decoder_attention_type,
             "ignore_index": self.ignore_index,
             "num_classes": self.num_classes,

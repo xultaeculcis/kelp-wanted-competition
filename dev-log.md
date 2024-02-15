@@ -804,4 +804,8 @@ as they are the worst on LB individually
 * SAHI training - split=8, image_size=128, no overlap between tiles - locally has DICE=0.83 which is disappointing
 * XEDice loss - no improvement
 * Add option to predict using latest checkpoint instead of the best one
-*
+* Train Unet with reduced encoder depth from 5 to 4. Minor improvements. Will investigate further.
+
+## 2024-02-15
+
+* Add support for providing custom `encoder_depth` and `decoder_channels`

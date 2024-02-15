@@ -97,6 +97,8 @@ def resolve_model(
     classes: int,
     in_channels: int,
     encoder_weights: Optional[str] = None,
+    encoder_depth: int = 5,
+    decoder_channels: Optional[List[int]] = None,
     decoder_attention_type: Optional[str] = None,
     pretrained: bool = False,
     compile: bool = False,
@@ -104,12 +106,17 @@ def resolve_model(
     compile_dynamic: Optional[bool] = None,
     ort: bool = False,
 ) -> nn.Module:
+    if decoder_channels is None:
+        decoder_channels = [256, 128, 64, 32, 16][:encoder_depth]
+
     if architecture in _MODEL_LOOKUP:
         model_kwargs = {
             "encoder_name": encoder,
             "encoder_weights": encoder_weights if pretrained else None,
             "in_channels": in_channels,
             "classes": classes,
+            "encoder_depth": encoder_depth,
+            "decoder_channels": decoder_channels,
             "decoder_attention_type": decoder_attention_type,
         }
         if "unet" not in architecture or architecture == "efficientunet++":

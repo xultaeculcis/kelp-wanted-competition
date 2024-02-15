@@ -42,6 +42,8 @@ class KelpForestSegmentationTask(pl.LightningModule):
             architecture=self.hyperparams["architecture"],
             encoder=self.hyperparams["encoder"],
             encoder_weights=self.hyperparams["encoder_weights"],
+            encoder_depth=self.hyperparams["encoder_depth"],
+            decoder_channels=self.hyperparams["decoder_channels"],
             decoder_attention_type=self.hyperparams["decoder_attention_type"],
             pretrained=self.hyperparams["pretrained"],
             in_channels=self.hyperparams["in_channels"],
