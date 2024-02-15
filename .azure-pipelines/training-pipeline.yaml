@@ -224,10 +224,19 @@ parameters:
       - ce
       - jaccard
       - dice
+      - tversky
       - focal
       - lovasz
-      - tversky
       - soft_ce
+      - xedice
+      - focal_tversky
+      - log_cosh_dice
+      - hausdorff
+      - t_loss
+      - combo
+      - exp_log_loss
+      - soft_dice
+      - batch_soft_dice
   - name: tta
     type: string
     default: False
