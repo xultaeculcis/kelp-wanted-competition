@@ -115,6 +115,14 @@ class TrainConfig(ConfigBase):
         "lovasz",
         "soft_ce",
         "xedice",
+        "focal_tversky",
+        "log_cosh_dice",
+        "hausdorff",
+        "t_loss",
+        "combo",
+        "exp_log_loss",
+        "soft_dice",
+        "batch_soft_dice",
     ] = "dice"
     ce_smooth_factor: float = 0.0
     ce_class_weights: Optional[List[float]] = None

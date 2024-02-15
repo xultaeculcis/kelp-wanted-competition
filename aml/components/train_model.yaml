@@ -16,10 +16,10 @@ inputs:
   dataset_stats_file:
     type: uri_file
     description: The dataset stats file.
-  decoder_channels:
+  loss:
     type: string
-    default: 256,128,64,32,16
-    description: The decoder channels.
+    default: dice
+    description: The loss.
 
 outputs:
   output_dir:
@@ -58,9 +58,10 @@ command: >-
   --lr_scheduler onecycle
   --plot_n_batches 0
   --precision bf16-mixed
+  --early_stopping_patience 50
   --epochs 25
   --decision_threshold 0.48
   --experiment model-hparam-search-exp
-  --decoder_channels ${{inputs.decoder_channels}}
+  --loss ${{inputs.loss}}
 
 is_deterministic: false

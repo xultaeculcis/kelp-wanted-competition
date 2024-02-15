@@ -21,7 +21,7 @@ from torch.optim.lr_scheduler import (
 from kelp import consts
 from kelp.nn.models.efficientunetplusplus.model import EfficientUnetPlusPlus
 from kelp.nn.models.fcn.model import FCN
-from kelp.nn.models.losses import XEDiceLoss
+from kelp.nn.models.losses import LOSS_REGISTRY
 from kelp.nn.models.resunet.model import ResUnet
 from kelp.nn.models.resunetplusplus.model import ResUnetPlusPlus
 
@@ -51,44 +51,56 @@ def resolve_loss(
     ce_class_weights: Optional[List[float]] = None,
     ignore_index: Optional[int] = None,
 ) -> nn.Module:
-    if loss_fn == "ce":
-        loss = nn.CrossEntropyLoss(
-            weight=torch.tensor(ce_class_weights, device=device),
-            ignore_index=ignore_index or -100,
-        )
-    elif loss_fn == "jaccard":
-        loss = smp.losses.JaccardLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            classes=list(range(num_classes)) if objective != "binary" else None,
-        )
-    elif loss_fn == "dice":
-        loss = smp.losses.DiceLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            classes=list(range(num_classes)) if objective != "binary" else None,
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "focal":
-        loss = smp.losses.FocalLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "lovasz":
-        loss = smp.losses.LovaszLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "tversky":
-        loss = smp.losses.TverskyLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "soft_ce":
-        loss = smp.losses.SoftCrossEntropyLoss(ignore_index=ignore_index, smooth_factor=ce_smooth_factor)
-    elif loss_fn == "xedice":
-        loss = XEDiceLoss(mode="multiclass", ce_class_weights=torch.tensor(ce_class_weights, device=device))
-    else:
+    if loss_fn not in LOSS_REGISTRY:
         raise ValueError(f"{loss_fn=} is not supported.")
-    return loss
+
+    loss_kwargs: Dict[str, Any]
+    if loss_fn in ["jaccard", "dice"]:
+        loss_kwargs = {
+            "mode": "multiclass",
+            "ignore_index": ignore_index,
+            "classes": list(range(num_classes)) if objective != "binary" else None,
+        }
+    elif loss_fn == "ce":
+        loss_kwargs = {
+            "weight": torch.tensor(ce_class_weights, device=device),
+            "ignore_index": ignore_index or -100,
+        }
+    elif loss_fn == "soft_ce":
+        loss_kwargs = {
+            "ignore_index": ignore_index,
+            "smooth_factor": ce_smooth_factor,
+        }
+    elif loss_fn == "xedice":
+        loss_kwargs = {
+            "mode": "multiclass",
+            "ce_class_weights": torch.tensor(ce_class_weights, device=device),
+        }
+    elif loss_fn in [
+        "focal_tversky",
+        "log_cosh_dice",
+        "hausdorff",
+        "combo",
+        "soft_dice",
+        "batch_soft_dice",
+        "sens_spec_loss",
+    ]:
+        loss_kwargs = {}
+    elif loss_fn == "t_loss":
+        loss_kwargs = {
+            "device": device,
+        }
+    elif loss_fn == "exp_log_loss":
+        loss_kwargs = {
+            "class_weights": torch.tensor(ce_class_weights, device=device),
+        }
+    else:
+        loss_kwargs = {
+            "mode": "multiclass",
+            "ignore_index": ignore_index,
+        }
+
+    return LOSS_REGISTRY[loss_fn](**loss_kwargs)
 
 
 def resolve_model(

@@ -36,18 +36,25 @@ jobs:
     trial: file:../components/train_model.yaml
 
     search_space:
-      decoder_channels:
+      loss:
         type: choice
         values:
-          - 256,128,64,32,16
-          - 256,128,64,32
-          - 256,128,64
-          - 512,256,128,64,32
-          - 512,256,128,64
-          - 1024,512,256,128,64
-          - 1024,512,256,128
-          - 1024,512,256,128,128
-          - 1024,512,256,128
+          - ce
+          - jaccard
+          - dice
+          - tversky
+          - focal
+          - lovasz
+          - soft_ce
+          - xedice
+          - focal_tversky
+          - log_cosh_dice
+          - hausdorff
+          - t_loss
+          - combo
+          - exp_log_loss
+          - soft_dice
+          - batch_soft_dice
 
     objective:
       goal: maximize
