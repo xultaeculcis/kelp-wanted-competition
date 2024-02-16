@@ -217,14 +217,14 @@ class KelpForestDataModule(pl.LightningDataModule):
         for index_name in self.spectral_indices:
             common_transforms.append(
                 SPECTRAL_INDEX_LOOKUP[index_name](
-                    index_swir=self.band_index_lookup["SWIR"],
-                    index_nir=self.band_index_lookup["NIR"],
-                    index_red=self.band_index_lookup["R"],
-                    index_green=self.band_index_lookup["G"],
-                    index_blue=self.band_index_lookup["B"],
-                    index_dem=self.band_index_lookup["DEM"],
-                    index_qa=self.band_index_lookup["QA"],
-                    index_water_mask=self.band_index_lookup["DEMWM"],
+                    index_swir=self.band_index_lookup.get("SWIR", -1),
+                    index_nir=self.band_index_lookup.get("NIR", -1),
+                    index_red=self.band_index_lookup.get("R", -1),
+                    index_green=self.band_index_lookup.get("G", -1),
+                    index_blue=self.band_index_lookup.get("B", -1),
+                    index_dem=self.band_index_lookup.get("DEM", -1),
+                    index_qa=self.band_index_lookup.get("QA", -1),
+                    index_water_mask=self.band_index_lookup.get("DEMWM", -1),
                     mask_using_qa=False if index_name.endswith("WM") else self.mask_using_qa,
                     mask_using_water_mask=False if index_name.endswith("WM") else self.mask_using_water_mask,
                     fill_val=torch.nan,

@@ -42,13 +42,13 @@ command: >-
   --cv_split ${{inputs.cv_split}}
   --batch_size 32
   --num_workers 16
-  --bands R,G,B,SWIR,NIR,QA,DEM
-  --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+  --bands R,G,B,SWIR,NIR
+  --spectral_indices NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
   --image_size 352
   --fill_missing_pixels_with_torch_nan True
-  --mask_using_qa True
-  --mask_using_water_mask True
+  --mask_using_qa False
+  --mask_using_water_mask False
   --use_weighted_sampler True
   --samples_per_epoch 10240
   --has_kelp_importance_factor 3
@@ -63,12 +63,12 @@ command: >-
   --encoder tu-efficientnet_b5
   --pretrained True
   --encoder_weights imagenet
-  --decoder_channels 512,256,128,64,32
+  --decoder_channels 256,128,64,32,16
   --lr 3e-4
   --optimizer adamw
   --weight_decay 1e-4
   --lr_scheduler onecycle
-  --loss jaccard
+  --loss dice
   --ce_class_weights=0.4,0.6
   --tta False
   --tta_merge_mode max
