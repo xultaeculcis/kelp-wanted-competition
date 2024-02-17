@@ -15,10 +15,10 @@ from tqdm import tqdm
 from xgboost import XGBClassifier
 
 from kelp import consts
+from kelp.consts.data import META
 from kelp.core.configs import ConfigBase
 from kelp.core.device import DEVICE
 from kelp.nn.data.transforms import build_append_index_transforms
-from kelp.nn.inference.predict import META
 from kelp.xgb.training.cfg import TrainConfig
 
 

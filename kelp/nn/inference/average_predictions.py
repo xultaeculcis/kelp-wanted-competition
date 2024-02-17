@@ -9,9 +9,9 @@ import yaml
 from pydantic import model_validator
 from tqdm import tqdm
 
+from kelp.consts.data import META
 from kelp.core.configs import ConfigBase
 from kelp.core.submission import create_submission_tar
-from kelp.nn.inference.predict import META
 from kelp.nn.inference.preview_submission import plot_first_n_samples
 from kelp.utils.logging import get_logger
 
