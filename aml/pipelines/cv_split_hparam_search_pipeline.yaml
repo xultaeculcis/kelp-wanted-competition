@@ -39,8 +39,26 @@ jobs:
       cv_split:
         type: choice
         values:
+          - 3
+          - 4
           - 6
-          - 9
+          - 8
+      encoder:
+        type: choice
+        values:
+          - tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384
+          - tu-maxvit_small_tf_384.in1k
+          - tu-seresnextaa101d_32x8d.sw_in12k_ft_in1k
+          - tu-rexnetr_200.sw_in12k_ft_in1k
+          - tu-seresnext26d_32x4d
+          - tu-gcresnet33ts.ra2_in1k
+          - tu-seresnext101_32x4d
+      architecture:
+        type: choice
+        values:
+          - linknet
+          - unet
+          - unet++
 
     objective:
       goal: maximize
