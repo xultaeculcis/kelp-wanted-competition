@@ -12,7 +12,7 @@ PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 
-AVG_PREDS_VERSION=v13
+AVG_PREDS_VERSION=v14
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
