@@ -25,6 +25,7 @@ class TrainConfig(ConfigBase):
     cv_split: int = 0
     bands: List[str]
     spectral_indices: List[str]
+    sahi: bool = False
     image_size: int = 352
     resize_strategy: Literal["pad", "resize"] = "pad"
     interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest"
@@ -68,6 +69,8 @@ class TrainConfig(ConfigBase):
     ] = "unet"
     encoder: str = "tu-efficientnet_b5"
     encoder_weights: Optional[str] = None
+    encoder_depth: int = 5
+    decoder_channels: List[int] = [256, 128, 64, 32, 16]
     decoder_attention_type: Optional[str] = None
     pretrained: bool = False
     num_classes: int = 2
@@ -85,6 +88,7 @@ class TrainConfig(ConfigBase):
             "cosine_with_warm_restarts",
             "cyclic",
             "reduce_lr_on_plateau",
+            "none",
         ]
     ] = None
     lr: float = 3e-4
@@ -110,6 +114,15 @@ class TrainConfig(ConfigBase):
         "focal",
         "lovasz",
         "soft_ce",
+        "xedice",
+        "focal_tversky",
+        "log_cosh_dice",
+        "hausdorff",
+        "t_loss",
+        "combo",
+        "exp_log_loss",
+        "soft_dice",
+        "batch_soft_dice",
     ] = "dice"
     ce_smooth_factor: float = 0.0
     ce_class_weights: Optional[List[float]] = None
@@ -134,6 +147,7 @@ class TrainConfig(ConfigBase):
     swa: bool = False
     swa_epoch_start: float = 0.75
     swa_annealing_epochs: int = 10
+    swa_lr: float = 3e-5
 
     # trainer params
     precision: Literal[
@@ -183,6 +197,16 @@ class TrainConfig(ConfigBase):
                     f"accumulate_grad_batches={values['accumulate_grad_batches']}"
                 )
                 break
+
+        channels_item = values.get("decoder_channels", "256,128,64,32,16")
+        channels = (
+            channels_item
+            if isinstance(channels_item, list)
+            else [int(index.strip()) for index in channels_item.split(",")]
+        )
+        values["decoder_channels"] = channels
+        values["encoder_depth"] = len(channels)
+
         return values
 
     @field_validator("bands", mode="before")
@@ -229,6 +253,10 @@ class TrainConfig(ConfigBase):
 
         return weights
 
+    @field_validator("lr_scheduler", mode="before")
+    def validate_lr_scheduler(cls, value: Optional[str] = None) -> Optional[str]:
+        return None if value is None or value == "none" else value
+
     @property
     def resolved_experiment_name(self) -> str:
         return os.environ.get("MLFLOW_EXPERIMENT_NAME", self.experiment)
@@ -260,6 +288,7 @@ class TrainConfig(ConfigBase):
             "spectral_indices": self.spectral_indices,
             "image_size": self.image_size,
             "resize_strategy": self.resize_strategy,
+            "sahi": self.sahi,
             "interpolation": self.interpolation,
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,
@@ -288,6 +317,7 @@ class TrainConfig(ConfigBase):
             "swa": self.swa,
             "swa_epoch_start": self.swa_epoch_start,
             "swa_annealing_epochs": self.swa_annealing_epochs,
+            "swa_lr": self.swa_lr,
         }
 
     @property
@@ -297,6 +327,8 @@ class TrainConfig(ConfigBase):
             "encoder": self.encoder,
             "pretrained": self.pretrained,
             "encoder_weights": self.encoder_weights,
+            "encoder_depth": self.encoder_depth,
+            "decoder_channels": self.decoder_channels,
             "decoder_attention_type": self.decoder_attention_type,
             "ignore_index": self.ignore_index,
             "num_classes": self.num_classes,

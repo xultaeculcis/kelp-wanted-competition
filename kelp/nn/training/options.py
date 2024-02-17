@@ -44,6 +44,12 @@ def parse_args() -> TrainConfig:
         default=4,
     )
     parser.add_argument(
+        "--sahi",
+        choices=["True", "False"],
+        type=str,
+        default="False",
+    )
+    parser.add_argument(
         "--image_size",
         type=int,
         default=352,
@@ -79,19 +85,27 @@ def parse_args() -> TrainConfig:
     )
     parser.add_argument(
         "--fill_missing_pixels_with_torch_nan",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--mask_using_qa",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--mask_using_water_mask",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--use_weighted_sampler",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--samples_per_epoch",
@@ -176,11 +190,18 @@ def parse_args() -> TrainConfig:
     )
     parser.add_argument(
         "--pretrained",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--encoder_weights",
         type=str,
+    )
+    parser.add_argument(
+        "--decoder_channels",
+        type=str,
+        default="256,128,64,32,16",
     )
     parser.add_argument(
         "--decoder_attention_type",
@@ -211,7 +232,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument(
         "--lr_scheduler",
         type=str,
-        choices=["onecycle", "cosine", "cosine_with_warm_restarts", "cyclic", "reduce_lr_on_plateau"],
+        choices=["onecycle", "cosine", "cosine_with_warm_restarts", "cyclic", "reduce_lr_on_plateau", "none"],
     )
     parser.add_argument(
         "--lr",
@@ -276,7 +297,9 @@ def parse_args() -> TrainConfig:
     )
     parser.add_argument(
         "--tta",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--tta_merge_mode",
@@ -299,6 +322,15 @@ def parse_args() -> TrainConfig:
             "focal",
             "lovasz",
             "soft_ce",
+            "xedice",
+            "focal_tversky",
+            "log_cosh_dice",
+            "hausdorff",
+            "t_loss",
+            "combo",
+            "exp_log_loss",
+            "soft_dice",
+            "batch_soft_dice",
         ],
         default="dice",
     )
@@ -323,15 +355,21 @@ def parse_args() -> TrainConfig:
     )
     parser.add_argument(
         "--ort",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--compile",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--compile_dynamic",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--compile_mode",
@@ -349,16 +387,26 @@ def parse_args() -> TrainConfig:
         type=int,
         default=10,
     )
-    parser.add_argument("--swa", action="store_true")
+    parser.add_argument(
+        "--swa",
+        choices=["True", "False"],
+        type=str,
+        default="False",
+    )
     parser.add_argument(
         "--swa_epoch_start",
         type=float,
-        default=0.75,
+        default=0.5,
     )
     parser.add_argument(
         "--swa_annealing_epochs",
         type=int,
         default=10,
+    )
+    parser.add_argument(
+        "--swa_lr",
+        type=float,
+        default=3e-5,
     )
     parser.add_argument(
         "--precision",
@@ -374,7 +422,9 @@ def parse_args() -> TrainConfig:
     )
     parser.add_argument(
         "--fast_dev_run",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     parser.add_argument(
         "--epochs",
@@ -409,7 +459,9 @@ def parse_args() -> TrainConfig:
     )
     parser.add_argument(
         "--benchmark",
-        action="store_true",
+        choices=["True", "False"],
+        type=str,
+        default="False",
     )
     args = parser.parse_args()
     cfg = TrainConfig(**vars(args))

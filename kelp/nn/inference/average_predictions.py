@@ -9,6 +9,7 @@ import yaml
 from pydantic import model_validator
 from tqdm import tqdm
 
+from kelp.consts.data import META
 from kelp.core.configs import ConfigBase
 from kelp.core.submission import create_submission_tar
 from kelp.nn.inference.preview_submission import plot_first_n_samples
@@ -124,8 +125,7 @@ def average_predictions(
         content["data"] = content["data"] / content["weight_sum"]
         content["data"] = np.where(content["data"] >= decision_threshold, 1, 0).astype(np.uint8)
         output_file = output_dir / file_name
-        profile = content["profile"]
-        with rasterio.open(output_file, "w", **profile) as dst:
+        with rasterio.open(output_file, "w", **META) as dst:
             dst.write(content["data"].astype(rasterio.uint8), 1)
 
 

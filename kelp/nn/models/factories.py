@@ -21,6 +21,7 @@ from torch.optim.lr_scheduler import (
 from kelp import consts
 from kelp.nn.models.efficientunetplusplus.model import EfficientUnetPlusPlus
 from kelp.nn.models.fcn.model import FCN
+from kelp.nn.models.losses import LOSS_REGISTRY
 from kelp.nn.models.resunet.model import ResUnet
 from kelp.nn.models.resunetplusplus.model import ResUnetPlusPlus
 
@@ -50,42 +51,55 @@ def resolve_loss(
     ce_class_weights: Optional[List[float]] = None,
     ignore_index: Optional[int] = None,
 ) -> nn.Module:
-    if loss_fn == "ce":
-        loss = nn.CrossEntropyLoss(
-            weight=torch.tensor(ce_class_weights, device=device),
-            ignore_index=ignore_index or -100,
-        )
-    elif loss_fn == "jaccard":
-        loss = smp.losses.JaccardLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            classes=list(range(num_classes)) if objective != "binary" else None,
-        )
-    elif loss_fn == "dice":
-        loss = smp.losses.DiceLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            classes=list(range(num_classes)) if objective != "binary" else None,
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "focal":
-        loss = smp.losses.FocalLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "lovasz":
-        loss = smp.losses.LovaszLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "tversky":
-        loss = smp.losses.TverskyLoss(
-            mode="multiclass",  # must be multiclass since we return predictions in shape NxCxHxW
-            ignore_index=ignore_index,
-        )
-    elif loss_fn == "soft_ce":
-        loss = smp.losses.SoftCrossEntropyLoss(ignore_index=ignore_index, smooth_factor=ce_smooth_factor)
-    else:
+    if loss_fn not in LOSS_REGISTRY:
         raise ValueError(f"{loss_fn=} is not supported.")
-    return loss
+
+    loss_kwargs: Dict[str, Any]
+    if loss_fn in ["jaccard", "dice"]:
+        loss_kwargs = {
+            "mode": "multiclass",
+            "classes": list(range(num_classes)) if objective != "binary" else None,
+        }
+    elif loss_fn == "ce":
+        loss_kwargs = {
+            "weight": torch.tensor(ce_class_weights, device=device),
+            "ignore_index": ignore_index or -100,
+        }
+    elif loss_fn == "soft_ce":
+        loss_kwargs = {
+            "ignore_index": ignore_index,
+            "smooth_factor": ce_smooth_factor,
+        }
+    elif loss_fn == "xedice":
+        loss_kwargs = {
+            "mode": "multiclass",
+            "ce_class_weights": torch.tensor(ce_class_weights, device=device),
+        }
+    elif loss_fn in [
+        "focal_tversky",
+        "log_cosh_dice",
+        "hausdorff",
+        "combo",
+        "soft_dice",
+        "batch_soft_dice",
+        "sens_spec_loss",
+    ]:
+        loss_kwargs = {}
+    elif loss_fn == "t_loss":
+        loss_kwargs = {
+            "device": device,
+        }
+    elif loss_fn == "exp_log_loss":
+        loss_kwargs = {
+            "class_weights": torch.tensor(ce_class_weights, device=device),
+        }
+    else:
+        loss_kwargs = {
+            "mode": "multiclass",
+            "ignore_index": ignore_index,
+        }
+
+    return LOSS_REGISTRY[loss_fn](**loss_kwargs)
 
 
 def resolve_model(
@@ -94,6 +108,7 @@ def resolve_model(
     classes: int,
     in_channels: int,
     encoder_weights: Optional[str] = None,
+    decoder_channels: Optional[List[int]] = None,
     decoder_attention_type: Optional[str] = None,
     pretrained: bool = False,
     compile: bool = False,
@@ -101,12 +116,17 @@ def resolve_model(
     compile_dynamic: Optional[bool] = None,
     ort: bool = False,
 ) -> nn.Module:
+    if decoder_channels is None:
+        decoder_channels = [256, 128, 64, 32, 16]
+
     if architecture in _MODEL_LOOKUP:
         model_kwargs = {
             "encoder_name": encoder,
             "encoder_weights": encoder_weights if pretrained else None,
             "in_channels": in_channels,
             "classes": classes,
+            "encoder_depth": len(decoder_channels),
+            "decoder_channels": decoder_channels,
             "decoder_attention_type": decoder_attention_type,
         }
         if "unet" not in architecture or architecture == "efficientunet++":
@@ -155,8 +175,10 @@ def resolve_lr_scheduler(
     num_training_steps: int,
     steps_per_epoch: int,
     hyperparams: Dict[str, Any],
-) -> torch.optim.lr_scheduler.LRScheduler:
-    if (lr_scheduler := hyperparams["lr_scheduler"]) == "onecycle":
+) -> Optional[torch.optim.lr_scheduler.LRScheduler]:
+    if (lr_scheduler := hyperparams["lr_scheduler"]) is None:
+        return None
+    elif lr_scheduler == "onecycle":
         scheduler = OneCycleLR(
             optimizer,
             max_lr=hyperparams["lr"],

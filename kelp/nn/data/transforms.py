@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List, Literal, Tuple, Union
 
 import kornia.augmentation as K
 import numpy as np
 import torch
+import torchvision.transforms as T
+from kornia.augmentation.base import _AugmentationBase
 from torch import Tensor, nn
 from torch.nn import Module
+from torchvision.transforms import InterpolationMode
 
 from kelp import consts
 from kelp.core.device import DEVICE
 from kelp.core.indices import BAND_INDEX_LOOKUP, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
+from kelp.nn.data.band_stats import BandStats
 
 
 class MinMaxNormalize(Module):
@@ -121,3 +125,133 @@ def build_append_index_transforms(spectral_indices: List[str]) -> Callable[[Tens
         data_keys=["input"],
     ).to(DEVICE)
     return transforms  # type: ignore[no-any-return]
+
+
+def resolve_transforms(
+    spectral_indices: List[str],
+    band_index_lookup: Dict[str, int],
+    band_stats: BandStats,
+    mask_using_qa: bool,
+    mask_using_water_mask: bool,
+    normalization_transform: Union[_AugmentationBase, nn.Module],
+    stage: Literal["train", "val", "test", "predict"],
+) -> K.AugmentationSequential:
+    common_transforms = []
+
+    for index_name in spectral_indices:
+        common_transforms.append(
+            SPECTRAL_INDEX_LOOKUP[index_name](
+                index_swir=band_index_lookup.get("SWIR", -1),
+                index_nir=band_index_lookup.get("NIR", -1),
+                index_red=band_index_lookup.get("R", -1),
+                index_green=band_index_lookup.get("G", -1),
+                index_blue=band_index_lookup.get("B", -1),
+                index_dem=band_index_lookup.get("DEM", -1),
+                index_qa=band_index_lookup.get("QA", -1),
+                index_water_mask=band_index_lookup.get("DEMWM", -1),
+                mask_using_qa=False if index_name.endswith("WM") else mask_using_qa,
+                mask_using_water_mask=False if index_name.endswith("WM") else mask_using_water_mask,
+                fill_val=torch.nan,
+            )
+        )
+
+    common_transforms.extend(
+        [
+            RemoveNaNs(min_vals=band_stats.min, max_vals=band_stats.max),
+            normalization_transform,
+        ]
+    )
+
+    if stage == "train":
+        return K.AugmentationSequential(
+            *common_transforms,
+            K.RandomRotation(p=0.5, degrees=90),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            data_keys=["input", "mask"],
+        )
+    else:
+        return K.AugmentationSequential(
+            *common_transforms,
+            data_keys=["input"] if stage == "predict" else ["input", "mask"],
+        )
+
+
+def resolve_normalization_stats(
+    dataset_stats: Dict[str, Dict[str, float]],
+    bands_to_use: List[str],
+) -> Tuple[BandStats, int]:
+    band_stats = {band: dataset_stats[band] for band in bands_to_use}
+    mean = [val["mean"] for val in band_stats.values()]
+    std = [val["std"] for val in band_stats.values()]
+    vmin = [val["min"] for val in band_stats.values()]
+    vmax = [val["max"] for val in band_stats.values()]
+    q01 = [val["q01"] for val in band_stats.values()]
+    q99 = [val["q99"] for val in band_stats.values()]
+    stats = BandStats(
+        mean=torch.tensor(mean),
+        std=torch.tensor(std),
+        min=torch.tensor(vmin),
+        max=torch.tensor(vmax),
+        q01=torch.tensor(q01),
+        q99=torch.tensor(q99),
+    )
+    return stats, len(band_stats)
+
+
+def resolve_normalization_transform(
+    band_stats: BandStats,
+    normalization_strategy: Literal[
+        "min-max",
+        "quantile",
+        "per-sample-min-max",
+        "per-sample-quantile",
+        "z-score",
+    ] = "quantile",
+) -> Union[_AugmentationBase, nn.Module]:
+    if normalization_strategy == "z-score":
+        return K.Normalize(band_stats.mean, band_stats.std)  # type: ignore[no-any-return]
+    elif normalization_strategy == "min-max":
+        return MinMaxNormalize(min_vals=band_stats.min, max_vals=band_stats.max)
+    elif normalization_strategy == "quantile":
+        return MinMaxNormalize(min_vals=band_stats.q01, max_vals=band_stats.q99)
+    elif normalization_strategy == "per-sample-quantile":
+        return PerSampleQuantileNormalize(q_low=0.01, q_high=0.99)
+    elif normalization_strategy == "per-sample-min-max":
+        return PerSampleMinMaxNormalize()
+    else:
+        raise ValueError(f"{normalization_strategy} is not supported!")
+
+
+def resolve_resize_transform(
+    image_or_mask: Literal["image", "mask"],
+    resize_strategy: Literal["pad", "resize"] = "pad",
+    image_size: int = 352,
+    interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
+) -> Callable[[Tensor], Tensor]:
+    interpolation_lookup = {
+        "nearest": InterpolationMode.NEAREST,
+        "nearest-exact": InterpolationMode.NEAREST_EXACT,
+        "bilinear": InterpolationMode.BILINEAR,
+        "bicubic": InterpolationMode.BICUBIC,
+    }
+    if resize_strategy == "pad":
+        if image_size < 352:
+            raise ValueError("Invalid resize strategy. Padding is only applicable when image size is greater than 352.")
+        return T.Pad(  # type: ignore[no-any-return]
+            padding=[
+                (image_size - consts.data.TILE_SIZE) // 2,
+            ],
+            fill=0,
+            padding_mode="constant",
+        )
+    elif resize_strategy == "resize":
+        return T.Resize(  # type: ignore[no-any-return]
+            size=(image_size, image_size),
+            interpolation=interpolation_lookup[interpolation]
+            if image_or_mask == "image"
+            else InterpolationMode.NEAREST,
+            antialias=False,
+        )
+    else:
+        raise ValueError(f"{resize_strategy=} is not supported!")

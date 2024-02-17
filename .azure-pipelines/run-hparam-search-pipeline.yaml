@@ -15,6 +15,7 @@ parameters:
     values:
       - azureml:gpu-4c-28g-t4-nc4ast4v3-spot
       - azureml:gpu-6c-112g-v100-nc6sv3-spot
+      - azureml:gpu-24c-220g-a100-nc24ads-spot
     default: azureml:gpu-4c-28g-t4-nc4ast4v3-spot
   - name: pipeline_spec_file
     displayName: Pipeline spec file

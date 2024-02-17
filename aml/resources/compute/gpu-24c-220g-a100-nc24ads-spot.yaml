@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/amlCompute.schema.json
+name: gpu-24c-220g-a100-nc24ads-spot
+type: amlcompute
+size: Standard_NC24ads_A100_v4
+min_instances: 0
+max_instances: 10
+idle_time_before_scale_down: 600
+tier: low_priority

@@ -50,8 +50,8 @@ def make_callbacks(
     monitor_metric: str = "val/dice",
     monitor_mode: str = "max",
     swa: bool = False,
-    swa_lr: float = 3e-4,
-    swa_epoch_start: float = 0.75,
+    swa_lr: float = 3e-5,
+    swa_epoch_start: float = 0.5,
     swa_annealing_epochs: int = 10,
 ) -> List[Callback]:
     early_stopping = EarlyStopping(
@@ -71,6 +71,7 @@ def make_callbacks(
         dirpath=output_dir,
         auto_insert_metric_name=False,
         filename=filename_str,
+        save_last=True,
     )
     callbacks = [early_stopping, lr_monitor, checkpoint]
     if swa:

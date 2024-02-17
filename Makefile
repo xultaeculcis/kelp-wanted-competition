@@ -11,7 +11,8 @@ PREDS_INPUT_DIR=data/raw/test/images
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
-AVG_PREDS_VERSION=v6
+
+AVG_PREDS_VERSION=v14
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
@@ -24,6 +25,9 @@ FOLD_6_RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs
 FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
 FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
 FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
+
+FOLD_NUMBER=8
+CHECKPOINT=best
 
 OLD_FOLD_0_WEIGHT=0.666
 OLD_FOLD_1_WEIGHT=0.5
@@ -194,7 +198,7 @@ train:
 		--output_dir mlruns \
 		--metadata_fp data/processed/train_val_test_dataset.parquet \
 		--dataset_stats_fp data/processed/2023-12-31T20:30:39-stats-fill_value=nan-mask_using_qa=True-mask_using_water_mask=True.json \
-		--cv_split 8 \
+		--cv_split $(FOLD_NUMBER) \
 		--batch_size 32 \
 		--num_workers 4 \
 		--bands R,G,B,SWIR,NIR,QA,DEM \
@@ -202,38 +206,33 @@ train:
 		--image_size 352 \
 		--resize_strategy pad \
 		--interpolation nearest \
-		--fill_missing_pixels_with_torch_nan \
-		--mask_using_qa \
-		--mask_using_water_mask \
-		--use_weighted_sampler \
+		--fill_missing_pixels_with_torch_nan True \
+		--mask_using_qa True \
+		--mask_using_water_mask True \
+		--use_weighted_sampler True \
 		--samples_per_epoch 10240 \
-		--has_kelp_importance_factor 2.0 \
-		--kelp_pixels_pct_importance_factor 0.5 \
-		--qa_ok_importance_factor 0.5 \
-		--qa_corrupted_pixels_pct_importance_factor -0.5 \
-		--almost_all_water_importance_factor -1.0 \
-		--dem_nan_pixels_pct_importance_factor 0.0 \
-		--dem_zero_pixels_pct_importance_factor -0.25 \
+		--has_kelp_importance_factor 3 \
+		--kelp_pixels_pct_importance_factor 0.2 \
+		--qa_ok_importance_factor 0 \
+		--qa_corrupted_pixels_pct_importance_factor -1 \
+		--almost_all_water_importance_factor 0.5 \
+		--dem_nan_pixels_pct_importance_factor 0.25 \
+		--dem_zero_pixels_pct_importance_factor -1 \
 		--normalization_strategy quantile \
 		--architecture unet \
 		--encoder tu-efficientnet_b5 \
-		--pretrained \
+		--pretrained True \
 		--encoder_weights imagenet \
 		--lr 3e-4 \
 		--optimizer adamw \
 		--weight_decay 1e-4 \
-		--lr_scheduler onecycle \
-		--onecycle_pct_start 0.1 \
-		--onecycle_div_factor 2 \
-		--onecycle_final_div_factor 1e2 \
 		--loss dice \
-		--tta \
-		--tta_merge_mode max \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
-		--early_stopping_patience 7 \
+		--early_stopping_patience 25 \
 		--precision bf16-mixed \
-		--epochs 10
+		--epochs 25 \
+		--swa True
 
 .PHONY: predict  ## Runs prediction
 predict:
@@ -242,6 +241,7 @@ predict:
 		--dataset_stats_dir=data/processed \
 		--output_dir $(PREDS_OUTPUT_DIR) \
 		--run_dir $(RUN_DIR) \
+		--use_checkpoint $(CHECKPOINT) \
 		--soft_labels \
 		--tta_merge_mode=mean \
 		--precision bf16-mixed
@@ -257,8 +257,9 @@ predict-and-submit:
 	python ./kelp/nn/inference/predict_and_submit.py \
 		--data_dir data/raw/test/images \
 		--dataset_stats_dir=data/processed \
-		--output_dir data/submissions \
+		--output_dir data/submissions/single-model \
 		--run_dir $(RUN_DIR) \
+		--preview_submission \
 		--decision_threshold 0.48 \
 		--precision bf16-mixed
 
@@ -291,6 +292,7 @@ average-predictions:
 		--fold_8_weight=$(FOLD_8_WEIGHT) \
 		--fold_9_weight=$(FOLD_9_WEIGHT) \
 		--test_data_dir=$(PREDS_INPUT_DIR) \
+		--preview_submission \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
@@ -358,35 +360,15 @@ eval-ensemble:
 	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
 
-t:
-	for fold_0_weight in 1.0 0.666 0.0 ; do \
-		for fold_1_weight in 1.0 0.5 0.0 ; do \
-			for fold_2_weight in 1.0 0.666 0.0 ; do \
-				for fold_3_weight in 1.0 0.88 0.0 ; do \
-					for fold_4_weight in 1.0 0.637 0.0 ; do \
-						for fold_5_weight in 1.0 0.59 0.0 ; do \
-							for fold_6_weight in 1.0 0.733 0.0 ; do \
-								for fold_7_weight in 1.0 0.63 0.0 ; do \
-									for fold_8_weight in 1.0 0.0 ; do \
-										for fold_9_weight in 1.0 0.2 0.0 ; do \
-											 make eval-ensemble \
-												FOLD_0_WEIGHT=$$fold_0_weight \
-												FOLD_1_WEIGHT=$$fold_1_weight\
-												FOLD_2_WEIGHT=$$fold_2_weight \
-												FOLD_3_WEIGHT=$$fold_3_weight \
-												FOLD_4_WEIGHT=$$fold_4_weight \
-												FOLD_5_WEIGHT=$$fold_5_weight \
-												FOLD_6_WEIGHT=$$fold_6_weight \
-												FOLD_7_WEIGHT=$$fold_7_weight \
-												FOLD_8_WEIGHT=$$fold_8_weight \
-												FOLD_9_WEIGHT=$$fold_9_weight; \
-										 done \
-									 done \
-								 done \
-							 done \
-						 done \
-					 done \
-				 done \
-			 done \
-		 done \
-    done
+.PHONY: train-all-folds
+train-all-folds:
+	make train FOLD_NUMBER=0
+	make train FOLD_NUMBER=1
+	make train FOLD_NUMBER=2
+	make train FOLD_NUMBER=3
+	make train FOLD_NUMBER=4
+	make train FOLD_NUMBER=5
+	make train FOLD_NUMBER=6
+	make train FOLD_NUMBER=7
+	make train FOLD_NUMBER=8
+	make train FOLD_NUMBER=9

@@ -48,10 +48,26 @@ inputs:
     type: string
     default: DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
     description: The spectral indices to append to input.
+  use_weighted_sampler:
+    type: string
+    default: True
+    description: Use weighted random sampler.
   samples_per_epoch:
     type: integer
     default: 10240
     description: The number of samples per epoch.
+  fill_missing_pixels_with_torch_nan:
+    type: string
+    default: True
+    description: Fill missing pixels with torch.nan.
+  mask_using_qa:
+    type: string
+    default: True
+    description: Mask corrupted pixels using QA band.
+  mask_using_water_mask:
+    type: string
+    default: True
+    description: Mask land pixels using DEM water mask.
   has_kelp_importance_factor:
     type: number
     default: 3.0
@@ -96,6 +112,14 @@ inputs:
     type: string
     default: imagenet
     description: The encoder weights.
+  decoder_channels:
+    type: string
+    default: 256,128,64,32,16
+    description: The decoder channels.
+  pretrained:
+    type: string
+    default: True
+    description: Use pretrained model.
   lr:
     type: number
     default: 3e-4
@@ -128,6 +152,10 @@ inputs:
     type: string
     default: dice
     description: The loss function.
+  tta:
+    type: string
+    default: False
+    description: Use TTA.
   tta_merge_mode:
     type: string
     default: max
@@ -164,6 +192,30 @@ inputs:
     type: number
     default: 1
     description: How often to check the validation set.
+  benchmark:
+    type: string
+    default: False
+    description: Value to set torch.backends.cudnn.benchmark to.
+  swa:
+    type: string
+    default: False
+    description: Use Stochastic Weight Averaging.
+  swa_epoch_start:
+    type: number
+    default: 0.5
+    description: When SWA should kick in as % of all epochs.
+  swa_annealing_epochs:
+    type: integer
+    default: 10
+    description: Number of epochs for SWA annealing LR.
+  swa_lr:
+    type: number
+    default: 3e-5
+    description: Final LR for SWA annealing.
+  sahi:
+    type: string
+    default: False
+    description: Use SAHI for training (random cropping input images).
 
 outputs:
   output_dir:
@@ -191,10 +243,10 @@ command: >-
   --image_size ${{inputs.image_size}}
   --resize_strategy ${{inputs.resize_strategy}}
   --interpolation ${{inputs.interpolation}}
-  --fill_missing_pixels_with_torch_nan
-  --mask_using_qa
-  --mask_using_water_mask
-  --use_weighted_sampler
+  --fill_missing_pixels_with_torch_nan ${{inputs.fill_missing_pixels_with_torch_nan}}
+  --mask_using_qa ${{inputs.mask_using_qa}}
+  --mask_using_water_mask ${{inputs.mask_using_water_mask}}
+  --use_weighted_sampler ${{inputs.use_weighted_sampler}}
   --samples_per_epoch ${{inputs.samples_per_epoch}}
   --has_kelp_importance_factor ${{inputs.has_kelp_importance_factor}}
   --kelp_pixels_pct_importance_factor ${{inputs.kelp_pixels_pct_importance_factor}}
@@ -206,8 +258,9 @@ command: >-
   --normalization_strategy ${{inputs.normalization_strategy}}
   --architecture ${{inputs.architecture}}
   --encoder ${{inputs.encoder}}
-  --pretrained
+  --pretrained ${{inputs.pretrained}}
   --encoder_weights ${{inputs.encoder_weights}}
+  --decoder_channels ${{inputs.decoder_channels}}
   --lr ${{inputs.lr}}
   --optimizer ${{inputs.optimizer}}
   --weight_decay ${{inputs.weight_decay}}
@@ -216,7 +269,7 @@ command: >-
   --onecycle_div_factor ${{inputs.onecycle_div_factor}}
   --onecycle_final_div_factor ${{inputs.onecycle_final_div_factor}}
   --loss ${{inputs.loss}}
-  --tta
+  --tta ${{inputs.tta}}
   --tta_merge_mode ${{inputs.tta_merge_mode}}
   --decision_threshold ${{inputs.decision_threshold}}
   --monitor_metric ${{inputs.monitor_metric}}
@@ -226,5 +279,9 @@ command: >-
   --epochs ${{inputs.epochs}}
   --accumulate_grad_batches ${{inputs.accumulate_grad_batches}}
   --val_check_interval ${{inputs.val_check_interval}}
-  --swa
+  --benchmark ${{inputs.benchmark}}
+  --swa ${{inputs.swa}}
+  --swa_epoch_start ${{inputs.swa_epoch_start}}
+  --swa_annealing_epochs ${{inputs.swa_annealing_epochs}}
+  --swa_lr ${{inputs.swa_lr}}
 is_deterministic: false

@@ -42,6 +42,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             architecture=self.hyperparams["architecture"],
             encoder=self.hyperparams["encoder"],
             encoder_weights=self.hyperparams["encoder_weights"],
+            decoder_channels=self.hyperparams.get("decoder_channels", [256, 128, 64, 32, 16]),
             decoder_attention_type=self.hyperparams["decoder_attention_type"],
             pretrained=self.hyperparams["pretrained"],
             in_channels=self.hyperparams["in_channels"],
@@ -264,7 +265,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
             f"val/iou_{consts.data.CLASSES[idx]}": iou_score for idx, iou_score in enumerate(per_class_iou)
         }
         metrics.update(per_class_iou_score_dict)
-        self.log_dict(metrics, on_step=False, on_epoch=True)
+        self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
