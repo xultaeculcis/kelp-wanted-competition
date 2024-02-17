@@ -128,3 +128,4 @@ data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs;0;0.85083;0.7089;effnet-b5 + 
 ???;all;???;0.7207;tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0.0, 0.0, 0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.0] + mix of updated best model per split
 ???;all;???;0.7207;tu-efficientnet_b5 + fp32 + soft labels, 10 fold average with dt=0.5, weights -> MinMax(0.2, 1.0), weights=[0.0, 0.0, 0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.0] + mix of best model per split
 ???;all;???;0.7040;tu-efficientnet_b5 + bf16 + no QA + no DEM + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0.0, 0.0, 0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.0] + mix of best model per split
+mlruns/567580247645556359/5691fc348f874ffdb2fc6c9616e11246;8;0.825;0.6826;tu-efficientnet_b5 + bf16 + SAHI + dt=0.48

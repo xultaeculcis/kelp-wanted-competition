@@ -274,7 +274,7 @@ def run_sahi_prediction(
         normalization_strategy=train_cfg.normalization_strategy,
     )
     predict_sahi(
-        file_paths=sorted(list(data_dir.glob("**/*.tif")))[:10],
+        file_paths=sorted(list(data_dir.glob("*.tif"))),
         model=model,
         tta=tta,
         soft_labels=soft_labels,

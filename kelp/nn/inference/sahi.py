@@ -10,6 +10,7 @@ from torch import Tensor, nn
 from tqdm import tqdm
 
 from kelp.consts.data import META
+from kelp.core.device import DEVICE
 
 _test_time_transforms = ttach.Compose(
     [
@@ -23,13 +24,12 @@ _test_time_transforms = ttach.Compose(
 def load_image(
     image_path: Path,
     band_order: List[int],
-    resize_tf: Callable[[Tensor], Tensor],
     fill_value: torch.nan,
 ) -> np.ndarray:  # type: ignore[type-arg]
     with rasterio.open(image_path) as src:
-        img = torch.from_numpy(src.read(band_order)).float()
-        img = torch.where(img == -32768, fill_value, img)
-    return resize_tf(img).numpy()  # type: ignore[no-any-return]
+        img = src.read(band_order).astype(np.float32)
+        img = np.where(img == -32768.0, fill_value, img)
+    return img  # type: ignore[no-any-return]
 
 
 def slice_image(
@@ -76,7 +76,6 @@ def inference_model(
             y_hat = tta_model(x)
         else:
             y_hat = model(x)
-
         if soft_labels:
             y_hat = y_hat.sigmoid()[:, 1, :, :].float()
         elif decision_threshold is not None:
@@ -108,8 +107,10 @@ def merge_predictions(
     # Avoid division by zero
     counts[counts == 0] = 1
     prediction /= counts
+
     if decision_threshold is not None:
         prediction = np.where(prediction > decision_threshold, 1, 0)
+
     return prediction.astype(np.int64)
 
 
@@ -130,24 +131,28 @@ def process_image(
 ) -> np.ndarray:  # type: ignore[type-arg]
     image = load_image(
         image_path=image_path,
-        resize_tf=resize_tf,
         fill_value=fill_value,
         band_order=band_order,
     )
     tiles = slice_image(image, tile_size, overlap)
     predictions = []
+    img_batch = []
     for tile in tiles:
-        x = input_transforms(torch.from_numpy(tile))
-        y_hat = inference_model(
-            x=x,
-            model=model,
-            soft_labels=soft_labels,
-            tta=tta,
-            tta_merge_mode=tta_merge_mode,
-            decision_threshold=decision_threshold,
-        )
-        prediction = post_predict_transforms(y_hat).squeeze().detach().cpu().numpy()
-        predictions.append(prediction)
+        x = resize_tf(torch.from_numpy(tile)).unsqueeze(0)
+        img_batch.append(x)
+
+    x = torch.cat(img_batch, dim=0).to(DEVICE)
+    x = input_transforms(x)
+    y_hat = inference_model(
+        x=x,
+        model=model,
+        soft_labels=soft_labels,
+        tta=tta,
+        tta_merge_mode=tta_merge_mode,
+        decision_threshold=decision_threshold,
+    )
+    prediction = post_predict_transforms(y_hat).detach().cpu().numpy()
+    predictions.extend([tensor for tensor in prediction])
 
     merged_prediction = merge_predictions(
         tiles=predictions,
@@ -193,7 +198,7 @@ def predict_sahi(
             resize_tf=resize_tf,
             fill_value=fill_value,
         )
-        if soft_labels:
+        if soft_labels and decision_threshold is None:
             META["dtype"] = "float32"
         dest: DatasetWriter
         with rasterio.open(output_dir / f"{tile_id}_kelp.tif", "w", **META) as dest:

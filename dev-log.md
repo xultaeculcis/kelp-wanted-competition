@@ -39,7 +39,7 @@ Checklist:
 - [x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data
 - [x] Soft labels
 - [x] Model weights averaging
-- [ ] SAHI
+- [x] SAHI
 - [ ] Prepare docs on how to train and predict
 - [ ] Build a CLI for eda, training, prediction and submission
 
@@ -86,6 +86,8 @@ Checklist:
 * LR Schedulers other than `OneCycleLR`
 * Random split
 * XGBoost and other tree based models predicting on pixel level
+* More decoder channels
+* SAHI
 
 ## 2023-12-02
 
@@ -812,3 +814,14 @@ as they are the worst on LB individually
 * Add support for more losses
 * New submissions - no improvement
 * Test out different `decoder_channels` configurations `512,256,128,64,32` seems to bump the performance a bit
+
+## 2024-02-16
+
+* WIP. SAHI inference
+
+## 2024-02-17
+
+* Finished SAHI inference scripts
+* Trained a model on 128x128 crops with resize to 320x320, which had the best local score
+* New submission with SAHI on 8th split => Public LB=0.68
+* Well, that was a waste of 3 days...
