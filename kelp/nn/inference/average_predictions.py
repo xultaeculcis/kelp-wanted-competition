@@ -20,37 +20,13 @@ _logger = get_logger(__name__)
 
 
 class AveragePredictionsConfig(ConfigBase):
-    predictions_dir: Path
+    predictions_dirs: List[Path]
     output_dir: Path
     decision_threshold: float = 0.5
-    fold_0_weight: float = 1.0
-    fold_1_weight: float = 1.0
-    fold_2_weight: float = 1.0
-    fold_3_weight: float = 1.0
-    fold_4_weight: float = 1.0
-    fold_5_weight: float = 1.0
-    fold_6_weight: float = 1.0
-    fold_7_weight: float = 1.0
-    fold_8_weight: float = 1.0
-    fold_9_weight: float = 1.0
+    weights: List[float]
     preview_submission: bool = False
     test_data_dir: Optional[Path] = None
     preview_first_n: int = 10
-
-    @property
-    def weights(self) -> List[float]:
-        return [
-            self.fold_0_weight,
-            self.fold_1_weight,
-            self.fold_2_weight,
-            self.fold_3_weight,
-            self.fold_4_weight,
-            self.fold_5_weight,
-            self.fold_6_weight,
-            self.fold_7_weight,
-            self.fold_8_weight,
-            self.fold_9_weight,
-        ]
 
     @model_validator(mode="before")
     def validate_cfg(cls, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -61,19 +37,10 @@ class AveragePredictionsConfig(ConfigBase):
 
 def parse_args() -> AveragePredictionsConfig:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--predictions_dir", type=str, required=True)
+    parser.add_argument("--predictions_dirs", nargs="*", required=True)
+    parser.add_argument("--weights", nargs="*", required=True)
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--decision_threshold", type=float, default=0.5)
-    parser.add_argument("--fold_0_weight", type=float, default=1.0)
-    parser.add_argument("--fold_1_weight", type=float, default=1.0)
-    parser.add_argument("--fold_2_weight", type=float, default=1.0)
-    parser.add_argument("--fold_3_weight", type=float, default=1.0)
-    parser.add_argument("--fold_4_weight", type=float, default=1.0)
-    parser.add_argument("--fold_5_weight", type=float, default=1.0)
-    parser.add_argument("--fold_6_weight", type=float, default=1.0)
-    parser.add_argument("--fold_7_weight", type=float, default=1.0)
-    parser.add_argument("--fold_8_weight", type=float, default=1.0)
-    parser.add_argument("--fold_9_weight", type=float, default=1.0)
     parser.add_argument("--preview_submission", action="store_true")
     parser.add_argument("--test_data_dir", type=str)
     parser.add_argument("--preview_first_n", type=int, default=10)
@@ -85,27 +52,24 @@ def parse_args() -> AveragePredictionsConfig:
 
 
 def average_predictions(
-    preds_dir: Path,
+    preds_dirs: List[Path],
     output_dir: Path,
     weights: List[float],
     decision_threshold: float = 0.5,
 ) -> None:
-    if len(weights) != FOLDS:
-        raise ValueError("Number of weights must match the number of folds")
-    if len(list(preds_dir.iterdir())) != FOLDS:
-        raise ValueError("Number of prediction dirs must match the number of folds")
+    if len(weights) != len(preds_dirs):
+        raise ValueError("Number of weights must match the number prediction dirs!")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     predictions = {}
-    fold_dirs = [preds_dir / f"fold={i}" for i in range(FOLDS)]
 
-    for fold_dir, weight in zip(fold_dirs, weights):
+    for preds_dir, weight in zip(preds_dirs, weights):
         if weight == 0.0:
-            _logger.info(f"Weight for {fold_dir.name} == 0.0. Skipping this fold.")
+            _logger.info(f"Weight for {preds_dir.name} == 0.0. Skipping this fold.")
             continue
         for pred_file in tqdm(
-            sorted(list(fold_dir.glob("*.tif"))),
-            desc=f"Processing files for {fold_dir.name}, {weight=}",
+            sorted(list(preds_dir.glob("*.tif"))),
+            desc=f"Processing files for {preds_dir.name}, {weight=}",
         ):
             file_name = pred_file.name
             with rasterio.open(pred_file) as src:
@@ -138,7 +102,7 @@ def main() -> None:
     avg_preds_config = cfg.model_dump(mode="json")
     (out_dir / "predict_config.yaml").write_text(yaml.dump(avg_preds_config))
     average_predictions(
-        preds_dir=cfg.predictions_dir,
+        preds_dirs=cfg.predictions_dirs,
         output_dir=preds_dir,
         weights=cfg.weights,
         decision_threshold=cfg.decision_threshold,

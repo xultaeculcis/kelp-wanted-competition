@@ -12,7 +12,7 @@ PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 
-AVG_PREDS_VERSION=v14
+AVG_PREDS_VERSION=v16
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
@@ -265,7 +265,7 @@ predict-and-submit:
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:
-	python ./kelp/nn/training/eval.py \
+	python ./kelp/nn/training/eval.py \<<<
 		--data_dir data/raw \
 		--metadata_dir data/processed \
 		--dataset_stats_dir data/processed \
@@ -278,35 +278,37 @@ eval:
 .PHONY: average-predictions  ## Runs prediction averaging
 average-predictions:
 	python ./kelp/nn/inference/average_predictions.py \
-		--predictions_dir=data/predictions/$(AVG_PREDS_VERSION) \
+		--predictions_dirs \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=3 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=4 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=5 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=6 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=7 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=8 \
+		--weights \
+			$(FOLD_2_WEIGHT) \
+			$(FOLD_3_WEIGHT) \
+			$(FOLD_4_WEIGHT) \
+			$(FOLD_5_WEIGHT) \
+			$(FOLD_6_WEIGHT) \
+			$(FOLD_7_WEIGHT) \
+			$(FOLD_8_WEIGHT) \
 		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
 		--decision_threshold=0.48 \
-		--fold_0_weight=$(FOLD_0_WEIGHT) \
-		--fold_1_weight=$(FOLD_1_WEIGHT) \
-		--fold_2_weight=$(FOLD_2_WEIGHT) \
-		--fold_3_weight=$(FOLD_3_WEIGHT) \
-		--fold_4_weight=$(FOLD_4_WEIGHT) \
-		--fold_5_weight=$(FOLD_5_WEIGHT) \
-		--fold_6_weight=$(FOLD_6_WEIGHT) \
-		--fold_7_weight=$(FOLD_7_WEIGHT) \
-		--fold_8_weight=$(FOLD_8_WEIGHT) \
-		--fold_9_weight=$(FOLD_9_WEIGHT) \
 		--test_data_dir=$(PREDS_INPUT_DIR) \
 		--preview_submission \
 		--preview_first_n=10
 
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
-	make predict RUN_DIR=$(FOLD_0_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
-	make predict RUN_DIR=$(FOLD_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
 	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
-	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
-	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
+	make predict RUN_DIR=$(FOLD_3_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3_1
+	make predict RUN_DIR=$(FOLD_4_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4_1
 	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
-	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
+	make predict RUN_DIR=$(FOLD_6_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6_1
 	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
 	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
-	make predict RUN_DIR=$(FOLD_9_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
 	make average-predictions
 
 eval-many:
