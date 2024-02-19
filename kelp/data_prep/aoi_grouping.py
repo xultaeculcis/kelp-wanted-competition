@@ -256,11 +256,11 @@ def group_aoi(
         batch_size=batch_size,
         num_workers=num_workers,
     )
-    save_json(output_dir / "intermediate_image_groups.json", groups)
+    save_json(output_dir / f"intermediate_image_groups_{similarity_threshold=}.json", groups)
     merged_groups = group_duplicate_images(groups=groups)
-    save_json(output_dir / "merged_image_groups.json", merged_groups)
+    save_json(output_dir / f"merged_image_groups_{similarity_threshold=}.json", merged_groups)
     final_groups = explode_groups_if_needed(groups=merged_groups)
-    save_json(output_dir / "final_image_groups.json", final_groups)
+    save_json(output_dir / f"final_image_groups_{similarity_threshold=}.json", final_groups)
     groups_df = groups_to_dataframe(final_groups)
     (
         metadata.merge(
@@ -268,7 +268,7 @@ def group_aoi(
             left_on="tile_id",
             right_on="tile_id",
             how="left",
-        ).to_parquet(output_dir / "metadata.parquet", index=False)
+        ).to_parquet(output_dir / f"metadata_{similarity_threshold=}.parquet", index=False)
     )
 
 

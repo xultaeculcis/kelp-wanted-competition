@@ -67,6 +67,7 @@ def parse_args() -> TrainTestSplitConfig:
     )
     args = parser.parse_args()
     cfg = TrainTestSplitConfig(**vars(args))
+    cfg.output_dir.mkdir(exist_ok=True, parents=True)
     cfg.log_self()
     return cfg
 

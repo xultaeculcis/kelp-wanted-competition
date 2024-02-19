@@ -825,3 +825,15 @@ as they are the worst on LB individually
 * Trained a model on 128x128 crops with resize to 320x320, which had the best local score
 * New submission with SAHI on 8th split => Public LB=0.68
 * Well, that was a waste of 3 days...
+
+## 2024-02-18
+
+* 5-Fold CV
+* Re-train 5 Folds
+
+## 2024-02-19
+
+* New submissions:
+  * Fold-0: 0.7135
+  * Fold-1: 0.7114
+  * Fold-2: 0.7094

@@ -155,17 +155,17 @@ sample-plotting:
 aoi-grouping:
 	python ./kelp/data_prep/aoi_grouping.py \
 		--dem_dir data/processed/dem \
- 		--output_dir data/processed/grouped_aoi_results \
- 		--metadata_fp data/processed/stats/metadata_fTq0l2T.csv \
+ 		--output_dir data/processed/grouped_aoi_results/sim_th=0.95 \
+ 		--metadata_fp data/raw/metadata_fTq0l2T.csv \
  		--batch_size 128 \
- 		--similarity_threshold 0.97
+ 		--similarity_threshold 0.95
 
 .PHONY: eda  ## Runs EDA
 eda:
 	python ./kelp/data_prep/eda.py \
  		--data_dir data/raw \
-		--metadata_fp data/processed/grouped_aoi_results/metadata.parquet \
-		--output_dir data/processed
+		--metadata_fp data/processed/grouped_aoi_results/sim_th=0.95/metadata_similarity_threshold=0.95.parquet \
+		--output_dir data/processed/stats_95
 
 .PHONY: calculate-band-stats  ## Runs band statistics calculation
 calculate-band-stats:
