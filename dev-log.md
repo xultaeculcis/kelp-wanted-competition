@@ -837,3 +837,9 @@ as they are the worst on LB individually
   * Fold-0: 0.7135
   * Fold-1: 0.7114
   * Fold-2: 0.7094
+  * Fold-3: 0.7133
+  * Fold-4: 0.7106
+
+## 2024-02-20
+
+* New ensemble: mix of 10-Fold and 5-fold models: **0.7205**

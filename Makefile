@@ -12,7 +12,7 @@ PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
 RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 
-AVG_PREDS_VERSION=v16
+AVG_PREDS_VERSION=v17
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
 FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
@@ -25,6 +25,12 @@ FOLD_6_RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs
 FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
 FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
 FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
+
+FOLD_0_V2_RUN_DIR=mlruns/567580247645556359/a82cc2d0adf4442b97128a87d5067234
+FOLD_1_V2_RUN_DIR=mlruns/567580247645556359/44027b189ede427b9b5f3576cd0cf2d5
+FOLD_2_V2_RUN_DIR=mlruns/567580247645556359/4f138f9da2c648b59abb5716748f73de
+FOLD_3_V2_RUN_DIR=mlruns/567580247645556359/fe0a0cab55d944f0a2cd5219d9e0cef7
+FOLD_4_V2_RUN_DIR=mlruns/567580247645556359/d911c04a75fa474982e77d41c8693515
 
 FOLD_NUMBER=8
 CHECKPOINT=best
@@ -42,14 +48,20 @@ OLD_FOLD_9_WEIGHT=0.2
 
 FOLD_0_WEIGHT=0.0
 FOLD_1_WEIGHT=0.0
-FOLD_2_WEIGHT=0.666
-FOLD_3_WEIGHT=0.88
-FOLD_4_WEIGHT=0.637
-FOLD_5_WEIGHT=0.59
-FOLD_6_WEIGHT=0.733
-FOLD_7_WEIGHT=0.63
+FOLD_2_WEIGHT=0.583
+FOLD_3_WEIGHT=0.852
+FOLD_4_WEIGHT=0.546
+FOLD_5_WEIGHT=0.491
+FOLD_6_WEIGHT=0.667
+FOLD_7_WEIGHT=0.537
 FOLD_8_WEIGHT=1.0
 FOLD_9_WEIGHT=0.0
+
+FOLD_0_V2_WEIGHT=0.815
+FOLD_1_V2_WEIGHT=0.62
+FOLD_2_V2_WEIGHT=0.435
+FOLD_3_V2_WEIGHT=0.796
+FOLD_4_V2_WEIGHT=0.546
 
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
@@ -286,6 +298,11 @@ average-predictions:
 			data/predictions/$(AVG_PREDS_VERSION)/fold=6 \
 			data/predictions/$(AVG_PREDS_VERSION)/fold=7 \
 			data/predictions/$(AVG_PREDS_VERSION)/fold=8 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=0v2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=1v2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=2v2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=3v2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=4v2 \
 		--weights \
 			$(FOLD_2_WEIGHT) \
 			$(FOLD_3_WEIGHT) \
@@ -294,6 +311,11 @@ average-predictions:
 			$(FOLD_6_WEIGHT) \
 			$(FOLD_7_WEIGHT) \
 			$(FOLD_8_WEIGHT) \
+			$(FOLD_0_V2_WEIGHT) \
+			$(FOLD_1_V2_WEIGHT) \
+			$(FOLD_2_V2_WEIGHT) \
+			$(FOLD_3_V2_WEIGHT) \
+			$(FOLD_4_V2_WEIGHT) \
 		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
 		--decision_threshold=0.48 \
 		--test_data_dir=$(PREDS_INPUT_DIR) \
@@ -303,12 +325,17 @@ average-predictions:
 .PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
 cv-predict:
 	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
-	make predict RUN_DIR=$(FOLD_3_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3_1
-	make predict RUN_DIR=$(FOLD_4_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4_1
+	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
+	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
 	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
-	make predict RUN_DIR=$(FOLD_6_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6_1
+	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
 	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
 	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
+	make predict RUN_DIR=$(FOLD_0_V2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0v2
+	make predict RUN_DIR=$(FOLD_1_V2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1v2
+	make predict RUN_DIR=$(FOLD_2_V2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2v2
+	make predict RUN_DIR=$(FOLD_3_V2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3v2
+	make predict RUN_DIR=$(FOLD_4_V2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4v2
 	make average-predictions
 
 eval-many:
