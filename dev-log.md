@@ -843,3 +843,11 @@ as they are the worst on LB individually
 ## 2024-02-20
 
 * New ensemble: mix of 10-Fold and 5-fold models: **0.7205**
+
+## 2024-02-21
+
+* Final submission with fold=2...fold=8 all 1.0 weights public LB = **0.7210**
+* No submissions left
+* The competition ends today
+* It was a good run regardless of final ranking
+* But oh boy, do I hope everyone in top 5 over-fitted to public test set :D

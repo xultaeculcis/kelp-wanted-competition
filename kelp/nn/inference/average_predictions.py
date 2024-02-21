@@ -1,7 +1,7 @@
 import argparse
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import rasterio
@@ -61,7 +61,7 @@ def average_predictions(
         raise ValueError("Number of weights must match the number prediction dirs!")
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    predictions = {}
+    predictions: Dict[str, Dict[str, Union[np.ndarray, float, int]]] = {}  # type: ignore[type-arg]
 
     for preds_dir, weight in zip(preds_dirs, weights):
         if weight == 0.0:
@@ -77,7 +77,6 @@ def average_predictions(
                 if file_name not in predictions:
                     predictions[file_name] = {
                         "data": np.zeros_like(pred_array, dtype=np.float32),
-                        "profile": src.profile,
                         "count": 1,
                         "weight_sum": weight,
                     }
@@ -90,7 +89,7 @@ def average_predictions(
         content["data"] = np.where(content["data"] >= decision_threshold, 1, 0).astype(np.uint8)
         output_file = output_dir / file_name
         with rasterio.open(output_file, "w", **META) as dst:
-            dst.write(content["data"].astype(rasterio.uint8), 1)
+            dst.write(content["data"].astype(rasterio.uint8), 1)  # type: ignore[union-attr]
 
 
 def main() -> None:
