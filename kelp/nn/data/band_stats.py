@@ -7,6 +7,8 @@ from torch import Tensor
 
 @dataclass
 class BandStats:
+    """A dataclass for holding band statistics."""
+
     mean: Tensor
     std: Tensor
     min: Tensor
