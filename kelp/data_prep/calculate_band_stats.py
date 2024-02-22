@@ -15,6 +15,7 @@ from rasterio.errors import NotGeoreferencedWarning
 from tqdm import tqdm
 
 from kelp.core.configs import ConfigBase
+from kelp.core.device import DEVICE
 from kelp.core.indices import BAND_INDEX_LOOKUP, BASE_BANDS, SPECTRAL_INDEX_LOOKUP, AppendDEMWM
 from kelp.utils.logging import get_logger
 
@@ -27,6 +28,8 @@ _logger = get_logger(__name__)
 
 
 class StatisticsCalculationConfig(ConfigBase):
+    """A Config class for running statistics calculations for training dataset."""
+
     data_dir: Path
     output_dir: Path
     mask_using_qa: bool = False
@@ -35,14 +38,22 @@ class StatisticsCalculationConfig(ConfigBase):
 
     @property
     def file_paths(self) -> List[Path]:
+        """List of file paths with satellite images."""
         return sorted(list(self.data_dir.rglob("*_satellite.tif")))
 
     @property
     def fill_value(self) -> float:
+        """Resolved fill value for masking corrupted pixels."""
         return torch.nan if self.fill_missing_pixels_with_torch_nan else 0.0  # type: ignore[no-any-return]
 
 
 def parse_args() -> StatisticsCalculationConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of StatisticsCalculationConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data_dir",
@@ -80,8 +91,20 @@ def calculate_band_statistics(
     mask_using_water_mask: bool = False,
     fill_value: float = 0,
 ) -> Dict[str, Dict[str, float]]:
+    """
+    Runs statistics calculation for specified images.
+
+    Args:
+        image_paths: The input image paths.
+        output_dir: The output directory.
+        mask_using_qa: A flag indicating whether the corrupted pixels should be masked using QA band.
+        mask_using_water_mask: A flag indicating whether the corrupted pixels should be masked using Water Mask.
+        fill_value: The fill value to use for corrupted pixels.
+
+    Returns: A dictionary with per band statistics.
+
+    """
     # Move computations to GPU if available
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transform = K.AugmentationSequential(
         AppendDEMWM(  # type: ignore
             index_dem=BAND_INDEX_LOOKUP["DEM"],
@@ -105,15 +128,15 @@ def calculate_band_statistics(
             if index_name != "DEMWM"
         ],
         data_keys=["input"],
-    ).to(device)
+    ).to(DEVICE)
 
     # Initialize statistics arrays
     band_names = BASE_BANDS + [index_name for index_name in SPECTRAL_INDEX_LOOKUP.keys() if index_name != "DEMWM"]
     num_bands = len(band_names)
-    min_per_band = torch.full((num_bands,), float("inf")).to(device)
-    max_per_band = torch.full((num_bands,), float("-inf")).to(device)
-    sum_per_band = torch.zeros(num_bands).to(device)
-    sum_sq_per_band = torch.zeros(num_bands).to(device)
+    min_per_band = torch.full((num_bands,), float("inf")).to(DEVICE)
+    max_per_band = torch.full((num_bands,), float("-inf")).to(DEVICE)
+    sum_per_band = torch.zeros(num_bands).to(DEVICE)
+    sum_sq_per_band = torch.zeros(num_bands).to(DEVICE)
     q01_items = []
     q99_items = []
     total_pixels = 0
@@ -124,7 +147,7 @@ def calculate_band_statistics(
         with rasterio.open(image_path) as src:
             image_arr = src.read()
             # Convert image to PyTorch tensor
-            image = torch.from_numpy(image_arr).float().to(device).unsqueeze(0)
+            image = torch.from_numpy(image_arr).float().to(DEVICE).unsqueeze(0)
             # Mask missing pixels
             image = torch.where(image == -32768.0, fill_value, image)
 
@@ -193,6 +216,9 @@ def calculate_band_statistics(
 
 
 def main() -> None:
+    """
+    Main entry point for band statistics calculation.
+    """
     cfg = parse_args()
     calculate_band_statistics(
         image_paths=cfg.file_paths,

@@ -25,6 +25,8 @@ IMAGES_PER_GROUP_EXPLODE_THRESHOLD = 100
 
 
 class AOIGroupingConfig(ConfigBase):
+    """AOI grouping configuration"""
+
     dem_dir: Path
     metadata_fp: Path
     output_dir: Path
@@ -34,11 +36,28 @@ class AOIGroupingConfig(ConfigBase):
 
 
 class ImageDataset(Dataset):
+    """
+    A simple image dataset that loads images from a list of file paths.
+
+    Args:
+        fps: The file paths.
+        transform: Transform to apply to the input images.
+    """
+
     def __init__(self, fps: List[Path], transform: Callable[[Any], Tensor]) -> None:
         self.fps = fps
         self.transform = transform
 
     def __getitem__(self, idx: int) -> Tensor:
+        """
+        Get image by its index.
+
+        Args:
+            idx: The image index.
+
+        Returns: A tensor with transformed image
+
+        """
         with open(self.fps[idx], "rb") as f:
             img = Image.open(f)
             sample = img.convert("RGB")
@@ -46,10 +65,22 @@ class ImageDataset(Dataset):
         return sample
 
     def __len__(self) -> int:
+        """
+        Get the number of images in the dataset.
+
+        Returns: The number of images in the dataset.
+
+        """
         return len(self.fps)
 
 
 def parse_args() -> AOIGroupingConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of AOI Grouping Config.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--dem_dir",
@@ -95,6 +126,18 @@ def generate_embeddings(
     batch_size: int = 32,
     num_workers: int = 6,
 ) -> Tuple[np.ndarray, ImageDataset]:  # type: ignore[type-arg]
+    """
+    Generates embeddings for images in specified data folder.
+
+    Args:
+        data_folder: A path to the data folder.
+        tile_ids: A list of Tile IDs for corresponding images.
+        batch_size: Batch size to use when generating embeddings.
+        num_workers: Number of worker processes to use when generating embeddings
+
+    Returns: A tuple of array with embeddings for each tile and an Image Dataset instance.
+
+    """
     fps = sorted([data_folder / f"{tile_id}_dem.png" for tile_id in tile_ids])
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -130,6 +173,17 @@ def calculate_similarity_groups(
     features: np.ndarray,  # type: ignore[type-arg]
     threshold: float = 0.95,
 ) -> List[List[str]]:
+    """
+    Calculate similarity groups.
+
+    Args:
+        dataset: An instance of ImageDataset class.
+        features: The embeddings for all images.
+        threshold: The similarity threshold to use when comparing individual image pairs.
+
+    Returns: A list of similar images.
+
+    """
     similarity_matrix = cosine_similarity(features)
     groups = []
     for i in tqdm(range(len(similarity_matrix)), desc="Grouping similar images", total=len(similarity_matrix)):
@@ -156,6 +210,19 @@ def find_similar_images(
     batch_size: int = 32,
     num_workers: int = 6,
 ) -> List[List[str]]:
+    """
+    Finds similar images in specified data folder.
+
+    Args:
+        data_folder: The data folder with input images.
+        tile_ids: A list of Tile IDs for corresponding images.
+        threshold: The similarity threshold to use when comparing individual image pairs.
+        batch_size: Batch size to use when generating embeddings.
+        num_workers: Number of worker processes to use when generating embeddings.
+
+    Returns: A list of similar images.
+
+    """
     features, dataset = generate_embeddings(
         data_folder=data_folder,
         tile_ids=tile_ids,
@@ -172,6 +239,16 @@ def find_similar_images(
 
 @timed
 def group_duplicate_images(groups: List[List[str]]) -> List[List[str]]:
+    """
+    Groups duplicate (similar) images.
+
+    Args:
+        groups: A list of lists where inner items are similar images.
+
+    Returns: Deduplicated list of the grouped images.
+
+    """
+
     # Step 1: Flatten the list of lists
     flattened_list = [tile_id for similar_image_group in groups for tile_id in similar_image_group]
 
@@ -213,6 +290,16 @@ def group_duplicate_images(groups: List[List[str]]) -> List[List[str]]:
 
 @timed
 def explode_groups_if_needed(groups: List[List[str]]) -> List[List[str]]:
+    """
+    Explodes all groups if needed.
+
+    Args:
+        groups: The list of groups of similar images to explode.
+
+    Returns: A list of groups of similar images.
+
+    """
+
     final_groups = []
     for group in groups:
         if len(group) > IMAGES_PER_GROUP_EXPLODE_THRESHOLD:
@@ -224,12 +311,29 @@ def explode_groups_if_needed(groups: List[List[str]]) -> List[List[str]]:
 
 @timed
 def save_json(fp: Path, data: Any) -> None:
+    """
+    Saves data to specified JSON file.
+
+    Args:
+        fp: The path to JSON file.
+        data: The content to save as JSON.
+
+    """
     with open(fp, "w") as file:
         json.dump(data, file, indent=4)
 
 
 @timed
 def groups_to_dataframe(groups: List[List[str]]) -> pd.DataFrame:
+    """
+    Creates a DataFrame with groups of similar images.
+
+    Args:
+        groups: A list of groups of similar images.
+
+    Returns: A DataFrame with groups of similar images.
+
+    """
     records = []
     for idx, group in enumerate(groups):
         for tile_id in group:
@@ -246,6 +350,18 @@ def group_aoi(
     num_workers: int = 6,
     similarity_threshold: float = 0.95,
 ) -> None:
+    """
+    Groups images in the specified DEM directory into similar AOIs.
+
+    Args:
+        dem_dir: The path to the directory with DEM images.
+        metadata_fp: The path to the metadata CSV file.
+        output_dir: The path where to save the results.
+        batch_size: Batch size to use when generating embeddings.
+        num_workers: Number of worker processes to use when generating embeddings.
+        similarity_threshold: The similarity threshold to use when comparing individual image pairs.
+
+    """
     metadata = pd.read_csv(metadata_fp)
     metadata["split"] = metadata["in_train"].apply(lambda x: "train" if x else "test")
     training_tiles = metadata[metadata["split"] == consts.data.TRAIN]["tile_id"].tolist()
@@ -273,6 +389,7 @@ def group_aoi(
 
 
 def main() -> None:
+    """Main entrypoint for grouping similar tiles together into AOIs"""
     cfg = parse_args()
     group_aoi(
         dem_dir=cfg.dem_dir,

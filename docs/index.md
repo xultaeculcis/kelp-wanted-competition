@@ -15,19 +15,7 @@ installation.
 
 ## Docs
 
-See project Confluence for more info. You can also run:
-
-```shell
-make docs
-```
-
-and then:
-
-```shell
-mkdocs serve
-```
-
-To see the interactive documentation web page.
+See [guides](guides) interactive documentation web page.
 
 ## Running tests
 
@@ -36,3 +24,15 @@ To run the unit tests execute:
 ```shell
 pytest tests -v
 ```
+
+## Details
+
+See the [Dev Log](dev-log.md) for details on what was done to train the model.
+
+## Final report
+
+The report can be found [here](technical-report.md).
+
+## Reproducibility
+
+Please see the [reproducibility](guides/reproducibility.md) docs for details on how to reproduce the results.
