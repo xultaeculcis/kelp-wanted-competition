@@ -59,4 +59,4 @@ nav:
         - kelp.data_prep.plot_samples: "api_ref/kelp.data_prep.plot_samples.md"
         - kelp.data_prep.sahi_dataset_prep: "api_ref/kelp.data_prep.sahi_dataset_prep.md"
         - kelp.data_prep.train_val_test_split: "api_ref/kelp.data_prep.train_val_test_split.md"
-        - kelp.utils: "api_ref/kelp.utils.md"
+      - kelp.utils: "api_ref/kelp.utils.md"

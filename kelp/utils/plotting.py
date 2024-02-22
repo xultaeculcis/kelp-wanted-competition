@@ -21,6 +21,24 @@ def plot_sample(
     show_titles: bool = True,
     suptitle: Optional[str] = None,
 ) -> plt.Figure:
+    """
+    Plot a single sample of the satellite image.
+
+    Args:
+        input_arr: The input image array. Expects all image bands to be provided.
+        target_arr: An optional kelp mask array.
+        predictions_arr: An optional kelp prediction array.
+        figsize: The figure size.
+        ndvi_cmap: The colormap to use for the NDVI.
+        dem_cmap: The colormap to use for the DEM band.
+        qa_mask_cmap: The colormap to use for the QA band.
+        mask_cmap: The colormap to use for the kelp mask.
+        show_titles: A flag indicating whether the titles should be visible.
+        suptitle: The title for the figure.
+
+    Returns: A figure with plotted sample.
+
+    """
     num_panels = 6
 
     if target_arr is not None:
