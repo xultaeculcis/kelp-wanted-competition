@@ -825,3 +825,29 @@ as they are the worst on LB individually
 * Trained a model on 128x128 crops with resize to 320x320, which had the best local score
 * New submission with SAHI on 8th split => Public LB=0.68
 * Well, that was a waste of 3 days...
+
+## 2024-02-18
+
+* 5-Fold CV
+* Re-train 5 Folds
+
+## 2024-02-19
+
+* New submissions:
+  * Fold-0: 0.7135
+  * Fold-1: 0.7114
+  * Fold-2: 0.7094
+  * Fold-3: 0.7133
+  * Fold-4: 0.7106
+
+## 2024-02-20
+
+* New ensemble: mix of 10-Fold and 5-fold models: **0.7205**
+
+## 2024-02-21
+
+* Final submission with fold=2...fold=8 all 1.0 weights public LB = **0.7210**
+* No submissions left
+* The competition ends today
+* It was a good run regardless of final ranking
+* But oh boy, do I hope everyone in top 5 over-fitted to public test set :D

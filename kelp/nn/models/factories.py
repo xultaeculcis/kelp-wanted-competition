@@ -134,6 +134,9 @@ def resolve_model(
         if architecture == "fcn":
             model_kwargs.pop("encoder_name")
             model_kwargs.pop("encoder_weights")
+        if architecture not in ["efficinentunet++", "manet", "resunet", "resunet++", "unet", "unet++"]:
+            model_kwargs.pop("decoder_channels")
+            model_kwargs.pop("encoder_depth")
         model = _MODEL_LOOKUP[architecture](**model_kwargs)
     else:
         raise ValueError(f"{architecture=} is not supported.")

@@ -20,6 +20,14 @@ inputs:
     type: integer
     default: 0
     description: The CV split number.
+  encoder:
+    type: string
+    default: resnet50
+    description: The encoder.
+  architecture:
+    type: string
+    default: unet
+    description: The network architecture.
 
 outputs:
   output_dir:
@@ -42,13 +50,13 @@ command: >-
   --cv_split ${{inputs.cv_split}}
   --batch_size 32
   --num_workers 16
-  --bands R,G,B,SWIR,NIR
-  --spectral_indices NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+  --bands R,G,B,SWIR,NIR,QA,DEM
+  --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
   --image_size 352
   --fill_missing_pixels_with_torch_nan True
-  --mask_using_qa False
-  --mask_using_water_mask False
+  --mask_using_qa True
+  --mask_using_water_mask True
   --use_weighted_sampler True
   --samples_per_epoch 10240
   --has_kelp_importance_factor 3
@@ -59,8 +67,8 @@ command: >-
   --dem_nan_pixels_pct_importance_factor 0.25
   --dem_zero_pixels_pct_importance_factor -1
   --normalization_strategy quantile
-  --architecture unet
-  --encoder tu-efficientnet_b5
+  --architecture ${{inputs.architecture}}
+  --encoder ${{inputs.encoder}}
   --pretrained True
   --encoder_weights imagenet
   --decoder_channels 256,128,64,32,16
@@ -77,7 +85,7 @@ command: >-
   --save_top_k 1
   --early_stopping_patience 50
   --precision bf16-mixed
-  --epochs 50
+  --epochs 25
   --swa False
   --swa_epoch_start 0.5
   --swa_annealing_epochs 25

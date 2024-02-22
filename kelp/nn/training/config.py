@@ -183,7 +183,7 @@ class TrainConfig(ConfigBase):
                 values["pretrained"] = False
                 values["encoder_weights"] = None
 
-        for img_size, bs in zip([224, 256, 336, 384, 448, 512], [32, 32, 32, 16, 4, 4]):
+        for img_size, bs in zip([224, 256, 336, 384, 448, 512], [32, 32, 32, 32, 4, 4]):
             if f"{img_size}" in values["encoder"] and values["image_size"] != img_size:
                 _logger.warning(f"Encoder requires image_size={img_size}. Forcing training with adjusted image size.")
                 values["image_size"] = img_size
