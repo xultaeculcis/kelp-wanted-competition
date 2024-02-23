@@ -10,7 +10,9 @@ DATA_DIR=data
 PREDS_INPUT_DIR=data/raw/test/images
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
-RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
+
+RUN_DIR=data/aml/Job_sincere_tangelo_dm0xsbhc_OutputsAndLogs
+BEST_SINGLE_MODEL_RUN_DIR=data/aml/Job_sincere_tangelo_dm0xsbhc_OutputsAndLogs
 
 AVG_PREDS_VERSION=v19
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
@@ -25,8 +27,6 @@ FOLD_6_RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs
 FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
 FOLD_8_RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs
 FOLD_9_RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs
-
-BEST_SINGLE_MODEL_RUN_DIR=data/aml/Job_sincere_tangelo_dm0xsbhc_OutputsAndLogs
 
 FOLD_NUMBER=8
 CHECKPOINT=best
@@ -71,6 +71,8 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
+# Creating environment
+
 .PHONY: lock  ## Creates conda-lock file
 lock:
 	conda-lock --mamba -f ./env.yaml -p linux-64
@@ -93,6 +95,8 @@ configure-torch-ort:
 
 .PHONY: local-env  ## Creates local environment and installs pre-commit hooks
 local-env: env setup-pre-commit setup-editable
+
+# Helper commands
 
 .PHONY: format  ## Runs code formatting (isort, black, flake8)
 format:
@@ -145,6 +149,8 @@ clean:
 	rm -rf .hypothesis
 	rm -rf docs-site
 
+# Data prep
+
 .PHONY: sample-plotting  ## Runs tile plotting
 sample-plotting:
 	python ./kelp/data_prep/sample_plotting.py \
@@ -192,6 +198,8 @@ train-val-test-split-random:
 		--seed 42 \
 		--output_dir data/processed
 
+# Model training
+
 .PHONY: train  ## Trains single CV split
 train:
 	python ./kelp/nn/training/train.py \
@@ -235,33 +243,20 @@ train:
 		--epochs 50 \
 		--swa False
 
-.PHONY: predict  ## Runs prediction
-predict:
-	python ./kelp/nn/inference/predict.py \
-		--data_dir $(PREDS_INPUT_DIR) \
-		--dataset_stats_dir=data/processed \
-		--output_dir $(PREDS_OUTPUT_DIR) \
-		--run_dir $(RUN_DIR) \
-		--use_checkpoint $(CHECKPOINT) \
-		--decision_threshold 0.48 \
-		--precision bf16-mixed
+.PHONY: train-all-folds  ## Trains all CV folds
+train-all-folds:
+	make train FOLD_NUMBER=0
+	make train FOLD_NUMBER=1
+	make train FOLD_NUMBER=2
+	make train FOLD_NUMBER=3
+	make train FOLD_NUMBER=4
+	make train FOLD_NUMBER=5
+	make train FOLD_NUMBER=6
+	make train FOLD_NUMBER=7
+	make train FOLD_NUMBER=8
+	make train FOLD_NUMBER=9
 
-.PHONY: submission  ## Generates submission file
-submission:
-	python ./kelp/core/submission.py \
-		--predictions_dir data/predictions \
-		--output_dir data/submissions
-
-.PHONY: predict-and-submit  ## Runs inference and generates submission file
-predict-and-submit:
-	python ./kelp/nn/inference/predict_and_submit.py \
-		--data_dir data/raw/test/images \
-		--dataset_stats_dir=data/processed \
-		--output_dir data/submissions/single-model \
-		--run_dir $(BEST_SINGLE_MODEL_RUN_DIR) \
-		--preview_submission \
-		--decision_threshold 0.45 \
-		--precision bf16-mixed
+# Model evaluation
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:
@@ -274,51 +269,6 @@ eval:
 		--precision bf16-mixed \
 		--decision_threshold=0.48 \
 		--experiment_name model-eval-exp
-
-.PHONY: average-predictions  ## Runs prediction averaging
-average-predictions:
-	python ./kelp/nn/inference/average_predictions.py \
-		--predictions_dirs \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=0 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=1 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=2 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=3 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=4 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=5 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=6 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=7 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=8 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=9 \
-		--weights \
-			$(FOLD_0_WEIGHT) \
-			$(FOLD_1_WEIGHT) \
-			$(FOLD_2_WEIGHT) \
-			$(FOLD_3_WEIGHT) \
-			$(FOLD_4_WEIGHT) \
-			$(FOLD_5_WEIGHT) \
-			$(FOLD_6_WEIGHT) \
-			$(FOLD_7_WEIGHT) \
-			$(FOLD_8_WEIGHT) \
-			$(FOLD_9_WEIGHT) \
-		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
-		--decision_threshold=0.48 \
-		--test_data_dir=$(PREDS_INPUT_DIR) \
-		--preview_submission \
-		--preview_first_n=10
-
-.PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
-cv-predict:
-	make predict RUN_DIR=$(FOLD_0_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
-	make predict RUN_DIR=$(FOLD_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
-	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
-	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
-	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
-	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
-	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
-	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
-	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
-	make predict RUN_DIR=$(FOLD_9_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
-	make average-predictions
 
 .PHONY: eval-many  ## Runs evaluation for specified runs
 eval-many:
@@ -372,15 +322,77 @@ eval-ensemble:
 	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
 
-.PHONY: train-all-folds  ## Trains all CV folds
-train-all-folds:
-	make train FOLD_NUMBER=0
-	make train FOLD_NUMBER=1
-	make train FOLD_NUMBER=2
-	make train FOLD_NUMBER=3
-	make train FOLD_NUMBER=4
-	make train FOLD_NUMBER=5
-	make train FOLD_NUMBER=6
-	make train FOLD_NUMBER=7
-	make train FOLD_NUMBER=8
-	make train FOLD_NUMBER=9
+# Making submissions
+
+.PHONY: predict  ## Runs prediction
+predict:
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir $(PREDS_OUTPUT_DIR) \
+		--run_dir $(RUN_DIR) \
+		--use_checkpoint $(CHECKPOINT) \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+
+.PHONY: submission  ## Generates submission file
+submission:
+	python ./kelp/core/submission.py \
+		--predictions_dir data/predictions \
+		--output_dir data/submissions
+
+.PHONY: predict-and-submit  ## Runs inference and generates submission file
+predict-and-submit:
+	python ./kelp/nn/inference/predict_and_submit.py \
+		--data_dir data/raw/test/images \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/submissions/single-model \
+		--run_dir $(RUN_DIR) \
+		--preview_submission \
+		--decision_threshold 0.45 \
+		--precision bf16-mixed
+
+.PHONY: average-predictions  ## Runs prediction averaging
+average-predictions:
+	python ./kelp/nn/inference/average_predictions.py \
+		--predictions_dirs \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=0 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=1 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=3 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=4 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=5 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=6 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=7 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=8 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=9 \
+		--weights \
+			$(FOLD_0_WEIGHT) \
+			$(FOLD_1_WEIGHT) \
+			$(FOLD_2_WEIGHT) \
+			$(FOLD_3_WEIGHT) \
+			$(FOLD_4_WEIGHT) \
+			$(FOLD_5_WEIGHT) \
+			$(FOLD_6_WEIGHT) \
+			$(FOLD_7_WEIGHT) \
+			$(FOLD_8_WEIGHT) \
+			$(FOLD_9_WEIGHT) \
+		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
+		--decision_threshold=0.48 \
+		--test_data_dir=$(PREDS_INPUT_DIR) \
+		--preview_submission \
+		--preview_first_n=10
+
+.PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
+cv-predict:
+	make predict RUN_DIR=$(FOLD_0_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
+	make predict RUN_DIR=$(FOLD_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
+	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
+	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
+	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
+	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
+	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
+	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
+	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
+	make predict RUN_DIR=$(FOLD_9_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
+	make average-predictions
