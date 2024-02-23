@@ -39,6 +39,17 @@ def load_data(
     sample_size: float = 1.0,
     seed: int = consts.reproducibility.SEED,
 ) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+    """
+    Loads the training data.
+
+    Args:
+        df: The input dataframe with pixel-level values.
+        sample_size: The random sample size to use for quicker training times.
+        seed: The seed for reproducibility.
+
+    Returns: A tuple containing features and labels in following order: X_train, y_train, X_val, y_val, X_test, y_test
+
+    """
     X_train = df[df["split"] == "train"]
     X_val = df[df["split"] == "val"]
     X_test = df[df["split"] == "test"]
@@ -66,6 +77,19 @@ def calculate_metrics(
     y_pred: np.ndarray,  # type: ignore[type-arg]
     prefix: str,
 ) -> Dict[str, float]:
+    """
+    Calculates metrics for given model and its predictions.
+
+    Args:
+        model: The XGBClassifier model.
+        x: The input dataframe.
+        y_true: The ground truth series.
+        y_pred: The prediction series.
+        prefix: A prefix to use for metrics logging.
+
+    Returns: A dictionary with metric names and the metric values.
+
+    """
     metrics = MetricCollection(
         metrics={
             "dice": Dice(num_classes=2, average="macro"),
@@ -100,6 +124,16 @@ def log_confusion_matrix(
     prefix: str,
     normalize: bool = False,
 ) -> None:
+    """
+    Logs confusion matrix to MLFlow.
+
+    Args:
+        y_true: A pandas Series with ground truth values.
+        y_pred: A pandas array with prediction values.
+        prefix: The prefix to use when logging confusion matrix.
+        normalize: A flag indicating whether to normalize the confusion matrix.
+
+    """
     cmd = ConfusionMatrixDisplay.from_predictions(
         y_true=y_true,
         y_pred=y_pred,
@@ -120,6 +154,15 @@ def log_precision_recall_curve(
     y_pred: np.ndarray,  # type: ignore[type-arg]
     prefix: str,
 ) -> None:
+    """
+    Logs the precision and recall curve plot to MLFlow.
+
+    Args:
+        y_true: The ground truth.
+        y_pred: The predicted values.
+        prefix: The prefix to use when logging precision and recall curves.
+
+    """
     prd = PrecisionRecallDisplay.from_predictions(
         y_true=y_true,
         y_pred=y_pred,
@@ -136,6 +179,15 @@ def log_roc_curve(
     y_pred: np.ndarray,  # type: ignore[type-arg]
     prefix: str,
 ) -> None:
+    """
+    Logs the ROC curve to MLFlow.
+
+    Args:
+        y_true: The ground truth.
+        y_pred: The predicted values.
+        prefix: The prefix to use when logging ROC curve plot.
+
+    """
     rc = RocCurveDisplay.from_predictions(
         y_true=y_true,
         y_pred=y_pred,
@@ -151,6 +203,14 @@ def log_model_feature_importance(
     model: XGBClassifier,
     feature_names: List[str],
 ) -> None:
+    """
+    Logs the feature importance to MLFlow.
+
+    Args:
+        model: The XGBClassifier model.
+        feature_names: The names of the features.
+
+    """
     sorted_idx = model.feature_importances_.argsort()
     fig, ax = plt.subplots()
     ax.barh(feature_names[sorted_idx], model.feature_importances_[sorted_idx])
@@ -170,6 +230,17 @@ def log_permutation_feature_importance(
     seed: int = consts.reproducibility.SEED,
     n_repeats: int = 10,
 ) -> None:
+    """
+    Logs the permutation feature importance to MLFlow.
+
+    Args:
+        model: The XGBClassifier model.
+        x: The input data.
+        y_true: The ground truth data.
+        seed: The seed to use for reproducibility.
+        n_repeats: The number of repeats.
+
+    """
     result = permutation_importance(model, x, y_true, n_repeats=n_repeats, random_state=seed, n_jobs=4)
     forest_importances = pd.Series(result.importances_mean, index=x.columns.tolist())
     fig, ax = plt.subplots()
@@ -191,6 +262,18 @@ def eval_model(
     seed: int = consts.reproducibility.SEED,
     explain_model: bool = False,
 ) -> None:
+    """
+    Evaluates the XGBoost model.
+
+    Args:
+        model: The XGBoost model.
+        x: The validation data.
+        y_true: The ground truth labels.
+        prefix: The prefix for the metrics and plots.
+        seed: The seed for reproducibility.
+        explain_model: A flag indicating whether to run model feature importance calculation.
+
+    """
     _logger.info(f"Running model eval for {prefix} split")
     y_pred = model.predict(x)
     metrics = calculate_metrics(model=model, x=x, y_true=y_true, y_pred=y_pred, prefix=prefix)
@@ -210,11 +293,31 @@ def fit_model(
     x: pd.DataFrame,
     y_true: pd.Series,
 ) -> XGBClassifier:
+    """
+    Runs the training.
+
+    Args:
+        model: The model to be trained.
+        x: The training dataset.
+        y_true: The training labels.
+
+    Returns: Fitted model.
+
+    """
     model.fit(x, y_true)
     return model
 
 
 def min_max_normalize(x: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Runs min-max quantile normalization on the input array.
+
+    Args:
+        x: The input array.
+
+    Returns: Normalized array.
+
+    """
     vmin = np.expand_dims(np.expand_dims(np.quantile(x, q=0.01, axis=(1, 2)), 1), 2)
     vmax = np.expand_dims(np.expand_dims(np.quantile(x, q=0.99, axis=(1, 2)), 1), 2)
     return (x - vmin) / (vmax - vmin + consts.data.EPS)  # type: ignore[no-any-return]
@@ -229,6 +332,18 @@ def log_sample_predictions(
     sample_size: int = 10,
     seed: int = consts.reproducibility.SEED,
 ) -> None:
+    """
+    Logs sample predictions to MLFlow.
+
+    Args:
+        train_data_dir: The training data directory.
+        metadata: The metadata dataframe.
+        model: The XGBClassifier model.
+        spectral_indices: The spectral indices to append to the input image before prediction.
+        sample_size: The number of samples to plot.
+        seed: The seed for reproducibility.
+
+    """
     sample_to_plot = metadata.sample(n=sample_size, random_state=seed)
     tile_ids = sample_to_plot["tile_id"].tolist()
     transforms = build_append_index_transforms(spectral_indices)
@@ -258,6 +373,23 @@ def run_training(
     seed: int = consts.reproducibility.SEED,
     explain_model: bool = False,
 ) -> XGBClassifier:
+    """
+    Runs XGBoost model training.
+
+    Args:
+        train_data_dir: The path to the training data.
+        dataset_fp: The path to the training dataset parquet file.
+        columns_to_load: The columns to load from the metadata dataset.
+        model: The model to train.
+        spectral_indices: The spectral indices to append to the input records.
+        sample_size: The fraction of samples to use for training.
+        plot_n_samples: The number of samples to plot.
+        seed: The seed for reproducibility.
+        explain_model: A flag indicating whether to run model feature importance calculation.
+
+    Returns: A fitted XGBClassifier.
+
+    """
     metadata = pd.read_parquet(dataset_fp, columns=columns_to_load)
     X_train, y_train, X_val, y_val, X_test, y_test = load_data(
         df=metadata.drop(["tile_id"], axis=1, errors="ignore"),
@@ -280,6 +412,7 @@ def run_training(
 
 
 def main() -> None:
+    """Main entrypoint for training XGBClassifier."""
     cfg = parse_args()
     mlflow.xgboost.autolog()
     mlflow.set_experiment(cfg.resolved_experiment_name)

@@ -99,7 +99,6 @@ nav:
           - training:
               - config: "api_ref/xgb/training/config.md"
               - eval: "api_ref/xgb/training/eval.md"
-              - eval_from_folders: "api_ref/xgb/training/eval_from_folders.md"
               - options: "api_ref/xgb/training/options.md"
               - train: "api_ref/xgb/training/train.md"
       - kelp.utils: "api_ref/utils.md"

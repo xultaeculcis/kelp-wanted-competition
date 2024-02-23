@@ -31,6 +31,8 @@ warnings.filterwarnings(
 
 
 class EvalConfig(PredictConfig):
+    """The config for running XGBoost model evaluation."""
+
     metadata_fp: Path
     eval_split: int = 8
     experiment_name: str = "model-eval-exp"
@@ -41,7 +43,7 @@ def parse_args() -> EvalConfig:
     """
     Parse command line arguments.
 
-    Returns: An instance of EvalConfig.
+    Returns: An instance of :class:`EvalConfig`.
 
     """
     parser = build_prediction_arg_parser()
@@ -64,6 +66,18 @@ def eval(
     prefix: str,
     decision_threshold: float = 0.5,
 ) -> None:
+    """
+    Runs evaluation using data from specified directory.
+
+    Args:
+        model: The XGBoost model.
+        data_dir: The data directory.
+        metadata: The metadata dataframe.
+        spectral_indices: The spectral indices to append to the input image.
+        prefix: The prefix for logged metrics.
+        decision_threshold: The decision threshold.
+
+    """
     tile_ids = metadata["tile_id"].tolist()
     metrics = MetricCollection(
         metrics={
@@ -114,6 +128,19 @@ def run_eval(
     experiment_name: str,
     decision_threshold: float = 0.5,
 ) -> None:
+    """
+    Runs XGBoost model evaluation and logs metrics to MLFlow.
+
+    Args:
+        run_dir: The run directory.
+        data_dir: The data directory.
+        metadata: The metadata dataframe.
+        model_dir: The model directory to.
+        train_cfg: The original training configuration.
+        experiment_name: The experiment name.
+        decision_threshold: The decision threshold.
+
+    """
     mlflow.set_experiment(experiment_name)
     mlflow.pytorch.autolog()
     run = mlflow.start_run(run_name=run_dir.parts[-1])
@@ -141,6 +168,7 @@ def run_eval(
 
 
 def main() -> None:
+    """Main entry point for running XGBoost model evaluation."""
     cfg = parse_args()
     metadata = pd.read_parquet(cfg.metadata_fp)
     metadata = metadata[metadata[f"split_{cfg.eval_split}"] == "val"]

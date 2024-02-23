@@ -34,6 +34,16 @@ def make_loggers(
     experiment: str,
     tags: Dict[str, Any],
 ) -> List[Logger]:
+    """
+    Factory method for creating lightning loggers.
+
+    Args:
+        experiment: The experiment name.
+        tags: The experiment tags.
+
+    Returns: List of lightning loggers.
+
+    """
     mlflow_logger = MLFlowLogger(
         experiment_name=experiment,
         run_id=mlflow.active_run().info.run_id,
@@ -54,6 +64,23 @@ def make_callbacks(
     swa_epoch_start: float = 0.5,
     swa_annealing_epochs: int = 10,
 ) -> List[Callback]:
+    """
+    A factory method for creating lightning callbacks.
+
+    Args:
+        output_dir: The output directory.
+        early_stopping_patience: The early stopping patience in epochs.
+        save_top_k: The number of top model checkpoints to save.
+        monitor_metric: The metric to monitor for early stopping.
+        monitor_mode: The mode to monitor for early stopping.
+        swa: A flag indicating whether to use SWA (Stochastic Weight Averaging).
+        swa_lr: The final learning rate for SWA annealing.
+        swa_epoch_start: The percentage of all training epochs when to start the SWA.
+        swa_annealing_epochs: The number of epochs to run the SWA for.
+
+    Returns: A list of lightning callbacks.
+
+    """
     early_stopping = EarlyStopping(
         monitor=monitor_metric,
         patience=early_stopping_patience,
@@ -86,6 +113,7 @@ def make_callbacks(
 
 
 def main() -> None:
+    """Main entrypoint for model training."""
     cfg = parse_args()
     set_gpu_power_limit_if_needed()
 

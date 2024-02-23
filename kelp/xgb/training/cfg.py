@@ -14,6 +14,8 @@ _logger = get_logger(__name__)
 
 
 class TrainConfig(ConfigBase):
+    """The XGBoost training configuration."""
+
     dataset_fp: Path
     train_data_dir: Path
     output_dir: Path

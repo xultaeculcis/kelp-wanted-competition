@@ -8,7 +8,7 @@ def parse_args() -> TrainConfig:
     """
     Parse command line arguments.
 
-    Returns: An instance of TrainConfig.
+    Returns: An instance of :class:`TrainConfig`.
 
     """
     parser = argparse.ArgumentParser()
