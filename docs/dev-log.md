@@ -40,8 +40,8 @@ Checklist:
 - [x] Soft labels
 - [x] Model weights averaging
 - [x] SAHI
-- [ ] Prepare docs on how to train and predict
-- [ ] Build a CLI for eda, training, prediction and submission
+- [x] Prepare docs on how to train and predict
+- [x] Build a CLI for eda, training, prediction and submission
 
 ## What worked
 
@@ -63,7 +63,23 @@ Checklist:
     * `dem_nan_pixels_pct_importance_factor=0.25`
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
-* Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+* Extra spectral indices:
+    * DEMWM,
+    * ATSAVI,
+    * AVI,
+    * CI,
+    * ClGreen,
+    * GBNDVI,
+    * GVMI,
+    * IPVI,
+    * KIVU,
+    * MCARI,
+    * MVI,
+    * NormNIR,
+    * PNDVI,
+    * SABI,
+    * WDRVI,
+    * mCRIG
 * Test Time Augmentations (only local runs)
 * Decision threshold change to 0.45-0.48
 * `OneCycleLR`

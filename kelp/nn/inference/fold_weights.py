@@ -3,6 +3,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 def main() -> None:
+    """Main entrypoint for calculating fold weights."""
     fold_scores = [
         ("fold=0", 0.7110),
         ("fold=1", 0.7086),
@@ -22,7 +23,7 @@ def main() -> None:
     ]
     df = pd.DataFrame(fold_scores, columns=["fold", "score"])
 
-    scaler = MinMaxScaler()
+    scaler = MinMaxScaler(feature_range=(0.2, 1.0))
     norm_scores = scaler.fit_transform(df[["score"]].values)
     df["score_norm"] = norm_scores
     df.to_parquet("scores.parquet")

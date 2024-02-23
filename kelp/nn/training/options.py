@@ -7,6 +7,12 @@ from kelp.nn.training.config import TrainConfig
 
 
 def parse_args() -> TrainConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of TrainConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data_dir",

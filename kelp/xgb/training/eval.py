@@ -38,6 +38,12 @@ class EvalConfig(PredictConfig):
 
 
 def parse_args() -> EvalConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of EvalConfig.
+
+    """
     parser = build_prediction_arg_parser()
     parser.add_argument("--metadata_fp", type=str, required=True)
     parser.add_argument("--eval_split", type=int, default=8)

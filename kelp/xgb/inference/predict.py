@@ -62,6 +62,12 @@ def build_prediction_arg_parser() -> argparse.ArgumentParser:
 
 
 def parse_args() -> PredictConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of PredictConfig.
+
+    """
     parser = build_prediction_arg_parser()
     args = parser.parse_args()
     cfg = PredictConfig(**vars(args))

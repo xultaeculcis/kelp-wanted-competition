@@ -17,6 +17,12 @@ class PredictAndSubmitConfig(PredictConfig):
 
 
 def parse_args() -> PredictAndSubmitConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of PredictAndSubmitConfig.
+
+    """
     parser = build_prediction_arg_parser()
     parser.add_argument("--preview_submission", action="store_true")
     parser.add_argument("--submission_preview_output_dir", type=str)

@@ -9,7 +9,7 @@ from kelp.nn.models.resunet.decoder import ResUnetDecoder
 
 
 class ResUnet(SegmentationModel):
-    """ResUnet_ is a fully-convolution neural network for image semantic segmentation. Consist of *encoder*
+    """ResUnet is a fully-convolution neural network for image semantic segmentation. Consist of *encoder*
     and *decoder* parts connected with *skip connections*. Encoder extract features of different spatial
     resolution (skip connections) which are used by decoder to define accurate segmentation mask. Use *concatenation*
     for fusing decoder blocks with skip connections. Use residual connections inside each decoder block.

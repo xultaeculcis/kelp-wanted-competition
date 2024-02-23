@@ -26,6 +26,17 @@ def load_image(
     band_order: List[int],
     fill_value: torch.nan,
 ) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Helper function to load a satellite image and fill out missing pixels.
+
+    Args:
+        image_path: The path to the image.
+        band_order: The band order to load.
+        fill_value: The fill value for missing pixels.
+
+    Returns: An array with the image.
+
+    """
     with rasterio.open(image_path) as src:
         img = src.read(band_order).astype(np.float32)
         img = np.where(img == -32768.0, fill_value, img)
@@ -37,6 +48,17 @@ def slice_image(
     tile_size: Tuple[int, int],
     overlap: int,
 ) -> List[np.ndarray]:  # type: ignore[type-arg]
+    """
+    Helper function to slice an image into smaller tiles with a given overlap.
+
+    Args:
+        image: The image to slice.
+        tile_size: The size of the tile.
+        overlap: The overlap between tiles.
+
+    Returns: A list of sliced images.
+
+    """
     tiles = []
     height, width = image.shape[1], image.shape[2]
     step = tile_size[0] - overlap
@@ -65,6 +87,20 @@ def inference_model(
     tta_merge_mode: str = "mean",
     decision_threshold: Optional[float] = None,
 ) -> Tensor:
+    """
+    Runs inference on a batch of image tiles.
+
+    Args:
+        x: The batch of image tiles.
+        model: The model to use for inference.
+        soft_labels: A flag indicating whether to use soft-labels.
+        tta: A flag indicating whether to use TTA.
+        tta_merge_mode: The TTA merge mode.
+        decision_threshold: An optional decision threshold to use. Will use torch.argmax by default.
+
+    Returns: A tensor with predictions.
+
+    """
     x = x.to(model.device)
     with torch.no_grad():
         if tta:
@@ -92,6 +128,19 @@ def merge_predictions(
     overlap: int,
     decision_threshold: Optional[float] = None,
 ) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Merges the prediction tiles into a single image by averaging the predictions in the overlapping sections.
+
+    Args:
+        tiles: A list of tiles to merge back into one image.
+        original_shape: The shape of the original image.
+        tile_size: The tile size used to generate crops.
+        overlap: The overlap between the tiles.
+        decision_threshold: An optional decision threshold.
+
+    Returns: A numpy array representing merged tiles.
+
+    """
     step = tile_size[0] - overlap
     prediction = np.zeros(original_shape, dtype=np.float32)
     counts = np.zeros(original_shape, dtype=np.float32)
@@ -129,6 +178,27 @@ def process_image(
     tta_merge_mode: str = "mean",
     decision_threshold: Optional[float] = None,
 ) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Runs SAHI on a single image.
+
+    Args:
+        image_path: The path to the image.
+        model: The model to use for prediction.
+        tile_size: The tile size to use for SAHI.
+        overlap: The overlap between tiles.
+        band_order: The band order.
+        resize_tf: The resize transform to use for resizing the tiles.
+        input_transforms: The input transform to use for input image before passing it to the model.
+        post_predict_transforms: The post-predict transform to use for predictions.
+        fill_value: The fill value for missing pixels.
+        soft_labels: A flag indicating whether to use soft-labels.
+        tta: A flag indicating whether to use TTA.
+        tta_merge_mode: The TTA merge mode.
+        decision_threshold: An optional decision threshold.
+
+    Returns: An array with post-processed and merged tiles as final prediction.
+
+    """
     image = load_image(
         image_path=image_path,
         fill_value=fill_value,
@@ -180,6 +250,26 @@ def predict_sahi(
     tta_merge_mode: str = "mean",
     decision_threshold: Optional[float] = None,
 ) -> None:
+    """
+    Runs SAHI on specified image list.
+
+    Args:
+        model: The model to use for prediction.
+        file_paths: The input image paths.
+        output_dir: The path to the output directory.
+        tile_size: The tile size to use for SAHI.
+        overlap: The overlap between tiles.
+        band_order: The band order.
+        resize_tf: The resize transform to use for resizing the tiles.
+        input_transforms: The input transform to use for input image before passing it to the model.
+        post_predict_transforms: The post-predict transform to use for predictions.
+        fill_value: The fill value for missing pixels.
+        soft_labels: A flag indicating whether to use soft-labels.
+        tta: A flag indicating whether to use TTA.
+        tta_merge_mode: The TTA merge mode.
+        decision_threshold: An optional decision threshold.
+
+    """
     model.eval()
     for file_path in tqdm(file_paths, desc="Processing files"):
         tile_id = file_path.name.split("_")[0]

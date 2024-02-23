@@ -31,6 +31,12 @@ class EvalConfig(PredictConfig):
 
 
 def parse_args() -> EvalConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of EvalConfig.
+
+    """
     parser = build_prediction_arg_parser()
     parser.add_argument("--metadata_dir", type=str, required=True)
     parser.add_argument("--experiment_name", type=str, default="model-eval-exp")

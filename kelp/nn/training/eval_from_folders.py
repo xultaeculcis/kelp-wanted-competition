@@ -48,6 +48,12 @@ class EvaluateFromFoldersConfig(ConfigBase):
 
 
 def parse_args() -> EvaluateFromFoldersConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of EvaluateFromFoldersConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--gt_dir", type=str, required=True)
     parser.add_argument("--preds_dir", type=str, required=True)

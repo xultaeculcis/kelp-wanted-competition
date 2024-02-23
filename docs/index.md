@@ -15,7 +15,7 @@ installation.
 
 ## Docs
 
-See [guides](guides) interactive documentation web page.
+See [interactive documentation](index.md) web page.
 
 ## Running tests
 

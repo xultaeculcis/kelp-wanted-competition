@@ -102,6 +102,10 @@ class DecoderBlock(nn.Module):
 
 
 class EfficientUnetPlusPlusDecoder(nn.Module):
+    """
+    EfficientUnet++ Decoder.
+    """
+
     def __init__(
         self,
         encoder_channels: List[int],

@@ -20,6 +20,8 @@ _logger = get_logger(__name__)
 
 
 class AveragePredictionsConfig(ConfigBase):
+    """Config for running prediction averaging logic."""
+
     predictions_dirs: List[Path]
     output_dir: Path
     decision_threshold: float = 0.5
@@ -36,6 +38,12 @@ class AveragePredictionsConfig(ConfigBase):
 
 
 def parse_args() -> AveragePredictionsConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of AveragePredictionsConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--predictions_dirs", nargs="*", required=True)
     parser.add_argument("--weights", nargs="*", required=True)
@@ -57,6 +65,16 @@ def average_predictions(
     weights: List[float],
     decision_threshold: float = 0.5,
 ) -> None:
+    """
+    Average predictions given a list of directories with predictions from single models.
+
+    Args:
+        preds_dirs: The list of directories with predictions from single model.
+        output_dir: The output directory.
+        weights: The list of weights for each fold (prediction directory).
+        decision_threshold: The final decision threshold.
+
+    """
     if len(weights) != len(preds_dirs):
         raise ValueError("Number of weights must match the number prediction dirs!")
 
@@ -93,6 +111,7 @@ def average_predictions(
 
 
 def main() -> None:
+    """Main entrypoint for averaging the predictions and creating a submission file."""
     cfg = parse_args()
     now = datetime.utcnow().isoformat()
     out_dir = cfg.output_dir / now
