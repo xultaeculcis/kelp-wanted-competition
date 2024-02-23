@@ -20,14 +20,6 @@ inputs:
     type: integer
     default: 0
     description: The CV split number.
-  encoder:
-    type: string
-    default: resnet50
-    description: The encoder.
-  architecture:
-    type: string
-    default: unet
-    description: The network architecture.
 
 outputs:
   output_dir:
@@ -49,7 +41,7 @@ command: >-
   --dataset_stats_fp ${{inputs.dataset_stats_file}}
   --cv_split ${{inputs.cv_split}}
   --batch_size 32
-  --num_workers 16
+  --num_workers 4
   --bands R,G,B,SWIR,NIR,QA,DEM
   --spectral_indices DEMWM,NDVI,ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
   --resize_strategy pad
@@ -67,8 +59,8 @@ command: >-
   --dem_nan_pixels_pct_importance_factor 0.25
   --dem_zero_pixels_pct_importance_factor -1
   --normalization_strategy quantile
-  --architecture ${{inputs.architecture}}
-  --encoder ${{inputs.encoder}}
+  --architecture unet
+  --encoder tu-efficientnet_b5
   --pretrained True
   --encoder_weights imagenet
   --decoder_channels 256,128,64,32,16
@@ -84,11 +76,8 @@ command: >-
   --monitor_metric val/dice
   --save_top_k 1
   --early_stopping_patience 50
-  --precision bf16-mixed
-  --epochs 25
+  --precision 16-mixed
+  --epochs 50
   --swa False
-  --swa_epoch_start 0.5
-  --swa_annealing_epochs 25
-  --swa_lr 3e-5
 
 is_deterministic: false

@@ -382,6 +382,7 @@ def main() -> None:
     Will automatically use SAHI if model was trained with this flag.
     """
     cfg = parse_args()
+    (cfg.output_dir / "predict_config.yaml").write_text(yaml.dump(cfg.model_dump(mode="json")))
     if cfg.training_config.sahi:
         run_sahi_prediction(
             data_dir=cfg.data_dir,
