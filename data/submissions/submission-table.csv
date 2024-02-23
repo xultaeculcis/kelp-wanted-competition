@@ -1,0 +1,140 @@
+No,Public score,Private score,Who,Submission ID,Submitted at,Note
+0,0.3861,0.3878,xultaeculcis,id-246492,2023-12-15 23:28:08 UTC,Baseline with bad checkpoint
+1,0.6569,0.6622,xultaeculcis,id-246539,2023-12-16 15:33:35 UTC,mlruns/750575777522054761/f8c87b7158d04f8ba28daeab8458d076/artifacts/checkpoints/kelp-epoch=07-val_dice=0.755.ckpt
+2,0.6338,0.6429,xultaeculcis,id-246540,2023-12-16 15:54:19 UTC,mlruns/750575777522054761/f8c87b7158d04f8ba28daeab8458d076/artifacts/model
+3,0.6491,0.6574,xultaeculcis,id-247008,2023-12-17 16:32:49 UTC,mlruns/256237887236640917/e8f90ac5b68c42b8a0f749faec8795e8
+4,0.6608,0.6645,xultaeculcis,id-247009,2023-12-17 16:36:07 UTC,mlruns/256237887236640917/60d08ce5f3714218964217abcf52d5b0
+5,0.6637,0.6664,xultaeculcis,id-247010,2023-12-17 16:37:59 UTC,mlruns/256237887236640917/c3c37349f8dd4717bbb4fc484daa780b
+6,0.6551,0.662,xultaeculcis,id-247144,2023-12-18 08:30:36 UTC,mlruns/256237887236640917/e258bef1a7d441f8a21f6dd417ed4faa
+7,0.6529,0.6578,xultaeculcis,id-247145,2023-12-18 08:32:53 UTC,mlruns/256237887236640917/9e4bdeedfb5f47f3955b484bc88236ef
+8,0.6411,0.6438,xultaeculcis,id-247146,2023-12-18 08:35:24 UTC,mlruns/256237887236640917/028b26594cb848c38345065cf89967af
+9,0.6653,0.6676,xultaeculcis,id-247318,2023-12-19 07:15:09 UTC,mlruns/256237887236640917/d015e5d417824e1f93ed557370856e74
+10,0.6507,0.6568,xultaeculcis,id-247319,2023-12-19 07:16:55 UTC,mlruns/256237887236640917/641b560fd9f441c3992d0fdc2e8ba483
+11,0.6626,0.6642,xultaeculcis,id-247320,2023-12-19 07:18:22 UTC,mlruns/256237887236640917/6c402e7ec8b349d5b9a1bd2fa7d280c1
+12,0.6506,0.6532,xultaeculcis,id-247499,2023-12-20 07:24:10 UTC,mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
+13,0.6648,0.6731,xultaeculcis,id-247931,2023-12-22 23:00:39 UTC,mlruns/256237887236640917/31cfd1130f464087a0644695eb54d244
+14,0.6583,0.6687,xultaeculcis,id-247932,2023-12-22 23:17:10 UTC,mlruns/256237887236640917/a958539648844d5fa0abfd885a3dcc9d
+15,0.6663,0.6725,xultaeculcis,id-247955,2023-12-23 12:51:15 UTC,mlruns/256237887236640917/790f576ce45f420895494c4e66bedfa3
+16,0.6566,0.6587,xultaeculcis,id-247956,2023-12-23 12:57:31 UTC,mlruns/256237887236640917/e9dff62e743347d29f0ccd7691632875
+17,0.6678,0.6752,xultaeculcis,id-247957,2023-12-23 12:59:52 UTC,mlruns/256237887236640917/0e4fd545a406419e926ef739c73b24da
+18,0.494,0.4978,xultaeculcis,id-248018,2023-12-24 09:46:23 UTC,mlruns/256237887236640917/1a228f92594f4504be9fd773ac089fc2
+19,0.6824,0.6948,xultaeculcis,id-248043,2023-12-24 17:52:21 UTC,mlruns/256237887236640917/e5337ce899634d47968b0b45a3e7968d
+20,0.6802,0.6899,xultaeculcis,id-248044,2023-12-24 18:01:12 UTC,mlruns/256237887236640917/1d511ccdecb1419187595a9baa753f00
+21,0.6872,0.699,xultaeculcis,id-248070,2023-12-25 15:56:51 UTC,mlruns/919593470568042977/de493922cbbc4cc7a39665e06fef5959
+22,0.6848,0.6937,xultaeculcis,id-248071,2023-12-25 16:01:23 UTC,mlruns/919593470568042977/08b9b0ebf85a46d5840a27e166004460
+23,0.694,0.7073,xultaeculcis,id-248229,2023-12-28 20:01:34 UTC,mlruns/256237887236640917/9b8e7dcfb5454f5680dee0445cde73fe
+24,0.6925,0.7032,xultaeculcis,id-248390,2023-12-31 22:38:01 UTC,mlruns/125701342133334851/993dc2f85f3b486cbe95c58d447edceb
+25,0.6926,0.7022,xultaeculcis,id-248391,2023-12-31 22:55:48 UTC,mlruns/125701342133334851/58c9b96abc114ea09f15f618bb95aa38
+26,0.6926,0.7022,xultaeculcis,id-248392,2023-12-31 23:33:54 UTC,mlruns/125701342133334851/4be05328ca1d493da83ae911a56cc2d3
+27,0.7022,0.7116,xultaeculcis,id-248394,2024-01-01 00:04:52 UTC,mlruns/125701342133334851/4be05328ca1d493da83ae911a56cc2d3
+28,0.7019,0.7098,xultaeculcis,id-248428,2024-01-01 21:55:22 UTC,mlruns/aml/Job_purple_muscle_cpdxz9p6_OutputsAndLogs
+29,0.7,0.7088,xultaeculcis,id-248430,2024-01-01 22:01:41 UTC,mlruns/aml/Job_helpful_cow_7wtpg6dn_OutputsAndLogs
+30,0.6957,0.7073,xultaeculcis,id-248452,2024-01-02 07:39:39 UTC,data/aml/Job_keen_sponge_7rfpsfqt_OutputsAndLogs
+31,0.6999,0.7106,xultaeculcis,id-248455,2024-01-02 08:11:49 UTC,Job_modest_basil_179pr5yd_OutputsAndLogs
+32,0.6989,0.7104,xultaeculcis,id-248457,2024-01-02 08:14:27 UTC,Job_polite_pot_4xcv1gph_OutputsAndLogs
+33,0.7034,0.7149,xultaeculcis,id-248517,2024-01-03 07:25:55 UTC,mlruns/125701342133334851/ff896e93496344c2903a69fbf94f14fa
+34,0.7045,0.7146,xultaeculcis,id-248518,2024-01-03 07:28:30 UTC,mlruns/125701342133334851/3298cf9aad3845a1ad0517e6bcca2c85
+35,0.7044,0.714,xultaeculcis,id-248519,2024-01-03 07:31:06 UTC,mlruns/125701342133334851/072d8f5e55e941ea82242301a1c3a1d5
+36,0.7049,0.7158,xultaeculcis,id-248569,2024-01-04 07:19:15 UTC,mlruns/125701342133334851/9b98c0ecd4554947bb23341cd4ae0191
+37,0.7011,0.7155,xultaeculcis,id-248570,2024-01-04 07:20:52 UTC,mlruns/125701342133334851/f67b7cfc2faa449c9cef2d3ace98a15c
+38,0.7062,0.7144,xultaeculcis,id-248571,2024-01-04 07:22:14 UTC,mlruns/125701342133334851/faf96942e21f4fa9b11b55287f4fb575
+39,0.7033,0.7132,xultaeculcis,id-248637,2024-01-05 07:39:22 UTC,mlruns/125701342133334851/4ccf406b8fec4793aabfd986fd417d26
+40,0.7025,0.7124,xultaeculcis,id-248638,2024-01-05 07:41:38 UTC,mlruns/125701342133334851/cc8d8af285474a9899e38f17f7397603
+41,0.706,0.7157,xultaeculcis,id-248639,2024-01-05 07:46:53 UTC,mlruns/125701342133334851/7063fb98bc4e4cb1bfb33e67e1ee10de
+42,0.7083,0.7176,xultaeculcis,id-248738,2024-01-06 19:50:47 UTC,mlruns/125701342133334851/a9ea38cb5cf144c28b85cef99fbf0fc3
+43,0.7049,0.7126,xultaeculcis,id-248746,2024-01-06 21:55:02 UTC,mlruns/125701342133334851/e5560bce41ac48eaa9bdd5ea4fbb5ab5
+44,0.7048,0.7155,xultaeculcis,id-248747,2024-01-06 21:57:23 UTC,mlruns/125701342133334851/3ab0ade31670498bbf2dd2368b485b60
+45,0.7028,0.7104,xultaeculcis,id-248804,2024-01-07 16:07:35 UTC,mlruns/125701342133334851/ec3d3613a9d04b1b81b934231360aebe
+46,0.7072,0.713,xultaeculcis,id-248805,2024-01-07 16:53:06 UTC,mlruns/572928089797188764/46c64ea323ac4a988be119633766f9ff
+47,0.7064,0.7158,xultaeculcis,id-248806,2024-01-07 16:56:29 UTC,mlruns/572928089797188764/23417e14da584842940c1ef120d90bab
+48,0.7076,0.7185,xultaeculcis,id-248847,2024-01-08 07:43:11 UTC,mlruns/125701342133334851/a9ea38cb5cf144c28b85cef99fbf0fc3 TTA
+49,0.7073,0.7191,xultaeculcis,id-248848,2024-01-08 07:47:10 UTC,mlruns/125701342133334851/a9ea38cb5cf144c28b85cef99fbf0fc3 + TTA (mean)
+50,0.7083,0.7176,xultaeculcis,id-248882,2024-01-08 16:15:41 UTC,mlruns/125701342133334851/a9ea38cb5cf144c28b85cef99fbf0fc3 + dt=0.45
+51,0.7077,0.7177,xultaeculcis,id-248943,2024-01-09 07:06:43 UTC,mlruns/125701342133334851/a9ea38cb5cf144c28b85cef99fbf0fc3 + dt=0.45
+52,0.7101,0.7224,xultaeculcis,id-249117,2024-01-11 09:20:59 UTC,mlruns/992153174516526782/f7f77cec28b84d3fbf02718622d2dea2
+53,0.7105,0.7209,xultaeculcis,id-249118,2024-01-11 09:39:09 UTC,data/aml/Job_epic_rain_k18c71rd_OutputsAndLogs
+54,0.7119,0.7227,xultaeculcis,id-249215,2024-01-11 21:31:06 UTC,data/aml/Job_epic_rain_k18c71rd_OutputsAndLogs effnet-b5 + bf16-mixed + dt=0.45 + fixed checkpoint restore
+55,0.7113,0.7206,xultaeculcis,id-249546,2024-01-16 19:15:37 UTC,mlruns/992153174516526782/8ee860bfdc5b44458419dcf45a9e8303
+56,0.7113,0.7206,xultaeculcis,id-249547,2024-01-16 19:21:00 UTC,mlruns/992153174516526782/8ee860bfdc5b44458419dcf45a9e8303 dt=0.45
+57,0.7112,0.7204,xultaeculcis,id-249548,2024-01-16 19:25:41 UTC,mlruns/992153174516526782/8ee860bfdc5b44458419dcf45a9e8303 no extra config
+58,0.7132,0.7264,xultaeculcis,id-249614,2024-01-18 08:10:41 UTC,data/aml/Job_sincere_tangelo_dm0xsbhc_OutputsAndLogs + dt=0.45 + bf16 <= BEST SINGLE MODEL - priv LB = 0.7264
+59,0.713,0.7223,xultaeculcis,id-249615,2024-01-18 08:13:39 UTC,data/aml/Job_sharp_diamond_rkmqf7v2_OutputsAndLogs effnet-b5 + dt=0.45 + bf16
+60,0.7116,0.7214,xultaeculcis,id-249616,2024-01-18 08:15:21 UTC,data/aml/Job_quiet_engine_rd9x6p4w_OutputsAndLogs effnet-b5 + dt=0.45 + bf16
+61,0.7105,0.7191,xultaeculcis,id-249691,2024-01-19 16:39:36 UTC,data/aml/Job_strong_star_lp3sn14h_OutputsAndLogs effnet-b5 + dt=0.45 + bf16
+62,0.7139,0.7194,xultaeculcis,id-249692,2024-01-19 16:41:26 UTC,data/aml/Job_joyful_chain_lplz87r6_OutputsAndLogs effnet-b5 + dt=0.45 + bf16
+63,0.7106,0.7194,xultaeculcis,id-249693,2024-01-19 16:43:09 UTC,data/aml/Job_brave_ticket_crnvjwth_OutputsAndLogs effnet-b5 + dt=0.45 + bf16
+64,0.7047,0.7095,xultaeculcis,id-249725,2024-01-20 07:32:59 UTC,data/aml/Job_sincere_pear_pfkfmyhf_OutputsAndLogs effnet-b5 + dt=0.45 + bf16
+65,0.7086,0.7187,xultaeculcis,id-249726,2024-01-20 07:34:39 UTC,data/aml/Job_teal_pea_pkhl66m8_OutputsAndLogs
+66,0.71,0.7223,xultaeculcis,id-249727,2024-01-20 07:44:07 UTC,Job_willing_pin_72ss6cnc_OutputsAndLogs
+67,0.7152,0.7244,xultaeculcis,id-249792,2024-01-21 09:00:55 UTC,Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs
+68,0.711,0.7213,xultaeculcis,id-249793,2024-01-21 09:02:29 UTC,Job_serene_nose_xhks3350_OutputsAndLogs
+69,0.711,0.7179,xultaeculcis,id-249794,2024-01-21 09:03:53 UTC,Job_jovial_neck_xjgtp32h_OutputsAndLogs
+70,0.7151,0.7242,xultaeculcis,id-249852,2024-01-22 07:19:24 UTC,data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs + effnet_b5 + bf16 + no tta + no dt
+71,0.7153,0.7246,xultaeculcis,id-249853,2024-01-22 07:21:29 UTC,data/aml/Job_sleepy_feijoa_19fnjmpm_OutputsAndLogs + effnet-b5 + bf16 + dt=0.48
+72,0.7115,0.7151,xultaeculcis,id-249854,2024-01-22 08:04:15 UTC,data/aml/Job_nifty_town_ygsm3t5f_OutputsAndLogs + tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 + bf16 + dt=0.48
+73,0.7125,0.7195,xultaeculcis,id-249994,2024-01-23 07:09:36 UTC,mlruns/992153174516526782/ea7f179a3f264049b45a3f13588d1339 + tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 trained locally + bf16 + dt=0.48
+74,0.7021,0.7012,xultaeculcis,id-250121,2024-01-24 19:12:29 UTC,mlruns/992153174516526782/77d71f684b6e4e77b537a76e908d638c tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 + unet++ + bf16 + dt=0.75
+75,0.7055,0.7009,xultaeculcis,id-250122,2024-01-24 19:14:47 UTC,mlruns/992153174516526782/77d71f684b6e4e77b537a76e908d638c tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384 + unet++ + bf16
+76,0.7108,0.7236,xultaeculcis,id-250125,2024-01-24 22:43:23 UTC,data/aml/Job_sweet_tiger_rcnbgqm8_OutputsAndLogs + tu-efficientnet_b5 + bf16 + benchmark
+77,0.7169,0.7278,xultaeculcis,id-250226,2024-01-25 22:37:25 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> all 1.0"
+78,0.7151,0.7281,xultaeculcis,id-250227,2024-01-25 22:49:14 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> as public LB, fold=8 => 1.0"
+79,0.717,0.7285,xultaeculcis,id-250229,2024-01-25 22:52:11 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.4, weights -> as public LB, fold=8 => 1.0"
+80,0.7164,0.7254,xultaeculcis,id-250273,2024-01-26 16:49:12 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[3,6,8] with dt=0.5, weights=[1,1,1]"
+81,0.7112,0.7166,xultaeculcis,id-250278,2024-01-26 17:30:46 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[3,6,8] with dt=0.1, weights=[1,1,1]"
+82,0.7142,0.7278,xultaeculcis,id-250313,2024-01-26 17:54:21 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average of folds=[0,2,3,5,6,8] with dt=0.6, weights=[1,1,1,1,1,1]"
+83,0.7072,0.7169,xultaeculcis,id-250390,2024-01-27 09:54:05 UTC,"tu-efficientnet_b5 + bf16, random split train@98%"
+84,0.7088,0.7176,xultaeculcis,id-250391,2024-01-27 09:57:21 UTC,"mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae tu-efficientnet_b5 + bf16 + dt=0.48, random split train@98%"
+85,0.709,0.7176,xultaeculcis,id-250392,2024-01-27 10:00:36 UTC,"mlruns/634608970142059489/3c656b06fdaf4d8aad11e7c9ba19c7ae tu-efficientnet_b5 + bf16 + dt=0.45, random split train@98%"
+86,0.7164,0.7259,xultaeculcis,id-250562,2024-01-28 20:56:08 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.4, weights -> as public LB, fold=8 => 1.0, retrain @50 epochs"
+87,0.7156,0.7238,xultaeculcis,id-250564,2024-01-28 20:59:34 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.35, weights -> as public LB, fold=8 => 1.0, retrain @50 epochs"
+88,0.7169,0.7278,xultaeculcis,id-250565,2024-01-28 21:08:32 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> as val scores, retrain @50 epochs"
+89,0.7169,0.7278,xultaeculcis,id-250607,2024-01-29 06:44:04 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.5, weights -> 1.0, retrain @50 epochs"
+90,0.7164,0.7283,xultaeculcis,id-250608,2024-01-29 06:46:30 UTC,"???;all;???;0.7169;tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.55, weights -> 1.0, retrain @50 epochs"
+91,0.7164,0.7259,xultaeculcis,id-250609,2024-01-29 06:49:15 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.45, weights -> 1.0, retrain @50 epochs"
+92,0.7169,0.7278,xultaeculcis,id-250941,2024-02-01 16:59:24 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0, retrain @50 epochs"
+93,0.5125,0.5051,xultaeculcis,id-251133,2024-02-02 18:45:24 UTC,mlruns/989535101499025198/980d209750c24bd1bc91de9879bcd865
+94,0.7155,0.7214,xultaeculcis,id-251335,2024-02-04 16:09:50 UTC,mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f effnet-b5 + bf16 + dt=0.48 + new sampler weights
+95,0.7143,0.7208,xultaeculcis,id-251336,2024-02-04 16:12:31 UTC,mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f effnet-b5 + bf16 + new sampler weights
+96,0.7155,0.7212,xultaeculcis,id-251337,2024-02-04 16:18:34 UTC,mlruns/256237887236640917/97e26d18714b4babbf4e16169b03243f effnet-b5 + bf16 + dt=0.45 + new sampler weights
+97,0.7169,0.7278,xultaeculcis,id-251442,2024-02-05 19:03:58 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0 + new sampler weights"
+98,0.717,0.7278,xultaeculcis,id-251443,2024-02-05 19:24:29 UTC,"tu-efficientnet_b5 + bf16 + dt=0.40, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + new sampler weights"
+99,0.7165,0.7278,xultaeculcis,id-251446,2024-02-05 19:32:22 UTC,"tu-efficientnet_b5 + bf16 + dt=0.40, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for 4 worst splits + new sampler weights"
+100,0.7197,0.7318,xultaeculcis,id-251549,2024-02-06 20:15:43 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0, retrain @50 epochs, fixed pred dir <= BEST SUBMISSION - priv LB = 0.7318"
+101,0.72,0.7316,xultaeculcis,id-251550,2024-02-06 20:23:09 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), retrain @50 epochs, fixed pred dir"
+102,0.7164,0.7271,xultaeculcis,id-251551,2024-02-06 20:25:54 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0 + new sampler weights, fixed preds dir"
+103,0.7201,0.7286,xultaeculcis,id-251606,2024-02-07 07:20:52 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) mix of best model per split"
+104,0.7195,0.7296,xultaeculcis,id-251633,2024-02-07 16:51:14 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> 1.0 mix of best model per split"
+105,0.7204,0.7296,xultaeculcis,id-251634,2024-02-07 16:54:21 UTC,"tu-efficientnet_b5 + bf16 + dt=0.48, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for worst 2 models + mix of best model per split"
+106,0.7204,0.7296,xultaeculcis,id-251670,2024-02-08 06:52:05 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for worst 2 models + mix of best model per split"
+107,0.7206,0.7296,xultaeculcis,id-251672,2024-02-08 06:57:19 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for worst 2 models + mix of best model per split"
+108,0.7204,0.7294,xultaeculcis,id-251675,2024-02-08 07:05:49 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + mix of best model per split"
+109,0.7203,0.7305,xultaeculcis,id-251885,2024-02-10 22:44:48 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> all 1.0, fold=8 -> 0.5, fold=9 -> 0.0 + mix of best model per split"
+110,0.7196,0.7293,xultaeculcis,id-251886,2024-02-10 22:51:08 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0) + 0.0 for worst 3 models + mix of best model per split"
+111,0.7208,0.7294,xultaeculcis,id-251887,2024-02-10 23:04:37 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> all 1.0, fold=0 -> 0.0 fold=5 -> 0.0, fold=9 -> 0.0 + mix of best model per split"
+112,0.7203,0.7297,xultaeculcis,id-251949,2024-02-11 17:53:52 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> all 1.0, fold=9 -> 0, fold=1 -> 0.0 + mix of best model per split"
+113,0.7147,0.7226,xultaeculcis,id-252056,2024-02-13 13:57:34 UTC,mlruns/567580247645556359/68264618d78642099951352bba6aada8 tu-efficientnet_b5 + bf16 + SWA @25 epochs
+114,0.7202,0.7278,xultaeculcis,id-252057,2024-02-13 14:03:32 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), fold=9 -> 0, fold=1 -> 0.0, fold=7 -> 0.0 + mix of best model per split"
+115,0.7207,0.7297,xultaeculcis,id-252059,2024-02-13 14:08:52 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,1,0.637,0.59,1,0.63,1,0] + mix of best model per split"
+116,0.7149,0.727,xultaeculcis,id-252135,2024-02-14 09:41:57 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.59,0.733,0.63,1,0] + mix of best model per split, SWA"
+117,0.7193,0.7304,xultaeculcis,id-252137,2024-02-14 10:02:23 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.59,0.733,0.63,1,0] + mix of updated best model per split"
+118,0.7159,0.7285,xultaeculcis,id-252139,2024-02-14 10:11:54 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.59,0.733,0.63,1,0] + SWA"
+119,0.7207,0.7278,xultaeculcis,id-252257,2024-02-15 21:22:23 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.45, weights -> MinMax(0.2, 1.0), weights=[0,0,0.666,0.88,0.637,0.3,0.733,0.3,1,0] + mix of updated best model per split"
+120,0.7111,0.7215,xultaeculcis,id-252263,2024-02-15 21:30:43 UTC,data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs + effnet-b5 + bf16 + dt=0.48
+121,0.7089,0.7192,xultaeculcis,id-252264,2024-02-15 21:33:43 UTC,data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs + effnet-b5 + bf16 + dt=0.48
+122,0.7194,0.7318,xultaeculcis,id-252313,2024-02-16 08:18:43 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.45, weights -> MinMax(0.2, 1.0) + cv hparam runs with jaccard, more channels @50 epochs"
+123,0.7207,0.7305,xultaeculcis,id-252314,2024-02-16 08:33:53 UTC,"tu-efficientnet_b5 + bf16 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0.0, 0.0, 0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.0] + mix of updated best model per split"
+124,0.7207,0.7291,xultaeculcis,id-252315,2024-02-16 08:49:32 UTC,"tu-efficientnet_b5 + fp32 + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0.0, 0.0, 0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.0] + mix of best model per split"
+125,0.704,0.7253,xultaeculcis,id-252414,2024-02-17 09:45:27 UTC,"tu-efficientnet_b5 + bf16 + no QA + no DEM + soft labels, 10 fold average with dt=0.48, weights -> MinMax(0.2, 1.0), weights=[0.0, 0.0, 0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.0] + mix of best model per split"
+126,0.6826,0.6848,xultaeculcis,id-252441,2024-02-17 18:05:05 UTC,mlruns/567580247645556359/5691fc348f874ffdb2fc6c9616e11246 + tu-efficientnet_b5 + bf16 + SAHI + dt=0.48
+127,0.7206,0.7299,xultaeculcis,id-252521,2024-02-18 14:42:27 UTC,"mix of best models effnet_b5, seresnext, rexnetr, unet, unet++, linknet, weights=[0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.88, 0.637, 0.733, 1.0, 1.0]"
+128,0.7205,0.7308,xultaeculcis,id-252523,2024-02-18 14:52:13 UTC,"mix of best models effnet_b5, seresnext, rexnetr, unet, unet++, linknet, weights=[0.666, 0.88, 0.637, 0.59, 0.733, 0.63, 1.0, 0.88, 0.637, 0.733]"
+129,0.7197,0.7301,xultaeculcis,id-252525,2024-02-18 14:58:29 UTC,"mix of best models effnet_b5, seresnext, rexnetr, unet, unet++, linknet, weights=[0.666, 0.59, 0.63, 1.0, 0.88, 0.637, 0.733]"
+130,0.7135,0.7199,xultaeculcis,id-252600,2024-02-19 07:15:51 UTC,mlruns/567580247645556359/a82cc2d0adf4442b97128a87d5067234 effnet-b5 + bf16 + dt=0.48
+131,0.7114,0.7229,xultaeculcis,id-252603,2024-02-19 07:28:21 UTC,mlruns/567580247645556359/44027b189ede427b9b5f3576cd0cf2d5;1;0.85881;;effnet-b5 + bf16 + dt=0.48mlruns/567580247645556359/44027b189ede427b9b5f3576cd0cf2d5 effnet-b5 + bf16 + dt=0.48
+132,0.7094,0.7204,xultaeculcis,id-252604,2024-02-19 07:36:00 UTC,mlruns/567580247645556359/4f138f9da2c648b59abb5716748f73de effnet-b5 + bf16 + dt=0.48
+133,0.7133,0.7217,xultaeculcis,id-252727,2024-02-20 07:25:09 UTC,mlruns/567580247645556359/fe0a0cab55d944f0a2cd5219d9e0cef7 effnet-b5 + bf16 + dt=0.48
+134,0.7106,0.7192,xultaeculcis,id-252728,2024-02-20 07:27:20 UTC,mlruns/567580247645556359/d911c04a75fa474982e77d41c8693515 effnet-b5 + bf16 + dt=0.48
+135,0.7205,0.729,xultaeculcis,id-252731,2024-02-20 07:55:36 UTC,"mix of best models effnet_b5 with 10-fold split + new 5-fold split models + weights=[0.583, 0.852, 0.546, 0.491, 0.667, 0.537, 1.0, 0.815, 0.62, 0.435, 0.796, 0.546] + dt=0.48 + soft labels"
+136,0.7207,0.7293,xultaeculcis,id-252826,2024-02-21 07:27:45 UTC,"mix of best models effnet_b5 with 10-fold split + weights=[0.583, 0.852, 0.546, 0.491, 0.667, 0.537, 1.0] + dt=0.48 + soft labels"
+137,0.7206,0.7287,xultaeculcis,id-252827,2024-02-21 07:36:06 UTC,"mix of best models effnet_b5 with 10-fold split + weights=[0.3, 0.88, 0.3, 0.59, 0.733, 0.63, 1.5] + dt=0.48 + soft labels"
+138,0.721,0.7296,xultaeculcis,id-252828,2024-02-21 07:38:00 UTC,"mix of best models effnet_b5 with 10-fold split + weights=[1, 1, 1, 1, 1, 1, 1] + dt=0.48 + soft labels"
