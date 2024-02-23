@@ -16,7 +16,7 @@ conda install -c conda-forge conda-lock -n base
 Run:
 
 ```shell
-make setup-local-env
+make local-env
 ```
 
 It will also install `pre-commit` hooks and the project in an editable mode.
@@ -67,12 +67,13 @@ You can manually disable `pre-commit` hooks by running: `pre-commit uninstall` U
 
 ## Setup environmental variables
 
+> NOTE: The .env files are only needed if you plan to run Azure ML Pipelines.
+
 Ask your colleagues for `.env` files which aren't included in this repository and put them inside the repo's root directory.
 
 To see what variables you need see the `.env-sample` file.
 
-
-## Torch-ORT support
+## Torch-ORT support (optional)
 
 Optionally, you can enable `torch-ort` support by configuring it via `Makefile` command:
 
