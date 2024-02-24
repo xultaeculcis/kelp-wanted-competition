@@ -263,7 +263,7 @@ train-all-folds:
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:
-	python ./kelp/nn/training/eval.py \<<<
+	python ./kelp/nn/training/eval.py \
 		--data_dir data/raw \
 		--metadata_dir data/processed \
 		--dataset_stats_dir data/processed \
@@ -341,8 +341,8 @@ predict:
 .PHONY: submission  ## Generates submission file
 submission:
 	python ./kelp/core/submission.py \
-		--predictions_dir data/predictions \
-		--output_dir data/submissions
+		--predictions_dir $(PREDS_OUTPUT_DIR) \
+		--output_dir data/submissions/single-model
 
 .PHONY: predict-and-submit  ## Runs inference and generates submission file
 predict-and-submit:
