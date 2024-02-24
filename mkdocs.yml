@@ -47,6 +47,12 @@ nav:
       - Running tests: "guides/tests.md"
       - Using Makefile commands: "guides/makefile-usage.md"
       - Reproducibility of results: "guides/reproducibility.md"
+      - Preparing data: "guides/data-prep.md"
+      - Training models: "guides/training.md"
+      - Evaluating models: "guides/evaluation.md"
+      - Running inference: "guides/inference.md"
+      - Making submissions: "guides/submissions.md"
+      - XGBoost stuff: "guides/xgb-stuff.md"
   - API reference:
       - kelp.consts: "api_ref/consts.md"
       - kelp.core:

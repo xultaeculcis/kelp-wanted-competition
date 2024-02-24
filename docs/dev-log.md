@@ -867,3 +867,19 @@ as they are the worst on LB individually
 * The competition ends today
 * It was a good run regardless of final ranking
 * But oh boy, do I hope everyone in top 5 over-fitted to public test set :D
+
+## 2024-02-22
+
+* Checked the LB today - #2 place
+* So, yeah... indeed some people over-fitted
+* WIP. docs with training guides and docstrings
+
+## 2024-02-23
+
+* Added more docstrings
+* Updated docs
+* WIP. Reproducibility guide
+
+## 2024-02-24
+
+* Added technical report

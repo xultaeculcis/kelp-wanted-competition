@@ -178,6 +178,9 @@ eda:
 calculate-band-stats:
 	python ./kelp/data_prep/calculate_band_stats.py \
  		--data_dir data/raw \
+ 		--mask_using_qa \
+ 		--mask_using_water_mask \
+ 		--fill_missing_pixels_with_torch_nan \
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-cv  ## Runs train-val-test split using cross validation
