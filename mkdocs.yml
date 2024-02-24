@@ -53,7 +53,8 @@ nav:
       - Evaluating models: "guides/evaluation.md"
       - Running inference: "guides/inference.md"
       - Making submissions: "guides/submissions.md"
-      - XGBoost stuff: "guides/xgb-stuff.md"
+      - XGBoost: "guides/xgb-stuff.md"
+      - SAHI: "guides/sahi.md"
   - API reference:
       - kelp.consts: "api_ref/consts.md"
       - kelp.core:
