@@ -49,6 +49,7 @@ nav:
       - Reproducibility of results: "guides/reproducibility.md"
       - Preparing data: "guides/data-prep.md"
       - Training models: "guides/training.md"
+      - MLFlow artifacts: "guides/mlflow-artifacts.md"
       - Evaluating models: "guides/evaluation.md"
       - Running inference: "guides/inference.md"
       - Making submissions: "guides/submissions.md"

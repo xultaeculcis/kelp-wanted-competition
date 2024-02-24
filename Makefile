@@ -242,7 +242,7 @@ train:
 		--monitor_metric val/dice \
 		--save_top_k 1 \
 		--early_stopping_patience 50 \
-		--precision bf16-mixed \
+		--precision 16-mixed \
 		--epochs 50 \
 		--swa False
 
