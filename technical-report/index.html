@@ -1,0 +1,4240 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Estimating the extent of Giant Kelp Forests by segmenting Landsat imagery">
+      
+      
+      
+      
+        <link rel="prev" href="../dev-log/">
+      
+      
+        <link rel="next" href="../guides/setup-dev-env/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
+    
+    
+      
+        <title>Technical Report - kelp-wanted-competition</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#kelp-wanted-segmenting-kelp-forests-2nd-place-solution" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="kelp-wanted-competition" class="md-header__button md-logo" aria-label="kelp-wanted-competition" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kelp-wanted-competition
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Technical Report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xultaeculcis/kelp-wanted-competition" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="kelp-wanted-competition" class="md-nav__button md-logo" aria-label="kelp-wanted-competition" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    kelp-wanted-competition
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xultaeculcis/kelp-wanted-competition" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dev-Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Technical Report
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Technical Report
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Introduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tldl-solution-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      TL;DL - solution summary
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TL;DL - solution summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-worked" class="md-nav__link">
+    <span class="md-ellipsis">
+      What worked
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-did-not-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      What did not work
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-single-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best single model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-submissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best submissions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best submissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#submission-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Submission #1
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#submission-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Submission #2
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-leaderboard-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      Private leaderboard scores
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Project documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dev-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dev Log
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-to-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      How-to guides
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      API docs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methodology
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methodology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issues-during-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issues during training
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#software-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Software setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initial-data-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initial Data processing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Baseline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-fiddling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data fiddling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extra-channels-spectral-indices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extra channels - spectral indices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normalization-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Normalization strategy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loss-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Loss functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weighted-sampler" class="md-nav__link">
+    <span class="md-ellipsis">
+      Weighted sampler
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Training configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tta" class="md-nav__link">
+    <span class="md-ellipsis">
+      TTA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thresholding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thresholding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-architectures-and-encoders" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Architectures and Encoders
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stochastic-weights-averaging-swa" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stochastic Weights Averaging (SWA)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xgboost" class="md-nav__link">
+    <span class="md-ellipsis">
+      XGBoost
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sahi" class="md-nav__link">
+    <span class="md-ellipsis">
+      SAHI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ensemble
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soft-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soft labels
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/setup-dev-env/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setting up dev environment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/tests/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running tests
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/makefile-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Makefile commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/reproducibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reproducibility of results
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/data-prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Preparing data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/training/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Training models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/mlflow-artifacts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MLFlow artifacts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/evaluation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluating models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/inference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running inference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/submissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Making submissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/xgb-stuff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    XGBoost
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/sahi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SAHI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/consts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kelp.consts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.core
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.core
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/configs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    configs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/indices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    indices
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/settings/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    settings
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/submission/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    submission
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.data_prep
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.data_prep
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/aoi_grouping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    aoi_grouping
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/calculate_band_stats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    calculate_band_stats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/dataset_prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dataset_prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/eda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eda
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/move_split_files/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    move_split_files
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/plot_samples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    plot_samples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/sahi_dataset_prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sahi_dataset_prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/train_val_test_split/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train_val_test_split
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.nn
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.nn
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_1" id="__nav_5_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/band_stats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    band_stats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/datamodule/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    datamodule
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/transforms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    transforms
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_2" id="__nav_5_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/average_predictions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    average_predictions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/fold_weights/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fold_weights
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/predict_and_submit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict_and_submit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/preview_submission/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    preview_submission
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/sahi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sahi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_3" id="__nav_5_5_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/efficientunetplusplus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    efficientunet++
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/fcn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fcn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/resunet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resunet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/resunetplusplus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resunet++
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/factories/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    factories
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/losses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    losses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/modules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    modules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/segmentation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    segmentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_4" id="__nav_5_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/eval/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/eval_from_folders/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval_from_folders
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/train/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.xgb
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.xgb
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6_1" id="__nav_5_6_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/inference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/inference/predict_and_submit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict_and_submit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6_2" id="__nav_5_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/eval/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/train/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kelp.utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Introduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tldl-solution-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      TL;DL - solution summary
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TL;DL - solution summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-worked" class="md-nav__link">
+    <span class="md-ellipsis">
+      What worked
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-did-not-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      What did not work
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-single-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best single model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-submissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best submissions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best submissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#submission-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Submission #1
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#submission-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Submission #2
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-leaderboard-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      Private leaderboard scores
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Project documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dev-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dev Log
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-to-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      How-to guides
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      API docs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methodology
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methodology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issues-during-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issues during training
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#software-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Software setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initial-data-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initial Data processing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Baseline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-fiddling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data fiddling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extra-channels-spectral-indices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extra channels - spectral indices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normalization-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Normalization strategy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loss-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Loss functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weighted-sampler" class="md-nav__link">
+    <span class="md-ellipsis">
+      Weighted sampler
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Training configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tta" class="md-nav__link">
+    <span class="md-ellipsis">
+      TTA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thresholding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thresholding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-architectures-and-encoders" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Architectures and Encoders
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stochastic-weights-averaging-swa" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stochastic Weights Averaging (SWA)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xgboost" class="md-nav__link">
+    <span class="md-ellipsis">
+      XGBoost
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sahi" class="md-nav__link">
+    <span class="md-ellipsis">
+      SAHI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ensemble
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soft-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soft labels
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="kelp-wanted-segmenting-kelp-forests-2nd-place-solution">Kelp Wanted: Segmenting Kelp Forests - 2nd place solution</h1>
+<p>Username: xultaeculcis</p>
+<p><img alt="kelp-canopy.jpg" src="../assets/images/competition/kelp-canopy.jpg" /></p>
+<p>Overhead drone footage of giant kelp canopy. Image Credit: Tom Bell, All Rights Reserved.</p>
+<h2 id="introduction">Introduction</h2>
+<p>In the realm of environmental conservation, the urgency to deploy innovative solutions for monitoring critical
+ecosystems has never been more pronounced. Among these ecosystems, kelp forests stand out due to their vital role
+in marine biodiversity and their substantial contribution to global economic value. These underwater habitats,
+predominantly formed by giant kelp, are foundational to coastal marine ecosystems, supporting thousands of species
+while also benefiting human industries significantly. However, the sustainability of kelp forests is under threat
+from climate change, overfishing, and unsustainable harvesting practices. The pressing need for effective monitoring
+methods to preserve these ecosystems is evident.</p>
+<p>In response to this challenge, the
+<a href="https://www.drivendata.org/competitions/255/kelp-forest-segmentation/page/791/">Kelp Wanted: Segmenting Kelp Forests</a>
+competition on the <a href="https://www.drivendata.org/">DrivenData</a> platform presented an opportunity for machine learning
+enthusiasts and experts to contribute to the conservation efforts of these vital marine habitats.
+The competition aimed to leverage the power of machine learning to analyze coastal satellite imagery,
+enabling the estimation of kelp forests' extent over large areas and over time. This innovative approach marks
+a significant advancement in the field of environmental monitoring, offering a cost-effective and scalable solution
+to understand and protect kelp forest dynamics.</p>
+<p>The challenge required participants to develop algorithms capable of detecting the presence or absence of kelp canopy
+using <a href="https://www.usgs.gov/landsat-missions/landsat-satellite-missions">Landsat</a> satellite imagery.
+This binary semantic segmentation task demanded not only technical expertise in machine learning and image processing
+but also a deep understanding of the environmental context and the data's geospatial nuances.</p>
+<p>The competition underscored the importance of applying a combination of advanced machine learning techniques
+and domain-specific knowledge to address environmental challenges. The solution, which secured the 2nd place,
+leveraged a comprehensive strategy that included the use of pre-trained weights, data preprocessing
+methods, and a carefully optimized model architecture. By integrating additional spectral indices,
+adjusting the learning strategy, and employing a robust model ensemble, it was possible to achieve significant
+accuracy in segmenting kelp forests from satellite imagery.</p>
+<p>This report details the methodologies and technologies that underpinned the best submissions.
+From data preparation and feature engineering to model development and validation, outlined are the steps
+taken to develop a solution proposed approach demonstrates the potential of machine learning to make
+a meaningful contribution to environmental conservation efforts, paving the way for further research
+and application in this critical field.</p>
+<p>The Author extends his deepest gratitude to the organizers of the "Kelp Wanted: Segmenting Kelp Forests" competition,
+including <a href="https://www.drivendata.org/">DrivenData</a>, <a href="https://kelpwatch.org/">Kelpwatch.org</a>,
+<a href="https://byrneslab.net/">UMass Boston</a>, and <a href="https://www.whoi.edu/">Woods Hole Oceanographic Institution</a>,
+for their visionary approach in bridging machine learning with environmental conservation.
+Their dedication to addressing the urgent need for innovative solutions in monitoring kelp forests has not only
+spotlighted the critical state of these ecosystems but has also paved the way for groundbreaking research and
+development. The meticulous organization of the competition, the provision of a rich dataset, and the support offered
+throughout the challenge were instrumental in fostering a collaborative and inspiring environment for all participants.
+In Author's opinion, this competition has not only contributed significantly to the field of environmental science
+but has also empowered the machine learning community to apply their skills for a cause that extends far beyond
+technological advancement, aiming for a profound and positive impact on our planet's future.</p>
+<h2 id="tldl-solution-summary">TL;DL - solution summary</h2>
+<p>This section contains a TL;DR summary for the 2nd place solution.</p>
+<h3 id="what-worked">What worked</h3>
+<ul>
+<li>Pre-trained weights</li>
+<li>Reorder channels into R,G,B,SWIR,NIR,QA,DEM</li>
+<li>AdamW instead of Adam or SGD</li>
+<li>Weight decay = 1e-4</li>
+<li>Learning rate = 3e-4</li>
+<li>Batch size = 32 &lt;- full utilization of Tesla T4</li>
+<li><code>16-mixed</code> precision training</li>
+<li><code>bf16-mixed</code> precision inference</li>
+<li>AOI grouping (removing leakage between CV folds)</li>
+<li>Quantile normalization</li>
+<li>Dice Loss</li>
+<li>Weighted sampler @10240 samples per epoch<ul>
+<li><code>has_kelp_importance_factor=3.0</code></li>
+<li><code>kelp_pixels_pct_importance_factor=0.2</code></li>
+<li><code>qa_ok_importance_factor=0.0</code></li>
+<li><code>qa_corrupted_pixels_pct_importance_factor=-1.0</code></li>
+<li><code>almost_all_water_importance_factor=0.5</code></li>
+<li><code>dem_nan_pixels_pct_importance_factor=0.25</code></li>
+<li><code>dem_zero_pixels_pct_importance_factor=-1.0</code></li>
+</ul>
+</li>
+<li>Masking indices with QA and DEM Water Mask</li>
+<li>Extra spectral indices:<ul>
+<li>DEMWM,</li>
+<li>NDVI,</li>
+<li>ATSAVI,</li>
+<li>AVI,</li>
+<li>CI,</li>
+<li>ClGreen,</li>
+<li>GBNDVI,</li>
+<li>GVMI,</li>
+<li>IPVI,</li>
+<li>KIVU,</li>
+<li>MCARI,</li>
+<li>MVI,</li>
+<li>NormNIR,</li>
+<li>PNDVI,</li>
+<li>SABI,</li>
+<li>WDRVI,</li>
+<li>mCRIG</li>
+</ul>
+</li>
+<li>UNet + EfficientNet-B5 &lt;- best combo</li>
+<li>Decision threshold change to 0.45-0.48</li>
+<li><code>OneCycleLR</code></li>
+<li>10-fold CV</li>
+<li>Training for 50 epochs (best model ensemble)</li>
+<li>Mixing models with best DICE per split in the ensemble</li>
+<li>Soft labels (second-best model used them)</li>
+<li>Mixing model architectures and encoders such as:<ul>
+<li><code>unet</code> &lt;- was the best</li>
+<li><code>linknet</code></li>
+<li><code>unet++</code></li>
+<li><code>tu-efficeintnet_b5</code> &lt;- was the best</li>
+<li><code>tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384</code></li>
+<li><code>tu-maxvit_small_tf_384.in1k</code></li>
+<li><code>tu-seresnextaa101d_32x8d.sw_in12k_ft_in1k</code></li>
+<li><code>tu-rexnetr_200.sw_in12k_ft_in1k</code></li>
+<li><code>tu-seresnext26d_32x4d</code></li>
+<li><code>tu-gcresnet33ts.ra2_in1k</code></li>
+<li><code>tu-seresnext101_32x4d</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="what-did-not-work">What did not work</h3>
+<ul>
+<li>Training from scratch</li>
+<li>Larger or smaller <code>weight_decay</code></li>
+<li>Larger or smaller <code>lr</code></li>
+<li><code>decoder_attention_type="scse"</code></li>
+<li>Losses other than DICE (CE with weighting was close)</li>
+<li>Compiling the model and <code>torch-ort</code></li>
+<li>Normalization strategies other than <code>quantile</code> / <code>z-score</code></li>
+<li>Bunch of different index combinations</li>
+<li>TTA (for leaderboard)</li>
+<li>LR Schedulers other than <code>OneCycleLR</code></li>
+<li>Random split</li>
+<li><a href="../guides/xgb-stuff/">XGBoost</a> and other tree based models predicting on pixel level</li>
+<li>More decoder channels</li>
+<li><a href="../guides/sahi/">SAHI</a></li>
+<li>Resize strategy different than <code>pad</code></li>
+<li>Training with larger images</li>
+<li>Bigger batches</li>
+<li>More frequent val checks</li>
+<li>Smaller batch sizes and <code>accumulate_grad_batches</code> &gt; 1</li>
+<li>Stochastic Weights Averaging (SWA)</li>
+</ul>
+<h3 id="best-single-model">Best single model</h3>
+<p>The best single model had private LB score of <strong>0.7264</strong> which would result in 5th place in the final ranking.</p>
+<blockquote>
+<p>NOTE: All submissions were created using a Linux machine with 8 core AMD CPU, 32 GB RAM, 2TB SSD disk and RTX 3090
+GPU.</p>
+</blockquote>
+<p>The model was a <strong>UNet</strong> with <strong>EfficientNet-B5</strong> encoder pretrained on ImageNet trained in a following fashion:</p>
+<ul>
+<li>Trained with Azure ML using <code>Standard_NC4as_T4_v3</code> spot instances (4 cores, 28 GB RAM, 176 GB disk, Tesla T4 GPU with
+  16 GB VRAM)</li>
+<li>CV-Fold: #7</li>
+<li>Channel order: R,G,B,SWIR,NIR,QA,DEM</li>
+<li>Additional spectral indices: DEMWM, NDVI, ATSAVI, AVI, CI, ClGreen, GBNDVI, GVMI, IPVI, KIVU, MCARI, MVI, NormNIR,
+  PNDVI, SABI, WDRVI, mCRIG</li>
+<li>Default decoder channel numbers</li>
+<li>Batch size: 32</li>
+<li>Accumulate Grad Batches: 1</li>
+<li>Val Check Interval: 1</li>
+<li>Loss: Dice</li>
+<li>Weighted Sampler: @10240 samples / epoch</li>
+<li>Per image weights based on following config:<ul>
+<li><code>almost_all_water_importance_factor</code>: 0.5</li>
+<li><code>dem_nan_pixels_pct_importance_factor</code>: 0.25</li>
+<li><code>dem_zero_pixels_pct_importance_factor</code>: -1.0</li>
+<li><code>has_kelp_importance_factor</code>: 3.0</li>
+<li><code>kelp_pixels_pct_importance_factor</code>: 0.2</li>
+<li><code>qa_corrupted_pixels_pct_importance_factor</code>: -1.0</li>
+<li><code>qa_ok_importance_factor</code>: 0.0</li>
+</ul>
+</li>
+<li>Image size: 352 (resized using padding)</li>
+<li>Image normalization strategy: <code>quantile</code></li>
+<li>Masking spectral indices with DEMWM and QA</li>
+<li>Replacing missing pixels with <code>torch.nan</code></li>
+<li>Epochs: 10</li>
+<li>Optimizer: AdamW</li>
+<li>Weight decay: 1e-4</li>
+<li>Max learning rate: 3e-4</li>
+<li>Learning rate scheduler: <code>OneCycleLR</code>:<ul>
+<li><code>onecycle_div_factor</code>: 2.0</li>
+<li><code>onecycle_final_div_factor</code>: 100.0</li>
+<li><code>onecycle_pct_start</code>: 0.1</li>
+</ul>
+</li>
+<li>Precision: <code>16-mixed</code></li>
+<li>No <code>torch</code> ORT or <code>torch.compile</code></li>
+<li>No <code>benchmark</code></li>
+<li>Seed: 42</li>
+<li>Training single model took ~1:20h</li>
+</ul>
+<p>The submission used:</p>
+<ul>
+<li>No TTA</li>
+<li><code>bf16-mixed</code> precision</li>
+<li>Decision threshold = 0.45</li>
+<li>Inference took: ~30s</li>
+</ul>
+<h3 id="best-submissions">Best submissions</h3>
+<p>Two submissions with the same private LB score of <strong>0.7318</strong> were produced. Both of those were an ensemble
+of 10 models, trained on all 10-fold CV splits. Both submission used <strong>the best</strong> checkpoints <strong>not the last</strong> ones.</p>
+<h4 id="submission-1">Submission #1</h4>
+<p>Trained in the same way as the single model submission with following exceptions:</p>
+<ul>
+<li>Epochs increased to 50</li>
+<li>Mixture of all 10 CV-Folds</li>
+<li>Training single model took: ~6-7h</li>
+</ul>
+<blockquote>
+<p>NOTE: Model trained on fold=5 by mistake was trained for 10 epochs not 50</p>
+</blockquote>
+<p>Inference:</p>
+<ul>
+<li>No soft labels</li>
+<li>No TTA</li>
+<li>Decision threshold for a single model: 0.48</li>
+<li>Ensemble model weights:<ul>
+<li>fold=0: 1.0</li>
+<li>fold=1: 1.0</li>
+<li>fold=2: 1.0</li>
+<li>fold=3: 1.0</li>
+<li>fold=4: 1.0</li>
+<li>fold=5: 1.0</li>
+<li>fold=6: 1.0</li>
+<li>fold=7: 1.0</li>
+<li>fold=8: 1.0</li>
+<li>fold=9: 1.0</li>
+</ul>
+</li>
+<li>Ensemble decision threshold: 0.48</li>
+<li>Inference took: ~3 min</li>
+</ul>
+<h4 id="submission-2">Submission #2</h4>
+<p>Trained in the same way as the single model submission with following exceptions:</p>
+<ul>
+<li>Trained with Azure ML using <code>Standard_NC24ads_A100_v4</code> spot instances (24 cores, 220 GB RAM, 64 GB disk, A100 GPU with
+  80 GB VRAM)</li>
+<li>50 epochs</li>
+<li>Loss: Jaccard</li>
+<li>Decoder channels: 512, 256, 128, 64, 32</li>
+<li><code>bf16-mixed</code> precision</li>
+<li>Mixture of all 10 CV-Folds</li>
+<li>Training single model took ~2h</li>
+</ul>
+<p>Inference:</p>
+<ul>
+<li>Soft labels</li>
+<li>No TTA</li>
+<li><code>bf16-mixed</code> precision</li>
+<li>Ensemble model weights:<ul>
+<li>fold=0: 0.666</li>
+<li>fold=1: 0.5</li>
+<li>fold=2: 0.666</li>
+<li>fold=3: 0.88</li>
+<li>fold=4: 0.637</li>
+<li>fold=5: 0.59</li>
+<li>fold=6: 0.733</li>
+<li>fold=7: 0.63</li>
+<li>fold=8: 1.0</li>
+<li>fold=9: 0.2</li>
+</ul>
+</li>
+<li>Ensemble decision threshold: 0.45</li>
+<li>Inference took: ~3 min</li>
+</ul>
+<h4 id="private-leaderboard-scores">Private leaderboard scores</h4>
+<p>In the end 11 submissions had the score that would qualify them as 2nd place solutions - 8 of those had score of over 
+<strong>0.73</strong>. Furthermore, additional 5 submissions had the same score as the 3rd place solution. </p>
+<p><img alt="top-priv-scores-lb.png" src="../assets/images/lb/top-priv-scores-lb.png" /></p>
+<p>All of those submissions used model ensembles. The best single model was #41 in Author's submissions 
+with a score of 0.7264. That would have been 5th place solution.</p>
+<h2 id="code">Code</h2>
+<p>The code is available on
+GitHub: <a href="https://github.com/xultaeculcis/kelp-wanted-competition">https://github.com/xultaeculcis/kelp-wanted-competition</a></p>
+<h2 id="project-documentation">Project documentation</h2>
+<p>Interactive documentation page is available here: <a href="">kelp-wanted-competition-docs</a></p>
+<h3 id="dev-log">Dev Log</h3>
+<p>A detailed development log has been kept during the competition.
+You can review what was done to train the model in great detail <a href="../dev-log/">here</a>.</p>
+<h3 id="how-to-guides">How-to guides</h3>
+<p>The best place to start with the solution is to review the How-To guides:</p>
+<ul>
+<li><a href="../guides/setup-dev-env/">Setting up dev environment</a></li>
+<li><a href="../guides/contributing/">Contributing</a></li>
+<li><a href="../guides/tests/">Running tests</a></li>
+<li><a href="../guides/makefile-usage/">Using Makefile commands</a></li>
+<li><a href="../guides/reproducibility/">Reproducibility of results</a></li>
+<li><a href="../guides/data-prep/">Preparing data</a></li>
+<li><a href="../guides/training/">Training models</a></li>
+<li><a href="../guides/mlflow-artifacts/">MLFlow artifacts</a></li>
+<li><a href="../guides/evaluation/">Evaluating models</a></li>
+<li><a href="../guides/inference/">Running inference</a></li>
+<li><a href="../guides/submissions/">Making submissions</a></li>
+<li><a href="../guides/xgb-stuff/">XGBoost</a></li>
+<li><a href="../guides/sahi/">SAHI</a></li>
+</ul>
+<h3 id="api-docs">API docs</h3>
+<p>To learn more about how the code is structured and what are its functionalities go to: <a href="../api_ref/">Code docs</a>.</p>
+<h2 id="methodology">Methodology</h2>
+<p>This section aims to provide a detailed exposition of the methods employed to tackle the complex task of detecting
+kelp canopy presence using satellite imagery. Overall approach was multifaceted, integrating advanced machine learning
+techniques with domain-specific insights to develop a robust and effective model.</p>
+<h3 id="issues-during-training">Issues during training</h3>
+<p>Before discussing the methods and techniques used in this solution, the Author would like to acknowledge a few 
+issues with the presented approach. </p>
+<ol>
+<li>Misaligned DEM and spectral layers - the misalignment became apparent in the last weeks of the competition, 
+that being said, aligning the images was not performed since as per competition rules: <strong>"Eligible solutions need
+to be able to run on test samples automatically using the test data as provided".</strong> Test set modification was prohibited.
+Designing an automated band alignment although possible would not be ideal if additional verification and checks
+for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.</li>
+<li>DICE score discrepancy between local runs and LB - <code>torchmetrics</code> package was used for fast on-GPU metrics 
+calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
+This discrepancy was attributed to the test set having different distribution and possibly higher number of false
+positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
+usually resulted in higher LB scores a decision was made to keep using <code>torchmetrics</code> DICE implementation. 
+After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
+yield better results in the end.</li>
+<li>The fold number used to compare the locally trained models changed from fold=0 to fold=6 and finally to fold=9.
+Fold #0 was used mainly during the baseline training phase, where different trainer and dataloader hyperparameters
+were tested. Once all folds were evaluated against public LB - fold #6 was used as it showed the best performance
+on public LB. Fold #8 was only used after training larger more capable models with larger amount of samples / epoch
+and with larger amount of input channels. Latest submissions were always evaluated against fold #8.</li>
+<li>Spot instances on Azure ML can be evicted, leading to failed Jobs - in such cases manual Job re-submission is needed.</li>
+</ol>
+<h3 id="software-setup">Software setup</h3>
+<p>All experiments were conducted on Linux based machines.
+<a href="https://azure.microsoft.com/en-us/products/machine-learning/">Azure ML</a> was used to scale the training jobs to the
+cloud.
+Local PC used Ubuntu 22.04 while jobs running on Azure ML used Ubuntu 20.04 based Docker images.
+The code is developed using Python. The environment management is performed using <code>conda</code> and <code>conda-lock</code>. Please
+refer to the <a href="../guides/setup-dev-env/">Local env setup guide</a> for setting up the local development environment.</p>
+<blockquote>
+<p>NOTE: The dev environment and code was not tested on Windows or macOS.</p>
+</blockquote>
+<p>A short guide on setting up Azure ML Workspace and Azure DevOps organization is available
+in <a href="../guides/reproducibility/#via-azure-ml-aml">Azure ML reproducibility guide</a>. Scheduling AML Jobs is described
+in <a href="../guides/training/#on-azure-ml">Training on Azure ML guide</a>.</p>
+<p>Full list of packages with their versions can be found in the
+<a href="https://github.com/xultaeculcis/kelp-wanted-competition/blob/main/conda-lock.yml">conda-lock.yml</a> file.
+Specs for Azure ML Docker based Environment are here:
+<a href="https://github.com/xultaeculcis/kelp-wanted-competition/tree/main/aml/environments/acpt_train_env">acpt_train_env</a></p>
+<h3 id="hardware-setup">Hardware setup</h3>
+<p>For running quick experiments, data preparation, training models and making submissions a local PC with Ubuntu 22.04
+was used. This machine was the only one used to make submission files.</p>
+<p>Specs:</p>
+<ul>
+<li>OS: Ubuntu 22.04</li>
+<li>Python 3.10 environment with PyTorch 2.1.2 and CUDA 12.1</li>
+<li>CPU: 8-Core AMD Ryzen 7 2700X</li>
+<li>RAM: 32 GB RAM</li>
+<li>Disk: 2 TB SSD</li>
+<li>GPU: RTX 3090 with 24 GB VRAM</li>
+</ul>
+<p>Larger training jobs and hyperparameter optimization sweeps were performed on Azure ML using following spot instances:</p>
+<ul>
+<li><strong>Standard_NC4as_T4_v3</strong>:<ul>
+<li>Ubuntu 20.04 docker image</li>
+<li>Python 3.8 environment with PyTorch 2.1.2 and CUDA 12.1 (the Azure base image forces py38 usage)</li>
+<li>4 cores</li>
+<li>28 GB RAM</li>
+<li>176 GB disk</li>
+<li>Tesla T4 GPU with 16 GB VRAM</li>
+</ul>
+</li>
+<li><strong>Standard_NC24ads_A100_v4</strong>:<ul>
+<li>Ubuntu 20.04 docker image</li>
+<li>Python 3.8 environment with PyTorch 2.1.2 and CUDA 12.1 (the Azure base image forces py38 usage)</li>
+<li>24 cores</li>
+<li>220 GB RAM</li>
+<li>64 GB disk</li>
+<li>A100 GPU with 80 GB VRAM</li>
+</ul>
+</li>
+</ul>
+<h3 id="initial-data-processing">Initial Data processing</h3>
+<p>Before the baseline submission was made, Exploratory Data Analysis (EDA) was performed. Samples were plotted in
+various composite configurations together with QA, DEM, NDVI and the Kelp Mask in a single figures. Samples were also
+visualized on the map using QGIS. The organizations choose to not include CRS information - probably to eliminate
+cheating, where one could use overlapping image extents in order to use leakage for model training. This however
+hindered robust train-val-test split strategies.</p>
+<h3 id="baseline">Baseline</h3>
+<p>For baseline a combo of <strong>UNet</strong> architecture
+from <a href="https://github.com/qubvel/segmentation_models.pytorch">Segmentation Model PyTorch</a>
+and <strong>ResNet-50</strong> was used. Initially a 10-Fold Stratified Cross Validation was used. Stratification was done using
+following per image flag combination: <code>qa_ok</code>, <code>has_kelp</code>, <code>dem_has_nans</code>, <code>high_corrupted_pixels_pct</code>.
+Band statistics were calculated and <code>z-score</code> normalization strategy was used. NDVI was appended to input Tensor.
+Pixels with -32k values were filled using <code>0.0</code>. Bands used in this model were: SWIR, NIR, R, G, B, QA, DEM and NDVI.
+Batch size of 32, no LR Scheduler, training for 10 epochs, without any form of weighted sampler
+using <code>torch.nn.CrossEntropy</code> loss. The optimizer was set to Adam with 3e-4 learning rate. Since UNet expects the
+input tensor W and H dimension to be divisible by 32 the input images were padded to 352x352.
+This model (after fixing MLFlow checkpoint loading) achieved <strong>0.6569</strong> on public LB.</p>
+<h3 id="data-fiddling">Data fiddling</h3>
+<p>After it became apparent that there are "duplicates" in the validation datasets - images captured from different
+orbits, different platforms or at different times a need for more robust train-test split arose. You can view
+sample of "duplicated" images below (DEM layer).</p>
+<p><img alt="duplicated_tiles" src="../assets/images/eda/grouped_aoi_results_sample.png" /></p>
+<p>You can see that the same Area of Interest is presented on those images. In order to create robust CV split strategy
+each DEM layer was used for embedding generation. DEM layer was chosen for AOI grouping since it does not contain 
+any striping artifacts, corrupted or saturated pixels or clouds. Missing values in this layer mark the extent of 
+the DEM layer i.e. DEM only goes couple hundred of meters into the sea - there is no point in calculating DEM over 
+the water. Missing values were replaced with zeroes. Every DEM image was passed through a pre-trained ResNet network.
+The resulting embeddings were then compared  with each other - if cosine similarity between two images was over 0.97 
+they were placed into a single group. The de-duplication resulted in 3313 unique AOI groups. Those groups where 
+then used to perform 10-Fold Stratified CV Split.</p>
+<p>What's more a few images had been mislabelled as kelp. Those images were filtered out from the training dataset.</p>
+<p><img alt="corrupted_images" src="../assets/images/eda/corrupted_images.png" /></p>
+<p>Input channels were also re-ordered so that the first channels match those used by pre-trained networks trained on
+ImageNet and other natural-image datasets. <strong>R, G, B, SWIR, NIR, QA, DEM</strong> band order consistently outperformed
+the default <strong>SWIR, NIR, R, G, B, QA, DEM</strong> by a small margin - val/dice <strong>0.760</strong> vs <strong>0.762</strong></p>
+<h3 id="extra-channels-spectral-indices">Extra channels - spectral indices</h3>
+<p>In Author's other projects utilization of additional input channels such as NDVI, EVI, Water Masks and other proved 
+to greatly bump model predictive capabilities. To see a list of all implemented spectral indices see the
+<a href="../api_ref/core/indices/">indices page</a>.</p>
+<p>The best models all used 17 extra spectral indices appended to the input tensor of <strong>R, G, B, SWIR, NIR, QA, DEM</strong>
+bands:
+<strong>DEMWM, NDVI, ATSAVI, AVI, CI, ClGreen, GBNDVI, GVMI, IPVI, KIVU, MCARI, MVI, NormNIR, PNDVI, SABI, WDRVI, mCRIG</strong>.</p>
+<p>To see visualization of those indices refer to
+<a href="../guides/mlflow-artifacts/#spectral-indices">MLFlow spectral indices artifacts guide</a>.</p>
+<h3 id="normalization-strategy">Normalization strategy</h3>
+<p>Following normalization strategies were evaluated early on using split=6:</p>
+<ul>
+<li><code>z-score</code>: <strong>0.834168</strong></li>
+<li><code>quantile</code>: <strong>0.834134</strong></li>
+<li><code>min-max</code>: <strong>0.831865</strong></li>
+<li><code>per-sample-quantile</code>: <strong>0.806227</strong></li>
+<li><code>per-sample-min-max</code>: <strong>0.801893</strong></li>
+</ul>
+<p>In the end <code>quantile</code> normalization was used since it produces the most appealing visual samples and was more robust
+against outliers, the learning curve also seemed to converge faster. The idea behind quantile normalization is rather
+simple instead of using global min-max we calculate quantile values for q01 and q99. During training Min-Max
+normalization
+is used.</p>
+<p>You can view the effects of normalization strategies in the figures below.</p>
+<ul>
+<li>Z-Score:</li>
+</ul>
+<p><img alt="z-score" src="../assets/images/normalization-strategies/z-score-short_wave_infrared_epoch%3D00_batch_idx%3D1.jpg" /></p>
+<ul>
+<li>Quantile:</li>
+</ul>
+<p><img alt="quantile" src="../assets/images/normalization-strategies/quantile-short_wave_infrared_epoch%3D00_batch_idx%3D1.jpg" /></p>
+<ul>
+<li>Min-Max:</li>
+</ul>
+<p><img alt="min-max" src="../assets/images/normalization-strategies/min-max-short_wave_infrared_epoch%3D00_batch_idx%3D1.jpg" /></p>
+<ul>
+<li>Per-Sample Min-Max:</li>
+</ul>
+<p><img alt="per-sample-min-max" src="../assets/images/normalization-strategies/per-sample-min-max-short_wave_infrared_epoch%3D00_batch_idx%3D1.jpg" /></p>
+<ul>
+<li>Per-Sample Quantile:</li>
+</ul>
+<p><img alt="per-sample-quantile" src="../assets/images/normalization-strategies/per-sample-quantile-short_wave_infrared_epoch%3D00_batch_idx%3D1.jpg" /></p>
+<p>Additionally, replacing corrupted, missing and land pixels with <code>0.0</code> and <code>torch.nan</code> was tested. Masking
+with <code>torch.nan</code>
+was better than using zeroes (Public LB  <strong>0.7062</strong> vs <strong>0.7083</strong>). A rationale here is that using zeroes can
+lead to suboptimal normalization. Masking with <code>torch.nan</code> is performed instead.
+After the spectral indices are calculated and appended to the input tensor, for each channel the <code>nan</code> and <code>-inf</code>
+pixels are replaced with minimal value for each channel, while <code>inf</code> pixels are replaced with maximal value per channel.
+Masking land and corrupted pixels in indices bumps the performance by over 1-2%</p>
+<h3 id="loss-functions">Loss functions</h3>
+<p>Various loss functions were evaluated:</p>
+<ul>
+<li><code>torch.nn.CrossEntropyLoss</code> (<code>weight=[0.4,0.6]</code>)</li>
+<li><code>smp.losses.DiceLoss</code></li>
+<li><code>smp.losses.JaccardLoss</code></li>
+<li><code>smp.losses.TverskyLoss</code></li>
+<li><code>torch.nn.CrossEntropyLoss</code> (<code>weight=[0.3,0.7]</code>)</li>
+<li><code>torch.nn.CrossEntropyLoss</code> (<code>weight=None</code>)</li>
+<li><code>smp.losses.SoftCrossEntropyLoss</code> (<code>smooth_factor=0.1</code>))</li>
+<li><code>smp.losses.FocalLoss</code></li>
+<li><code>smp.losses.LovaszLoss</code></li>
+<li><code>smp.losses.SoftCrossEntropyLoss</code> (<code>smooth_factor=0.2</code>)</li>
+<li><code>smp.losses.SoftCrossEntropyLoss</code> (<code>smooth_factor=0.3</code>)</li>
+<li><code>torch.nn.CrossEntropyLoss</code> (<code>weight=[0.1,0.9]</code>)</li>
+<li><code>kelp.nn.models.losses.XEDiceLoss</code></li>
+<li><code>kelp.nn.models.losses.ComboLoss</code></li>
+<li><code>kelp.nn.models.losses.LogCoshDiceLoss</code></li>
+<li><code>kelp.nn.models.losses.HausdorffLoss</code></li>
+<li><code>kelp.nn.models.losses.TLoss</code></li>
+<li><code>kelp.nn.models.losses.ExponentialLogarithmicLoss</code></li>
+<li><code>kelp.nn.models.losses.SoftDiceLoss</code></li>
+<li><code>kelp.nn.models.losses.BatchSoftDice</code></li>
+</ul>
+<p>In the end Dice loss was used, since it performed best on public leaderboard. The best two model ensembles with
+the same private LB score of 0.7318 used <strong>DICE</strong> and <strong>Jaccard</strong> losses respectively.</p>
+<h3 id="weighted-sampler">Weighted sampler</h3>
+<p>Since over 2000 images do not have any kelp pixels in them. It was apparent that those images will not contribute
+to the training very much. Weighted Sampler was then used and adjusted via hparam search on Azure ML.</p>
+<p><img alt="has_kelp.png" src="../assets/images/eda/has_kelp.png" /></p>
+<p>Following metadata stats and flags were used to determine the optimal per-image weight:</p>
+<ul>
+<li><code>has_kelp</code> - a flag indicating if the image has kelp in it</li>
+<li><code>kelp_pixels_pct</code> - percentage of all pixels marked as kelp</li>
+<li><code>dem_nan_pixels_pct</code> - percentage of all DEM pixels marked as NaN</li>
+<li><code>dem_zero_pixels_pct</code> - percentage of all DEM pixels with value=zero</li>
+<li><code>almost_all_water</code> - a flag indicating that over 98% of the DEM layer pixels are water</li>
+<li><code>qa_ok</code> - a flag indicating that no pixels are corrupted in the QA band</li>
+<li>
+<p><code>qa_corrupted_pixels_pct</code> - percentage of corrupted pixels in the QA band</p>
+</li>
+<li>
+<p>Some results after whole night of training:</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>samples_per_epoch</th>
+<th>has_kelp</th>
+<th>kelp_pixels_pct</th>
+<th>qa_ok</th>
+<th>qa_corrupted_pixels_pct</th>
+<th>almost_all_water</th>
+<th>dem_nan_pixels_pct</th>
+<th>dem_zero_pixels_pct</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-0.25</td>
+<td>0.84405</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84402</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0</td>
+<td>0.84396</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.2</td>
+<td>0</td>
+<td>-1</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.84396</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0</td>
+<td>0.5</td>
+<td>0</td>
+<td>0.25</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0.84391</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.5</td>
+<td>0.2</td>
+<td>-0.5</td>
+<td>0.75</td>
+<td>0.5</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.84390</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.2</td>
+<td>0.5</td>
+<td>-0.25</td>
+<td>0.75</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>0.84382</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.5</td>
+<td>1</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0</td>
+<td>0.84382</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>2</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.84380</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>1</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.75</td>
+<td>1</td>
+<td>0.84377</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>0.84374</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.25</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>0.84373</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.2</td>
+<td>0</td>
+<td>0</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84370</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0.84369</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>After retraining using 10240 samples per epoch:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>samples_per_epoch</th>
+<th>has_kelp</th>
+<th>kelp_pixels_pct</th>
+<th>qa_ok</th>
+<th>qa_corrupted_pixels_pct</th>
+<th>almost_all_water</th>
+<th>dem_nan_pixels_pct</th>
+<th>dem_zero_pixels_pct</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-0.25</td>
+<td>0.84459</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84456</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0</td>
+<td>0.84501</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.2</td>
+<td>0</td>
+<td>-1</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.84801</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0</td>
+<td>0.5</td>
+<td>0</td>
+<td>0.25</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0.84641</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.5</td>
+<td>0.2</td>
+<td>-0.5</td>
+<td>0.75</td>
+<td>0.5</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.84622</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.2</td>
+<td>0.5</td>
+<td>-0.25</td>
+<td>0.75</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>0.84546</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.5</td>
+<td>1</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0</td>
+<td>0.84619</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>2</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.84500</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>1</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.75</td>
+<td>1</td>
+<td>0.84508</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>0.84430</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.25</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>0.84496</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.2</td>
+<td>0</td>
+<td>0</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84522</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0.84538</td>
+</tr>
+</tbody>
+</table>
+<p>Training for 10240 samples / epoch yielded better results. Assigning higher importance to <code>has_kelp</code> flag while keeping
+the <code>almost_all_water</code> flag low and even negative was the best combination. Zeroes and NaN values in the DEM layer
+seemed to not be important as much - weights for those stats usually ranged from -0.25 - 0.25. The QA band stats
+seemed also to be only slightly important with weights being in rage -1.0 - 1.0.</p>
+<p>For public LB following configuration worked the best:</p>
+<ul>
+<li>10240 samples / epoch</li>
+<li><code>has_kelp_importance_factor=3.0</code></li>
+<li><code>kelp_pixels_pct_importance_factor=0.2</code></li>
+<li><code>qa_ok_importance_factor=0.0</code></li>
+<li><code>qa_corrupted_pixels_pct_importance_factor=-1.0</code></li>
+<li><code>almost_all_water_importance_factor=0.5</code></li>
+<li><code>dem_nan_pixels_pct_importance_factor=0.25</code></li>
+<li><code>dem_zero_pixels_pct_importance_factor=-1.0</code></li>
+</ul>
+<h3 id="training-configuration">Training configuration</h3>
+<p>Multiple training configurations were tested out including:</p>
+<ul>
+<li>Training from scratch - very slow convergence, training using pre-trained model is a must in this case.
+  Final DICE after 10 epochs=<strong>0.736</strong>, compared to <strong>0.760</strong> with <code>imagenet</code> weights</li>
+<li>Optimizers: Adam, SGD, AdamW - in the end AdamW was the best on local validation set -&gt; +0.02 for AdamW</li>
+<li>OneCycleLR vs no LR scheduler: <strong>0.76640</strong> vs <strong>0.764593</strong> but overall stability is better with 1Cycle</li>
+<li><code>weight_decay</code>:<ul>
+<li>1e-2: <strong>0.759</strong></li>
+<li>1e-3: <strong>0.763</strong></li>
+<li>1e-4: <strong>0.765</strong></li>
+<li>1e-5: <strong>0.762</strong></li>
+</ul>
+</li>
+<li>Tried to add <code>decoder_attention_type="scse"</code> but it gives worse performance (val/dice=<strong>0.755</strong>)</li>
+<li>Learning rate set to 3e-4 worked best locally</li>
+<li>UNet required images to be divisible by 32 - resized the input images to 352x352 using zero-padding - during the
+  inference the padding is removed</li>
+<li>Using other resize strategies and image sizes did not generate better results</li>
+<li>Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM errors </li>
+<li>Training with <code>batch_size=8</code> and <code>accumulate_grad_batches=4</code> resulted in better local eval scores,
+  but did not improve leaderboard scores</li>
+<li>The train augmentations were rather simple:<ul>
+<li>Random Horizontal Flip</li>
+<li>Random Vertical Flip</li>
+<li>Random Rotation 0-90 deg.</li>
+</ul>
+</li>
+<li>Using Random Resized Crops did not work better than the base augmentations mentioned above</li>
+<li>Transforms (including appending spectral indices) were performed on batch of images on GPU using
+  <a href="https://kornia.readthedocs.io/en/latest/index.html">kornia</a> library</li>
+<li>Compiling the model using <code>torch-ort</code> or <code>torch.compile</code> did not yield much of speedups, in some configurations
+the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
+training runs where those few % of speedup can really be beneficial. </li>
+</ul>
+<h3 id="tta">TTA</h3>
+<p>Test time augmentations were also tested. <a href="https://github.com/qubvel/ttach">ttach</a> library was used for it. Following
+augmentations were used during testing:</p>
+<ul>
+<li>Vertical flip</li>
+<li>Horizontal flip</li>
+<li>Rotation: 0, 90, 180, 270</li>
+</ul>
+<p>Results with different <code>tta_merge_mode</code>:</p>
+<ul>
+<li>Baseline (no TTA) val/dice=0.85339:</li>
+<li>max: <strong>0.85490</strong></li>
+<li>mean: 0.85458</li>
+<li>sum: 0.85458</li>
+<li>min: 0.85403</li>
+<li>gmean: 0.15955</li>
+<li>tsharpen: 0.00468 - loss was nan</li>
+</ul>
+<p>On public LB:</p>
+<ul>
+<li>no-tta: 0.7083</li>
+<li>max: 0.7076</li>
+<li>mean: 0.7073</li>
+</ul>
+<p>Decided that TTA was not working and never used it again...</p>
+<h3 id="thresholding">Thresholding</h3>
+<p>Multiple decision threshold were verified on local validation set.</p>
+<table>
+<thead>
+<tr>
+<th>threshold</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.3</td>
+<td>0.85301</td>
+</tr>
+<tr>
+<td>0.31</td>
+<td>0.85305</td>
+</tr>
+<tr>
+<td>0.32</td>
+<td>0.85306</td>
+</tr>
+<tr>
+<td>0.33</td>
+<td>0.85307</td>
+</tr>
+<tr>
+<td>0.34</td>
+<td>0.85309</td>
+</tr>
+<tr>
+<td>0.35</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.36</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.37</td>
+<td>0.85313</td>
+</tr>
+<tr>
+<td>0.38</td>
+<td>0.85315</td>
+</tr>
+<tr>
+<td>0.39</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.4</td>
+<td>0.85316</td>
+</tr>
+<tr>
+<td>0.41</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.42</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.43</td>
+<td>0.85320</td>
+</tr>
+<tr>
+<td>0.44</td>
+<td>0.85319</td>
+</tr>
+<tr>
+<td>0.45</td>
+<td><strong>0.85320</strong></td>
+</tr>
+<tr>
+<td>0.46</td>
+<td>0.85318</td>
+</tr>
+<tr>
+<td>0.47</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.48</td>
+<td>0.85316</td>
+</tr>
+<tr>
+<td>0.49</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>0.85316</td>
+</tr>
+<tr>
+<td>0.51</td>
+<td>0.85315</td>
+</tr>
+<tr>
+<td>0.52</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.53</td>
+<td>0.85313</td>
+</tr>
+<tr>
+<td>0.54</td>
+<td>0.85311</td>
+</tr>
+<tr>
+<td>0.55</td>
+<td>0.85309</td>
+</tr>
+<tr>
+<td>0.56</td>
+<td>0.85305</td>
+</tr>
+<tr>
+<td>0.57</td>
+<td>0.85303</td>
+</tr>
+<tr>
+<td>0.58</td>
+<td>0.85300</td>
+</tr>
+<tr>
+<td>0.59</td>
+<td>0.85300</td>
+</tr>
+<tr>
+<td>0.6</td>
+<td>0.85296</td>
+</tr>
+<tr>
+<td>0.61</td>
+<td>0.85296</td>
+</tr>
+<tr>
+<td>0.62</td>
+<td>0.85290</td>
+</tr>
+<tr>
+<td>0.63</td>
+<td>0.85287</td>
+</tr>
+<tr>
+<td>0.64</td>
+<td>0.85285</td>
+</tr>
+<tr>
+<td>0.65</td>
+<td>0.85281</td>
+</tr>
+<tr>
+<td>0.66</td>
+<td>0.85278</td>
+</tr>
+<tr>
+<td>0.67</td>
+<td>0.85274</td>
+</tr>
+<tr>
+<td>0.68</td>
+<td>0.85267</td>
+</tr>
+<tr>
+<td>0.69</td>
+<td>0.85259</td>
+</tr>
+<tr>
+<td>0.7</td>
+<td>0.85253</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Leaderboard using <strong>dt=0.45</strong>: 0.7077</li>
+</ul>
+<h3 id="model-architectures-and-encoders">Model Architectures and Encoders</h3>
+<p>Various Model architectures and encoders were tested to find the best performing ones. Azure ML Sweep Job was used to
+verify encoder + architecture pairs. The encoders came from both
+<a href="https://github.com/qubvel/segmentation_models.pytorch">segmentation-models-pytorch</a>
+and <a href="https://github.com/huggingface/pytorch-image-models">timm</a> libraries.
+A sample job results are visible below.</p>
+<p><img alt="architecture-encoder-hparam-search-sweep.png" src="../assets/images/aml/architecture-encoder-hparam-search-sweep.png" /></p>
+<p>General observations:</p>
+<ul>
+<li>ResUnet++ often results in <code>NaN</code> loss.</li>
+<li>Unet and Unet++ often were the best.</li>
+<li>Unet++ training was not deterministic even though <code>pl.seed_everything(42)</code> was used</li>
+<li>Bigger models often resulted in OOM errors during training - had to reduce batch size and apply gradient accumulation</li>
+<li>Some models expected the input image to be divisible by 8, 24, 128 etc. - the training config class had to be
+  adjusted to change the input <code>image_size</code> parameter to allow for training those models.</li>
+<li>In general bigger models worked better</li>
+<li>FCN - model collapses</li>
+<li>ConvNext and SWIN Transformer models not supported</li>
+<li>The best combo was <strong>UNet</strong> + <strong>EfficientNet-B5</strong></li>
+</ul>
+<p>Results after overnight training on split=6 (Top 5 runs only):</p>
+<table>
+<thead>
+<tr>
+<th>encoder</th>
+<th>architecture</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tu-efficientnet_b5</td>
+<td>unet</td>
+<td>0.85854</td>
+</tr>
+<tr>
+<td>tu-seresnext101_32x4d</td>
+<td>unet</td>
+<td>0.85807</td>
+</tr>
+<tr>
+<td>tu-resnest50d_4s2x40d</td>
+<td>unet</td>
+<td>0.85787</td>
+</tr>
+<tr>
+<td>tu-rexnetr_300</td>
+<td>unet</td>
+<td>0.85749</td>
+</tr>
+<tr>
+<td>tu-seresnext26d_32x4d</td>
+<td>unet</td>
+<td>0.85728</td>
+</tr>
+</tbody>
+</table>
+<p>As you might have noticed in the screenshot in the <a href="#private-leaderboard-scores">Private leaderboard</a> subsection
+some of the top performing model ensembles used a mixture of EfficientNet, SE-ResNext, ReXNet-R and other encoders
+trained as part of LinkNet, UNet and UNet++ architectures. Although, best two submissions used an ensemble of just
+UNet + EfficientNet-B5 models.</p>
+<h3 id="stochastic-weights-averaging-swa">Stochastic Weights Averaging (SWA)</h3>
+<p>SWA was one of the last things that were tested during the competition. In short, SWA performs an equal average of the
+weights traversed by SGD with a modified learning rate schedule
+(see the left panel of figure below). SWA solutions end up in the center of a wide flat region of loss,
+while SGD tends to converge to the boundary of the low-loss region, making it susceptible to the shift between
+train and test error surfaces (see the middle and right panels of figure below).</p>
+<p><img alt="swa-figure-1.png" src="../assets/images/swa/swa-figure-1.png" /></p>
+<p>Source: <a href="https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/">Stochastic Weight Averaging in PyTorch</a>
+Illustrations of SWA and SGD with a Preactivation ResNet-164 on CIFAR-100 [1].
+Left: test error surface for three FGE samples and the corresponding SWA solution (averaging in weight space).
+Middle and Right: test error and train loss surfaces showing the weights proposed by SGD (at convergence) and SWA,
+starting from the same initialization of SGD after 125 training epochs. Please see [1] for details on how these
+figures were constructed.</p>
+<p>The figure below presents and illustration of the learning rate schedule adopted by SWA. Standard decaying schedule
+is used for the first 75% of the training and then a high constant value is used for the remaining 25%.
+The SWA averages are formed during the last 25% of training.</p>
+<p><img alt="swa-figure-2.png" src="../assets/images/swa/swa-figure-2.png" /></p>
+<p>The best model ensemble trained with SWA had public and private LB score of 0.7159 and 0.7285 respectively - thus,
+was not the best. Best single model with SWA had public and private LB score of 0.7147 and 0.7226 respectively.</p>
+<p>[1] Averaging Weights Leads to Wider Optima and Better Generalization;
+Pavel Izmailov, Dmitry Podoprikhin, Timur Garipov, Dmitry Vetrov, Andrew Gordon Wilson;
+Uncertainty in Artificial Intelligence (UAI), 2018</p>
+<h3 id="xgboost">XGBoost</h3>
+<p>Another idea that did not work was training XGBoost Classifier on all channels and spectral indices.
+The goal was not to use XGBoost to establish channel and spectral index importance, but rather completely replace the
+deep learning approach with classical tree-based model. Unfortunately best models on public LB had score
+of 0.5125. Which was way too low to try to optimize. Since predictions are done per pixel, TTA cannot be usd.
+Optimizing decision threshold did not improve the scores much. Even applying post-processing operations
+such as erosion or dilution would not bump the performance by 20 p.p.</p>
+<p>Sample predictions:</p>
+<p><img alt="OK551533.png" src="../assets/images/xgb/preds/OK551533.png" /></p>
+<p>If you want to learn more about XGBoost approach and to reproduce the results,
+please see: <a href="../guides/xgb-stuff/">XGBoost guide</a>.</p>
+<p>The XGB feature importance at least gave me confidence that the original approach with appending spectral
+indices to the input tensor was somewhat justified.</p>
+<p><img alt="feature_importance_weight.png" src="../assets/images/xgb/feature_importance_weight.png" /></p>
+<h3 id="sahi">SAHI</h3>
+<p>Slicing Aided Hyper Inference or SAHI is a technique that helps overcome the problem with detecting and segmenting
+small objects in large images by utilizing inference on image slices and prediction merging.
+Because of this it is slower than running inference on full image but at the same time usually ends up
+having better performance, especially for smaller features.</p>
+<p>This was the last idea that was tested.</p>
+<p><img alt="sahi_gif" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif" />
+Source: <a href="https://github.com/obss/sahi">https://github.com/obss/sahi</a></p>
+<p>The idea was simple:</p>
+<ol>
+<li>Generate sliced dataset of small 128x128 non-overlapping tiles from the bigger 350x350 input images</li>
+<li>Use this dataset to train new model</li>
+<li>During training resize the crops to e.g. 320x320 resolution and train on those</li>
+<li>When running inference generate overlapping tiles, inference on those tiles, and merge the predicted masks
+   by averaging the predictions in the overlapping areas</li>
+<li>Profit?</li>
+</ol>
+<p>A sample of small tiles used for training are visualized below:</p>
+<p><img alt="short_wave_infrared_batch_idx=1_epoch=00_step=0320.jpg" src="../assets/images/sahi/short_wave_infrared_batch_idx%3D1_epoch%3D00_step%3D0320.jpg" /></p>
+<p>Best model trained on <strong>128x128</strong> crops with <strong>320x320 resize</strong> and <strong>nearest interpolation</strong>
+resulted in public LB score of: <strong>0.6848</strong>. As it turns out, the input time size of 350x350 is already too
+small for SAHI to shine. Sliced inference did not result in any meaningful bump in performance.</p>
+<p>If you want to learn more about SAHI approach and to reproduce the results,
+please see: <a href="../guides/sahi/">SAHI guide</a>.</p>
+<h3 id="ensemble">Ensemble</h3>
+<p>Averaging model predictions was a natural step to take in the later stages of the competition. The prediction scripts
+were written in a way to allow to optimize both decision threshold and usage of TTA. The final prediction
+averaging was done using per-model weights. The weights were obtained by using <code>MinMaxScaler</code> with feature range
+if <code>(0.2, 1.0)</code> on public LB scores obtained for each model. This resulted with following weights:</p>
+<table>
+<thead>
+<tr>
+<th>Fold #</th>
+<th>Public LB Score</th>
+<th>Calculated Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0.7110</td>
+<td>0.666</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0.7086</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0.7110</td>
+<td>0.666</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0.7139</td>
+<td>0.88</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0.7106</td>
+<td>0.637</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.7100</td>
+<td>0.59</td>
+</tr>
+<tr>
+<td>6</td>
+<td>0.7119</td>
+<td>0.733</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0.7105</td>
+<td>0.63</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.7155</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>9</td>
+<td>0.7047</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<p>2nd best submission used those weights. The best submission used following weights:</p>
+<table>
+<thead>
+<tr>
+<th>Fold #</th>
+<th>Public LB Score</th>
+<th>Calculated Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0.7110</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0.7086</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0.7110</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0.7139</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0.7106</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.7100</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>6</td>
+<td>0.7119</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0.7105</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.7155</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>9</td>
+<td>0.7047</td>
+<td>1.0</td>
+</tr>
+</tbody>
+</table>
+<p>Model stacking was not performed. </p>
+<h3 id="soft-labels">Soft labels</h3>
+<p>Once the ensemble prediction pipeline was in place soft label prediction was implemented. Using soft labels
+is rather simple - instead of using hard labels i.e. 0 - for <code>no kelp</code> and 1 for <code>kelp</code> we use probability of 
+certain pixel belonging to <code>kelp</code> class. We can then use weighted average and decision threshold adjustment to make
+final prediction.</p>
+<p>As seen in the LB screenshot in the <a href="#private-leaderboard-scores">Private LB scores</a> subsection, most of the top performing 
+submissions used soft labels - the 2nd best submission included. </p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this highly competitive and challenging contest, approach to segmenting kelp forests using Landsat satellite 
+imagery and deep learning has demonstrated the power of combining advanced machine learning techniques with 
+domain-specific knowledge. Used methodology was propelled to the second place, showcasing a robust and effective 
+solution for the critical environmental task of mapping and monitoring kelp canopy presence.</p>
+<p>The utilization of pre-trained weights laid a strong foundation, allowing our models to learn from relevant, 
+pre-existing patterns, significantly accelerating the learning process. The introduction of the 
+Normalized Difference Vegetation Index (NDVI) and other spectral indices such as ATSAVI, AVI, CI, and more, 
+provided our models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively. 
+These indices, especially when coupled with strategy of reordering channels to align more closely with natural 
+and scientific observations, significantly improved model performance.</p>
+<p>Decision to employ AdamW optimizer, accompanied by a carefully chosen weight decay and learning rate scheduler, 
+further optimized our training process, striking a fine balance between fast convergence and avoiding overfitting. 
+The choice of a 32 batch size fully leveraged the computational capacity of the Tesla T4 GPUs, ensuring efficient 
+use of resources.</p>
+<p>The implementation of mixed-precision training and inference not only reduced model's memory footprint 
+but also accelerated its computational speed, making our solution both effective and efficient. By adopting 
+a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on 
+significant areas, reducing the bias towards dominant classes.</p>
+<p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for our task, 
+striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold 
+allowed us to fine-tune our model's sensitivity to kelp presence, which was crucial for achieving high 
+evaluation scores.</p>
+<p>Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs, 
+and creating an ensemble of the best-performing models, ensured that our solution was not only robust across 
+different data splits but also generalized well to unseen data.</p>
+<p>To conclude, this work underscores the potential of machine learning to contribute significantly to 
+environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis 
+to advanced deep learning models, a scalable and accurate method for monitoring kelp forests was developed. 
+This solution not offers a practical tool for ecosystem management and conservation. Success of Deep Learning 
+approach in this challenge reaffirms the importance of machine learning in addressing some  of the most pressing 
+environmental issues of our time.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2023 xultaeculcis
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e1c3ead8.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,4570 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Estimating the extent of Giant Kelp Forests by segmenting Landsat imagery">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../technical-report/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
+    
+    
+      
+        <title>Dev-Log - kelp-wanted-competition</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dev-log" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="kelp-wanted-competition" class="md-header__button md-logo" aria-label="kelp-wanted-competition" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kelp-wanted-competition
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Dev-Log
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xultaeculcis/kelp-wanted-competition" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="kelp-wanted-competition" class="md-nav__button md-logo" aria-label="kelp-wanted-competition" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    kelp-wanted-competition
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xultaeculcis/kelp-wanted-competition" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Dev-Log
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Dev-Log
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-worked" class="md-nav__link">
+    <span class="md-ellipsis">
+      What worked
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-did-not-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      What did not work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-02
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-03
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-08
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-09
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-12
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-13
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-14
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-15
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-16
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-17
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-18
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-19
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-20" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-20
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-21" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-21
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-22
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-23" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-23
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-24
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-25
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-26
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-27
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-28" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-28
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-29
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-30
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-31" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-31
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-01
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-02
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-03
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-04
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-05
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-06
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-07
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-08
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical-report/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Technical Report
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/setup-dev-env/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setting up dev environment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/tests/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running tests
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/makefile-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Makefile commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/reproducibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reproducibility of results
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/data-prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Preparing data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/training/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Training models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/mlflow-artifacts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MLFlow artifacts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/evaluation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluating models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/inference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running inference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/submissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Making submissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/xgb-stuff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    XGBoost
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/sahi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SAHI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/consts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kelp.consts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.core
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.core
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/configs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    configs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/indices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    indices
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/settings/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    settings
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/core/submission/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    submission
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.data_prep
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.data_prep
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/aoi_grouping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    aoi_grouping
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/calculate_band_stats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    calculate_band_stats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/dataset_prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dataset_prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/eda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eda
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/move_split_files/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    move_split_files
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/plot_samples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    plot_samples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/sahi_dataset_prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sahi_dataset_prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/data_prep/train_val_test_split/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train_val_test_split
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.nn
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.nn
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_1" id="__nav_5_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/band_stats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    band_stats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/datamodule/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    datamodule
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/transforms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    transforms
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/data/utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_2" id="__nav_5_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/average_predictions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    average_predictions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/fold_weights/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fold_weights
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/predict_and_submit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict_and_submit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/preview_submission/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    preview_submission
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/inference/sahi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sahi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_3" id="__nav_5_5_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/efficientunetplusplus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    efficientunet++
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/fcn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fcn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/resunet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resunet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/resunetplusplus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resunet++
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/factories/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    factories
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/losses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    losses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/modules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    modules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/models/segmentation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    segmentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_4" id="__nav_5_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/eval/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/eval_from_folders/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval_from_folders
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/nn/training/train/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.xgb
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.xgb
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6_1" id="__nav_5_6_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/inference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/inference/predict_and_submit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict_and_submit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6_2" id="__nav_5_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/eval/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/xgb/training/train/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_ref/utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kelp.utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-worked" class="md-nav__link">
+    <span class="md-ellipsis">
+      What worked
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-did-not-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      What did not work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-02
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-03
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-08
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-09
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-12
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-13
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-14
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-15
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-16
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-17
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-18
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-19
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-20" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-20
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-21" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-21
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-22
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-23" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-23
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-24
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-25
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-26
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-27
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-28" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-28
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-29
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-30
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2023-12-31" class="md-nav__link">
+    <span class="md-ellipsis">
+      2023-12-31
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-01
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-02
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-03
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-04
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-05
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-06
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-07
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2024-01-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      2024-01-08
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="dev-log">Dev Log</h1>
+<p>Checklist:</p>
+<ul>
+<li>[x] EDA</li>
+<li>[x] Use metadata csv as lookup for the dataset</li>
+<li>[x] Log a few hundred images during validation loop</li>
+<li>[x] Log segmentation metrics</li>
+<li>[x] MLFlow logger</li>
+<li>[x] Pre-process data and add extra channels: NDVI, NDWI, EVI, water masks from different sources (NDVI, DEM) etc.</li>
+<li>[x] Unet baseline with pre-trained ResNet-50 backbone</li>
+<li>[x] Inference script</li>
+<li>[x] Submission script</li>
+<li>[x] 10-fold CV instead of 5-fold</li>
+<li>[x] Change channel order (SWIR, NIR, R) -&gt; (R, G, B)</li>
+<li>[x] Training from scratch vs pre-trained weights</li>
+<li>[x] <code>OneCycleLR</code> or Cosine schedule</li>
+<li>[x] Log confusion matrix</li>
+<li>[x] Log prediction grid during eval loop</li>
+<li>[x] Find images of the same area and bin them together to avoid data leakage (must have since CRS is missing) - use
+  embeddings to find similar images (DEM layer can be good candidate to find images of the same AOI)</li>
+<li>[x] More robust CV split with deduplication of images from val set</li>
+<li>[x] Different data normalization strategies (min-max, quantile, z-score, per-image min-max)</li>
+<li>[x] Different loss functions</li>
+<li>[x] Weighted sampler</li>
+<li>[x] Azure ML Hparam Search</li>
+<li>[x] Add extra spectral indices combinations</li>
+<li>[x] Eval script</li>
+<li>[x] TTA</li>
+<li>[x] Decision threshold optimization</li>
+<li>[x] ConvNeXt v1/v2 - not supported by <code>segmentation-models-pytorch</code></li>
+<li>[x] EfficientNet v1/v2</li>
+<li>[x] ResNeXt</li>
+<li>[x] SwinV2-B - not supported by <code>segmentation-models-pytorch</code></li>
+<li>[x] Model Ensemble</li>
+<li>[x] Mask post-processing</li>
+<li>[x] Build parquet dataset for training Tree-based models -&gt; all <code>kelp</code> pixels, few-pixel buffer around them,
+  and random sample of 1000 <code>non-kelp</code> pixels per image</li>
+<li>[x] Train Random Forest, XGBoost, LightGBM, CatBoost on enhanced data</li>
+<li>[x] Soft labels</li>
+<li>[x] Model weights averaging</li>
+<li>[x] SAHI</li>
+<li>[x] Prepare docs on how to train and predict</li>
+<li>[x] Build a CLI for eda, training, prediction and submission</li>
+</ul>
+<h2 id="what-worked">What worked</h2>
+<ul>
+<li>Pre-trained weights</li>
+<li>Appending NDVI</li>
+<li>Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI</li>
+<li>AdamW instead of Adam</li>
+<li>Weight decay = 1e-4</li>
+<li>Learning rate 3e-4</li>
+<li>AOI grouping (removing leakage)</li>
+<li>Quantile normalization</li>
+<li>Dice Loss</li>
+<li>Weighted sampler<ul>
+<li><code>has_kelp_importance_factor=3.0</code></li>
+<li><code>kelp_pixels_pct_importance_factor=0.2</code></li>
+<li><code>qa_ok_importance_factor=0.0</code></li>
+<li><code>qa_corrupted_pixels_pct_importance_factor=-1.0</code></li>
+<li><code>almost_all_water_importance_factor=0.5</code></li>
+<li><code>dem_nan_pixels_pct_importance_factor=0.25</code></li>
+<li><code>dem_zero_pixels_pct_importance_factor=-1.0</code></li>
+</ul>
+</li>
+<li>Masking indices with QA and DEM Water Mask</li>
+<li>Extra spectral indices:<ul>
+<li>DEMWM,</li>
+<li>NDVI,</li>
+<li>ATSAVI,</li>
+<li>AVI,</li>
+<li>CI,</li>
+<li>ClGreen,</li>
+<li>GBNDVI,</li>
+<li>GVMI,</li>
+<li>IPVI,</li>
+<li>KIVU,</li>
+<li>MCARI,</li>
+<li>MVI,</li>
+<li>NormNIR,</li>
+<li>PNDVI,</li>
+<li>SABI,</li>
+<li>WDRVI,</li>
+<li>mCRIG</li>
+</ul>
+</li>
+<li>Test Time Augmentations (only local runs)</li>
+<li>EfficientNet-B5</li>
+<li>Decision threshold change to 0.45-0.48</li>
+<li><code>OneCycleLR</code></li>
+<li>10-fold CV</li>
+<li>Training for 50 epochs (best model ensemble)</li>
+<li>Mixing models with best dice per split in the ensemble</li>
+<li>Soft labels (second-best model used them)</li>
+<li>Mixing model architectures and encoders such as:<ul>
+<li><code>unet</code></li>
+<li><code>linknet</code></li>
+<li><code>unet++</code></li>
+<li><code>tu-efficeintnet_b5</code></li>
+<li><code>tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384</code></li>
+<li><code>tu-maxvit_small_tf_384.in1k</code></li>
+<li><code>tu-seresnextaa101d_32x8d.sw_in12k_ft_in1k</code></li>
+<li><code>tu-rexnetr_200.sw_in12k_ft_in1k</code></li>
+<li><code>tu-seresnext26d_32x4d</code></li>
+<li><code>tu-gcresnet33ts.ra2_in1k</code></li>
+<li><code>tu-seresnext101_32x4d</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="what-did-not-work">What did not work</h2>
+<ul>
+<li>Training from scratch</li>
+<li>Larger or smaller <code>weight_decay</code></li>
+<li>Larger or smaller <code>lr</code></li>
+<li><code>decoder_attention_type="scse"</code></li>
+<li>Losses other than dice (CE with weighting was close)</li>
+<li>Compiling the model and <code>torch-ort</code></li>
+<li>Normalization strategies other than <code>quantile</code> / <code>z-score</code></li>
+<li>Bunch of different index combinations</li>
+<li>TTA (for leaderboard)</li>
+<li>LR Schedulers other than <code>OneCycleLR</code></li>
+<li>Random split</li>
+<li>XGBoost and other tree based models predicting on pixel level</li>
+<li>More decoder channels</li>
+<li>SAHI</li>
+<li>Resize strategy different than <code>pad</code></li>
+<li>Training with larger images</li>
+<li>Bigger batches</li>
+<li>More frequent val checks</li>
+<li>Smaller batch sizes and <code>accumulate_grad_batches</code> &gt; 1</li>
+</ul>
+<h2 id="2023-12-02">2023-12-02</h2>
+<ul>
+<li>Initial commit</li>
+<li>Data downloaded - slow transfer speeds observed - took over 2h to download all assets on 1Gb Internet connection</li>
+<li>No CRS specified in the GeoTiff files - cannot perform split easily... Idea: find the same regions using embeddings</li>
+<li><code>torchgeo.RasterDataset</code> cannot be used - use <code>torchgeo.VisionDataset</code> instead</li>
+</ul>
+<h2 id="2023-12-03">2023-12-03</h2>
+<ul>
+<li>WIP torch dataset implementation</li>
+<li>Added pre-processing script, need to calculate indices</li>
+<li>Plotted the data for quick visual inspection</li>
+</ul>
+<p>Findings:</p>
+<ul>
+<li>DEM will need to be clipped due to nan values -&gt; use <code>np.maximum(0, arr)</code></li>
+<li>Cloud mask is actually the QA mask - it also contains faulty pixels</li>
+</ul>
+<h2 id="2023-12-08">2023-12-08</h2>
+<ul>
+<li>-32k pixels are also in the main bands not just the DEM layer -&gt; substitute them with zeroes</li>
+<li>Spent last few days implementing spectral indices for Landsat scenes</li>
+<li>Standardization will not work due to data corruption issues - clouds, saturated pixels, striping etc</li>
+<li>Mask indices using QA band after computation</li>
+<li>Clamp values using quantiles (1-99)</li>
+<li>Add option to use min-max normalize using quantiles (1-99)</li>
+<li>WIP. Calculate stats using masked and clamped data</li>
+</ul>
+<h2 id="2023-12-09">2023-12-09</h2>
+<ul>
+<li>Finally, computed stats for whole dataset</li>
+<li>Added code to find images with a lot of invalid values in the QA mask</li>
+<li>Added sample plotting logic on <code>Dataset</code> class</li>
+</ul>
+<h2 id="2023-12-12">2023-12-12</h2>
+<ul>
+<li>Add stratified k-fold split - stratification using following per image flag combination: <code>qa_ok</code>, <code>has_kelp</code>,
+  <code>dem_has_nans</code>, <code>high_corrupted_pixels_pct</code></li>
+<li>Update augmentations</li>
+<li>Pad images to 352x352 - required by the model for the image shape to be divisible by 32</li>
+<li>Messed up something in the dataset - training batch has some <code>torch.nan</code> values</li>
+</ul>
+<h2 id="2023-12-13">2023-12-13</h2>
+<ul>
+<li>Add GPU utils to power limit RTX 3090 for more comfortable training temperatures</li>
+<li>Add dataset stats to <code>consts</code></li>
+<li>Remove <code>torchgeo</code> package dependency since its newest version conflicted with pydantic v2 - didn't use its
+  features anyway...</li>
+<li>Use index min value instead of <code>torch.nan</code> to mask corrupted pixels</li>
+<li>Finally, train a single epoch</li>
+<li><code>MLFlowLogger</code> is wonky - will use <code>mlflow</code> autologging capabilities</li>
+<li>Make <code>mlflow</code> logging work correctly</li>
+<li>Need to ensure checkpoint logging works as it should</li>
+<li>Make image logging work fine</li>
+<li>Image logging should no longer work during validation sanity checks</li>
+</ul>
+<h2 id="2023-12-14">2023-12-14</h2>
+<ul>
+<li>Remove device stats monitor callback</li>
+<li>Adjust checkpoint saving path to the same location as <code>mlflow</code> artifacts</li>
+<li>Training cannot converge, the network is not learning. A bug somewhere - most likely data normalization issue</li>
+<li>Fix data normalization issue when during validation the transforms were not being applied</li>
+<li>Train first <code>UNet</code> model with <code>ResNet-50</code> encoder for 10 epochs successfully - final <code>val/dice</code> score was <strong>0.782</strong></li>
+<li>TODO: Validation is slow - instead of logging figures per sample each epoch log a grid of targets vs predictions</li>
+<li>WIP. inference script - the datamodule needs refactoring, the user should be able to crate it either from metadata
+  file or from list of file paths</li>
+</ul>
+<h2 id="2023-12-15">2023-12-15</h2>
+<ul>
+<li>Add factory methods to <code>KelpForestDataModule</code></li>
+<li><code>TrainConfig</code> now has dedicated properties for data module, model and trainer kwargs</li>
+<li>Prediction script works, preds look ok</li>
+<li>Tried to install <code>lightning-bolts</code> for torch ORT support - PL ends up being downgraded since bolts require it to be
+  less than 2.0</li>
+<li>Needed to bring the images to original shape because of padding necessary by unet -&gt; hacked ugly solution to remove
+  the padding</li>
+<li>Training a few more models - looks like seed is not respected and each model ends up having different training curves
+  and final performance</li>
+<li>PL way of logging metrics results in <code>epoch</code> being treated as a step in visualizations of learning curves in MLFlow
+  UI - a bit annoying</li>
+</ul>
+<h2 id="2023-12-16">2023-12-16</h2>
+<ul>
+<li>Add submission creation script</li>
+<li>First submission using unet/resnet50 combination trained for 10 epochs - <strong>score 0.3861</strong> - let's train for longer</li>
+<li>Need to implement a few makefile commands for training and prediction</li>
+<li>Hmmm, maybe run hyperparameter search on Azure ML?</li>
+<li>Trying to install <code>torch-ort</code> for training speedups (docs say about 37% speedups)</li>
+<li>No speedups at all - some new package messed up logging, debug statements all over the place...</li>
+<li><code>torch.compile</code> is the same - no speedups, takes forever to compile the model using <code>mode</code> != <code>default</code>
+  (which too is painfully slow)</li>
+<li>Reverting the env changes</li>
+<li>Run 10-fold CV and re-trained model, new submission score using lightning's best checkpoint = <strong>0.6569</strong>, using
+  <code>mlflow</code> model <strong>0.6338</strong> WTF!?</li>
+<li><code>mlflow</code> must have saved last checkpoint instead of the best one... Need to fix that</li>
+<li><code>MLFlowLogger</code> now uses <code>log_model=True</code>, instead of <code>log_model="all"</code> - final logged model is the same as the
+  best one even if the latest epoch resulted in worse model</li>
+<li>Figured out that <code>--benchmark</code> resulted in difference in non-deterministic model performance, will not use it again
+  for reproducibility</li>
+<li>Tried training from scratch - very slow convergence, training using pre-trained model is a must in this case.
+  Final DICE after 10 epochs=<strong>0.736</strong>, compared to <strong>0.760</strong> with <code>imagenet</code> weights</li>
+<li>Removing NDVI -&gt; dice=<strong>0.758</strong>, keep NDVI</li>
+<li>Adding <code>decoder_attention_type="scse"</code> did not improve the performance (dice=<strong>0.755</strong>)</li>
+<li>Reorder channels into R,G,B,SWIR,NIR,QA,DEM,NDVI -&gt; bump performance to dice=<strong>0.762</strong></li>
+<li>WIP. <code>OneCycleLR</code></li>
+</ul>
+<h2 id="2023-12-17">2023-12-17</h2>
+<ul>
+<li>Trying out different hyperparameter combinations</li>
+<li>OneCycleLR vs no LR scheduler: <strong>0.76640</strong> vs <strong>0.764593</strong> but overall stability is better with 1Cycle</li>
+<li>Adam vs AdamW +0.02 for AdamW</li>
+<li><code>weight_decay</code>:<ul>
+<li>1e-2: <strong>0.759</strong></li>
+<li>1e-3: <strong>0.763</strong></li>
+<li>1e-4: <strong>0.765</strong></li>
+<li>1e-5: <strong>0.762</strong></li>
+</ul>
+</li>
+<li>10-fold CV splits:<ul>
+<li>split 0: <strong>0.764593</strong> - public score: <strong>0.6551</strong></li>
+<li>split 1: <strong>0.831507</strong> - public score: <strong>0.6491</strong></li>
+<li>split 2: <strong>0.804093</strong> - public score: <strong>0.6608</strong></li>
+<li>split 3: <strong>0.820495</strong> - public score: <strong>0.6637</strong></li>
+<li>split 4: <strong>0.815217</strong> - public score: <strong>0.6529</strong></li>
+<li>split 5: <strong>0.825403</strong> - public score: <strong>0.6653</strong></li>
+<li>split 6: <strong>0.815222</strong> - public score: <strong>0.6507</strong></li>
+<li>split 7: <strong>0.823355</strong> - public score: <strong>0.6626</strong></li>
+<li>split 8: <strong>0.829409</strong> - public score: <strong>0.6411</strong></li>
+<li>split 9: <strong>0.820984</strong> - public score: <strong>0.6506</strong></li>
+</ul>
+</li>
+<li>Add confusion matrix logging</li>
+<li>Use <code>mlflow</code> autogenerated run names</li>
+</ul>
+<h2 id="2023-12-18">2023-12-18</h2>
+<ul>
+<li>Implementing image grid logging during eval loop</li>
+<li>Plot new submission scores</li>
+<li>Allow experiment name to be passed from command line</li>
+</ul>
+<h2 id="2023-12-19">2023-12-19</h2>
+<ul>
+<li>Submit more CV split models</li>
+<li>Finish up plotting image batch</li>
+<li>Add NDVI grid</li>
+<li>Fix reordered bands plotting issue</li>
+<li>Remove IoU from training metrics</li>
+<li>Used <code>digiKam</code> to find if duplicates are indeed present in the data using DEM layer - yup, and a lot of them</li>
+<li>Need to group duplicates and redesign CV splits</li>
+<li>WIP. AOI grouping</li>
+</ul>
+<h2 id="2023-12-20">2023-12-20</h2>
+<ul>
+<li>There is a single mask in the mask grid that's 90% kelp - cloudy image, open water - this can skew the results,
+  need to verify the rest of the masks</li>
+<li>Did some more work on AOI resolution</li>
+</ul>
+<h2 id="2023-12-21">2023-12-21</h2>
+<ul>
+<li>Implemented AOI grouping logic after grouping we have 3K of AOIs</li>
+<li>Added some more commands to Makefile</li>
+<li>WIP. More plotting logic to EDA - need to incorporate AOI ID column into EDA</li>
+<li>Maybe split EDA into 2 parts - composite plotting, stats plotting</li>
+</ul>
+<h2 id="2023-12-22">2023-12-22</h2>
+<ul>
+<li>Split EDA into tile plotting and stats plotting</li>
+<li>AOI resolution should be done after tile plotting and before EDA</li>
+<li>Updated makefile commands</li>
+<li>Renamed <code>preprocessing.py</code> to <code>calculate_band_stats.py</code></li>
+<li>Added few new stats calculation</li>
+<li>Updated train-val-test split logic using deduplicated AOIs</li>
+<li>Trained new models using new dataset:<ul>
+<li>split 0: <strong>0.820488</strong> - public score: <strong>0.6648</strong></li>
+<li>split 1: <strong>0.818475</strong> - public score: <strong>0.6583</strong></li>
+<li>split 2: <strong>0.819387</strong> - public score: ****</li>
+<li>split 3: <strong>0.837715</strong> - public score: <strong>0.6566</strong></li>
+<li>split 4: <strong>0.828322</strong> - public score: ****</li>
+<li>split 5: <strong>0.829196</strong> - public score: ****</li>
+<li>split 6: <strong>0.832407</strong> - public score: <strong>0.6678</strong></li>
+<li>split 7: <strong>0.848665</strong> - public score: <strong>0.6663</strong></li>
+<li>split 8: <strong>0.823535</strong> - public score: ****</li>
+<li>split 9: <strong>0.832882</strong> - public score: ****</li>
+</ul>
+</li>
+<li>There is too much splits to check each time... Will use split #6 to train from now on</li>
+</ul>
+<h2 id="2023-12-23">2023-12-23</h2>
+<ul>
+<li>Checking out different normalization strategies</li>
+<li>Move stats computation to GPU if available - 45x speedup</li>
+<li>Commented out some indices, as they result in nan/inf values</li>
+<li>Trained new models on split=6 with different normalization strategies:<ul>
+<li><code>z-score</code>: <strong>0.834168</strong></li>
+<li><code>quantile</code>: <strong>0.834134</strong></li>
+<li><code>min-max</code>: <strong>0.831865</strong></li>
+<li><code>per-sample-quantile</code>: <strong>0.806227</strong></li>
+<li><code>per-sample-min-max</code>: <strong>0.801893</strong></li>
+</ul>
+</li>
+<li>Will use <code>quantile</code> since it produces the most appealing visual samples and is more robust for outliers,
+  the learning curve also seems to converge faster</li>
+</ul>
+<h2 id="2023-12-24">2023-12-24</h2>
+<ul>
+<li>Fixed smp losses - <code>mode</code> param must be "multiclass" since our predictions have shape <code>NxCxHxW</code></li>
+<li>Some results from best to worst:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Loss class specs</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>torch.nn.CrossEntropyLoss</code> (<code>weight=[0.4,0.6]</code>)</td>
+<td><strong>0.840475</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.DiceLoss</code></td>
+<td><strong>0.840451</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.JaccardLoss</code></td>
+<td><strong>0.839553</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.TverskyLoss</code></td>
+<td><strong>0.839455</strong></td>
+</tr>
+<tr>
+<td><code>torch.nn.CrossEntropyLoss</code> (<code>weight=[0.3,0.7]</code>)</td>
+<td><strong>0.83682</strong></td>
+</tr>
+<tr>
+<td><code>torch.nn.CrossEntropyLoss</code> (<code>weight=None</code>)</td>
+<td><strong>0.834134</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.SoftCrossEntropyLoss</code> (<code>smooth_factor=0.1</code>))</td>
+<td><strong>0.833259</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.FocalLoss</code></td>
+<td><strong>0.832160</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.LovaszLoss</code></td>
+<td><strong>0.82262</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.SoftCrossEntropyLoss</code> (<code>smooth_factor=0.2</code>)</td>
+<td><strong>0.83195</strong></td>
+</tr>
+<tr>
+<td><code>smp.losses.SoftCrossEntropyLoss</code> (<code>smooth_factor=0.3</code>)</td>
+<td><strong>0.83040</strong></td>
+</tr>
+<tr>
+<td><code>torch.nn.CrossEntropyLoss</code> (<code>weight=[0.1,0.9]</code>)</td>
+<td><strong>0.80692</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Removed <code>smp.losses.MCCLoss</code> and <code>smp.losses.SoftBCEWithLogitsLoss</code> since they require different input shapes -
+  have no time for resolving this behaviour - error with <code>requires_grad</code> not being enabled or something...</li>
+<li>Will use Dice since it performed better on public leaderboard <strong>0.6824</strong> vs <strong>0.6802</strong> (CE with weights)</li>
+</ul>
+<h2 id="2023-12-25">2023-12-25</h2>
+<ul>
+<li>Comparing weighted sampler results with different weights:<ul>
+<li>9600 samples per epoch (300 batches - 2x as many as without the sampler)</li>
+<li>5120 (160 batches - as many as without the sampler)</li>
+<li>Ran 84 experiments with 5120 samples/epoch for 10 epochs, but not with all combinations of weights that I
+  wanted...</li>
+<li>Did not run 9600 samples / epoch at all</li>
+<li>Need to scale the experiments to the cloud</li>
+<li>1 experiment takes ~10 min, running full hparam search for weights would take ~8 days</li>
+</ul>
+</li>
+<li>Top 5 local runs:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>samples_per_epoch</th>
+<th>has_kelp</th>
+<th>kelp_pixels_pct</th>
+<th>qa_ok</th>
+<th>qa_corrupted_pixels_pct</th>
+<th>almost_all_water</th>
+<th>dem_nan_pixels_pct</th>
+<th>dem_zero_pixels_pct</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5120</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>0.0</td>
+<td>-1.0</td>
+<td>-1.0</td>
+<td>0.840818</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2.0</td>
+<td>1.0</td>
+<td>0.5</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>-1.0</td>
+<td>-1.0</td>
+<td>0.840141</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>0.0</td>
+<td>-1.0</td>
+<td>-1.0</td>
+<td>0.832289</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>0.832120</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.831936</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>-1.0</td>
+<td>0.831921</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>-1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.831608</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Just realised, that I was running the experiments on wrong CV split</li>
+<li>First 2 runs are on CV Split #6, the rest are on #0</li>
+<li>So dumb...</li>
+</ul>
+<h2 id="2023-12-26">2023-12-26</h2>
+<ul>
+<li>WIP. Azure ML integration</li>
+<li>Env issues - no GPU detected</li>
+</ul>
+<h2 id="2023-12-27">2023-12-27</h2>
+<ul>
+<li>WIP. Azure ML integration</li>
+<li>Finally, GPU was detected - had to recreate the env from scratch using Azure's curated base env</li>
+<li>Installing dependencies via pip... Well, fuck the lock-files I guess ¯_(ツ)_/¯</li>
+<li>Training takes forever WTF M$???</li>
+<li>Alright, downloading dataset instead of using ro_mount fixed slow training</li>
+<li>Fixed a few issues with confusion matrix logging</li>
+<li>Fixed double logging</li>
+<li>Added temporary fix for DEBUG level logging being permanently set by some 3rd party package</li>
+<li>Will run few hundred experiments overnight</li>
+</ul>
+<h2 id="2023-12-28">2023-12-28</h2>
+<ul>
+<li>Some results after whole night of training:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>samples_per_epoch</th>
+<th>has_kelp</th>
+<th>kelp_pixels_pct</th>
+<th>qa_ok</th>
+<th>qa_corrupted_pixels_pct</th>
+<th>almost_all_water</th>
+<th>dem_nan_pixels_pct</th>
+<th>dem_zero_pixels_pct</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-0.25</td>
+<td>0.84405</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84402</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0</td>
+<td>0.84396</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.2</td>
+<td>0</td>
+<td>-1</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.84396</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0</td>
+<td>0.5</td>
+<td>0</td>
+<td>0.25</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0.84391</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.5</td>
+<td>0.2</td>
+<td>-0.5</td>
+<td>0.75</td>
+<td>0.5</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.84390</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.2</td>
+<td>0.5</td>
+<td>-0.25</td>
+<td>0.75</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>0.84382</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>0.5</td>
+<td>1</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0</td>
+<td>0.84382</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>3</td>
+<td>2</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.84380</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>1</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.75</td>
+<td>1</td>
+<td>0.84377</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>0.84374</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.25</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>0.84373</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>0.2</td>
+<td>0</td>
+<td>0</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84370</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0.84369</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>After retraining using 10240 samples per epoch:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>samples_per_epoch</th>
+<th>has_kelp</th>
+<th>kelp_pixels_pct</th>
+<th>qa_ok</th>
+<th>qa_corrupted_pixels_pct</th>
+<th>almost_all_water</th>
+<th>dem_nan_pixels_pct</th>
+<th>dem_zero_pixels_pct</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-0.25</td>
+<td>0.84459</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84456</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.5</td>
+<td>-1</td>
+<td>0</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0</td>
+<td>0.84501</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.2</td>
+<td>0</td>
+<td>-1</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.84801</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0</td>
+<td>0.5</td>
+<td>0</td>
+<td>0.25</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0.84641</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.5</td>
+<td>0.2</td>
+<td>-0.5</td>
+<td>0.75</td>
+<td>0.5</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.84622</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.2</td>
+<td>0.5</td>
+<td>-0.25</td>
+<td>0.75</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>0.84546</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>0.5</td>
+<td>1</td>
+<td>-0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0</td>
+<td>0.84619</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>3</td>
+<td>2</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>-0.5</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.84500</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>1</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.75</td>
+<td>0.75</td>
+<td>1</td>
+<td>0.84508</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0</td>
+<td>-0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>0.84430</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.5</td>
+<td>0</td>
+<td>-1</td>
+<td>-0.25</td>
+<td>0.25</td>
+<td>-0.25</td>
+<td>-0.5</td>
+<td>0.84496</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>0.2</td>
+<td>0</td>
+<td>0</td>
+<td>0.25</td>
+<td>-1</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>0.84522</td>
+</tr>
+<tr>
+<td>10240</td>
+<td>2</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>-0.5</td>
+<td>0.25</td>
+<td>0.5</td>
+<td>-0.5</td>
+<td>0.84538</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Using more samples over the basic configuration yields very small increase 0.84405 vs 0.84801. But will use those
+  weights for the future.</li>
+</ul>
+<h2 id="2023-12-29">2023-12-29</h2>
+<ul>
+<li>Working on verifying impact of adding different spectral indices to the input</li>
+<li>Added new indices</li>
+<li>Refactored all indices into Kornia compatible classes</li>
+</ul>
+<h2 id="2023-12-30">2023-12-30</h2>
+<ul>
+<li>Added new aquatic vegetation indices</li>
+<li>Re-calculate band stats</li>
+<li>Added spectral indices plotting logic to the dataset</li>
+<li>Tried again to add <code>decoder_attention_type="scse"</code> but it gives worse performance</li>
+<li>DEMWM and NDVI are now always appended to the spectral_indices list</li>
+<li>Added option to mask spectral indices using DEMWM - needs testing</li>
+</ul>
+<h2 id="2023-12-31">2023-12-31</h2>
+<ul>
+<li>Enabled training using on-the-fly masking of indices using QA and DEM Water Mask</li>
+<li>Masking land and corrupted pixels in indices bumps the performance by over 1-2%</li>
+<li>Zeroes in the main bands (the ones with -32k pixel values) make the indices incorrect - maybe use NaNs and substitute
+  them with band min value instead?</li>
+<li>Changed indices back to inheriting from <code>torch.nn.Module</code> almost 1.6x speedup for stats calculation</li>
+<li>Recalculate dataset stats</li>
+<li>Added support for specifying fill value for "missing" pixels - either <code>torch.nan</code> or <code>0.0</code> for both stats calculation
+  and model training</li>
+<li>Load datasets stats from file instead of keeping them in the code</li>
+<li>Best combination so far:<ul>
+<li>CDOM,DOC,WATERCOLOR,SABI,KIVU,Kab1,NDAVI,WAVI</li>
+<li>WM masking</li>
+<li>without using <code>torch.nan</code> for missing pixels -&gt; using 0.0 instead</li>
+<li>with <code>2023-12-31T20:37:17-stats-fill_value=0.0-mask_using_qa=False-mask_using_water_mask=False-modified.json</code>
+  stats</li>
+<li>val/dice = 0.8477</li>
+</ul>
+</li>
+<li>WIP. Azure ML hparam search pipeline for best combination of spectral indices</li>
+</ul>
+<h2 id="2024-01-01">2024-01-01</h2>
+<ul>
+<li>WIP. Azure ML hparam search pipeline for best combination of spectral indices</li>
+<li>Removing <code>resources:shm_size</code> section from the pipeline spec results in workers dying from OOM errors</li>
+<li>Running 1k experiments with different spectral index combinations using zeros to mask missing pixels</li>
+</ul>
+<h2 id="2024-01-02">2024-01-02</h2>
+<ul>
+<li>Fixed issue with missing pixels not being filled</li>
+<li>Re-trained locally best models from Azure ML hparam search runs:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>run_id</th>
+<th>stats_fp</th>
+<th>fill_val</th>
+<th>steps_per_epoch</th>
+<th>spectral_indices</th>
+<th>val/dice</th>
+<th>leaderboard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ff896e93496344c2903a69fbf94f14fa</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>CI,CYA,ClGreen,IPVI,KIVU,NormNIR,SABI,mCRIG</td>
+<td><strong>0.85234</strong></td>
+<td>0.7034</td>
+</tr>
+<tr>
+<td>3298cf9aad3845a1ad0517e6bcca2c85</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>AFRI1600,ATSAVI,AVI,CHLA,GDVI,LogR,NormR,SRNIRR</td>
+<td>0.85211</td>
+<td>0.7045</td>
+</tr>
+<tr>
+<td>072d8f5e55e941ea82242301a1c3a1d5</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>BWDRVI,CI,ClGreen,GVMI,I,MCARI,SRNIRSWIR,WAVI</td>
+<td>0.85199</td>
+<td>0.7044</td>
+</tr>
+<tr>
+<td>9b98c0ecd4554947bb23341cd4ae0191</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>ARVI,AVI,CDOM,CI,GARI,I,SRNIRSWIR,mCRIG</td>
+<td>0.85191</td>
+<td>0.7049</td>
+</tr>
+<tr>
+<td>f67b7cfc2faa449c9cef2d3ace98a15c</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>AVI,DOC,IPVI,Kab1,LogR,NDWIWM,NormR,SRGR</td>
+<td>0.85133</td>
+<td>0.7011</td>
+</tr>
+<tr>
+<td>faf96942e21f4fa9b11b55287f4fb575</td>
+<td>zero-adjusted</td>
+<td>0.0</td>
+<td>10240</td>
+<td>AVI,CDOM,GBNDVI,PNDVI,SABI,SRGR,TVI,WDRVI</td>
+<td>0.85131</td>
+<td><strong>0.7062</strong></td>
+</tr>
+<tr>
+<td>4ccf406b8fec4793aabfd986fd417d26</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>AVI,I,Kab1,NDWIWM,NormNIR,SRNIRR,WDRVI,mCRIG</td>
+<td>0.85115</td>
+<td>0.7033</td>
+</tr>
+<tr>
+<td>cc8d8af285474a9899e38f17f7397603</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>AFRI1600,EVI22,MSAVI,NLI,NormR,RBNDVI,SRGR,TURB</td>
+<td>0.85094</td>
+<td>0.7025</td>
+</tr>
+<tr>
+<td>7063fb98bc4e4cb1bfb33e67e1ee10de</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>ATSAVI,CDOM,CI,ClGreen,GVMI,I,MCARI,MVI</td>
+<td>0.85051</td>
+<td>0.7060</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Need to add eval script for those AML models, cannot re-train them each time or waste submissions...</li>
+<li>Best models from AML were not better than what I had trained locally - best model had dice=0.7019</li>
+<li>Will resubmit locally trained models tomorrow</li>
+<li>It seems that pixel masking with nans and using adjusted quantile normalization is going to work best</li>
+</ul>
+<h2 id="2024-01-03">2024-01-03</h2>
+<ul>
+<li>New submissions (see table above)</li>
+<li>Will submit a few more runs tomorrow, but it looks like I'm going to use AFRI1600, ATSAVI, AVI, CHLA, GDVI, LogR,
+  NormR, SRNIRR index combination for the future.</li>
+<li>Added evaluation script for AML models</li>
+<li>Evaluated all top models trained on Azure ML - best one had dice=0.85015</li>
+</ul>
+<h2 id="2024-01-04">2024-01-04</h2>
+<ul>
+<li>Added a few more submissions - best score <strong>0.7062</strong></li>
+<li>Working on Test Time Augmentations</li>
+</ul>
+<h2 id="2024-01-05">2024-01-05</h2>
+<ul>
+<li>Added a few more submissions - best score <strong>0.7060</strong> -</li>
+<li>Run another hparam search using 15 indices at once (previous was using max 8 indices)</li>
+</ul>
+<h2 id="2024-01-06">2024-01-06</h2>
+<table>
+<thead>
+<tr>
+<th>run_id</th>
+<th>stats_fp</th>
+<th>fill_val</th>
+<th>steps_per_epoch</th>
+<th>spectral_indices</th>
+<th>val/dice (AML)</th>
+<th>val/dice (local)</th>
+<th>leaderboard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a9ea38cb5cf144c28b85cef99fbf0fc3</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG</td>
+<td>N/A</td>
+<td><strong>0.85339</strong></td>
+<td><strong>0.7083</strong></td>
+</tr>
+<tr>
+<td>e5560bce41ac48eaa9bdd5ea4fbb5ab5</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>BWDRVI,GARI,H,I,MVI,NDAVI,NDWI,NLI,NormG,SRGR,SRNIRR,SRSWIRNIR,VARIGreen,WATERCOLOR,mCRIG</td>
+<td>0.85303</td>
+<td>0.85304</td>
+<td>0.7064</td>
+</tr>
+<tr>
+<td>3ab0ade31670498bbf2dd2368b485b60</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>ARVI,BWDRVI,CYA,DVIMSS,EVI,GNDVI,H,I,KIVU,MCARI,MVI,NormG,NormNIR,SRNIRSWIR,TVI</td>
+<td>0.85298</td>
+<td>0.85123</td>
+<td>0.7048</td>
+</tr>
+<tr>
+<td>2654497d84bf466cb5508369bd83ce24</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>AFRI1600,AVI,CHLA,ClGreen,H,IPVI,LogR,MVI,PNDVI,SQRTNIRR,SRGR,SRNIRG,SRNIRSWIR,WATERCOLOR,WAVI</td>
+<td>0.85316</td>
+<td>0.85316</td>
+<td>0.7072</td>
+</tr>
+<tr>
+<td>ec3d3613a9d04b1b81b934231360aebe</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>ARVI,AVI,CDOM,CI,CYA,EVI22,GBNDVI,GRNDVI,H,I,LogR,NormG,NormNIR,NormR,WDRVI</td>
+<td>0.85299</td>
+<td>0.85120</td>
+<td>0.7028</td>
+</tr>
+<tr>
+<td>834d204b70c645c2949b01adb1cdffef</td>
+<td>nan-adjusted</td>
+<td>nan</td>
+<td>10240</td>
+<td>ATSAVI,CHLA,CI,CVI,EVI2,GDVI,GRNDVI,H,I,NDWI,NormNIR,PNDVI,SABI,TURB,WATERCOLOR</td>
+<td>0.85300</td>
+<td>0.85300</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="2024-01-07">2024-01-07</h2>
+<ul>
+<li>Added submissions log to the repo</li>
+<li>Resolve artifacts dir dynamically - allow raw AML export as input to eval script, log model after eval</li>
+<li>Updated Makefile to include the best combination of spectral indices</li>
+<li>Added TTA (baseline val/dice=0.85339):<ul>
+<li>max: <strong>0.85490</strong></li>
+<li>mean: 0.85458</li>
+<li>sum: 0.85458</li>
+<li>min: 0.85403</li>
+<li>gmean: 0.15955</li>
+<li>tsharpen: 0.00468 - loss was nan</li>
+</ul>
+</li>
+</ul>
+<h2 id="2024-01-08">2024-01-08</h2>
+<ul>
+<li>Submitted new preds with TTA:<ul>
+<li>no-tta: 0.7083</li>
+<li>max: 0.7076</li>
+<li>mean: 0.7073</li>
+</ul>
+</li>
+<li>So... that was a waste of time...</li>
+<li>Prediction threshold optimization</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>threshold</th>
+<th>test/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.3</td>
+<td>0.85301</td>
+</tr>
+<tr>
+<td>0.31</td>
+<td>0.85305</td>
+</tr>
+<tr>
+<td>0.32</td>
+<td>0.85306</td>
+</tr>
+<tr>
+<td>0.33</td>
+<td>0.85307</td>
+</tr>
+<tr>
+<td>0.34</td>
+<td>0.85309</td>
+</tr>
+<tr>
+<td>0.35</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.36</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.37</td>
+<td>0.85313</td>
+</tr>
+<tr>
+<td>0.38</td>
+<td>0.85315</td>
+</tr>
+<tr>
+<td>0.39</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.4</td>
+<td>0.85316</td>
+</tr>
+<tr>
+<td>0.41</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.42</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.43</td>
+<td>0.85320</td>
+</tr>
+<tr>
+<td>0.44</td>
+<td>0.85319</td>
+</tr>
+<tr>
+<td>0.45</td>
+<td><strong>0.85320</strong></td>
+</tr>
+<tr>
+<td>0.46</td>
+<td>0.85318</td>
+</tr>
+<tr>
+<td>0.47</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.48</td>
+<td>0.85316</td>
+</tr>
+<tr>
+<td>0.49</td>
+<td>0.85317</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>0.85316</td>
+</tr>
+<tr>
+<td>0.51</td>
+<td>0.85315</td>
+</tr>
+<tr>
+<td>0.52</td>
+<td>0.85314</td>
+</tr>
+<tr>
+<td>0.53</td>
+<td>0.85313</td>
+</tr>
+<tr>
+<td>0.54</td>
+<td>0.85311</td>
+</tr>
+<tr>
+<td>0.55</td>
+<td>0.85309</td>
+</tr>
+<tr>
+<td>0.56</td>
+<td>0.85305</td>
+</tr>
+<tr>
+<td>0.57</td>
+<td>0.85303</td>
+</tr>
+<tr>
+<td>0.58</td>
+<td>0.85300</td>
+</tr>
+<tr>
+<td>0.59</td>
+<td>0.85300</td>
+</tr>
+<tr>
+<td>0.6</td>
+<td>0.85296</td>
+</tr>
+<tr>
+<td>0.61</td>
+<td>0.85296</td>
+</tr>
+<tr>
+<td>0.62</td>
+<td>0.85290</td>
+</tr>
+<tr>
+<td>0.63</td>
+<td>0.85287</td>
+</tr>
+<tr>
+<td>0.64</td>
+<td>0.85285</td>
+</tr>
+<tr>
+<td>0.65</td>
+<td>0.85281</td>
+</tr>
+<tr>
+<td>0.66</td>
+<td>0.85278</td>
+</tr>
+<tr>
+<td>0.67</td>
+<td>0.85274</td>
+</tr>
+<tr>
+<td>0.68</td>
+<td>0.85267</td>
+</tr>
+<tr>
+<td>0.69</td>
+<td>0.85259</td>
+</tr>
+<tr>
+<td>0.7</td>
+<td>0.85253</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Leaderboard: 0.7077</li>
+</ul>
+<h1 id="2024-01-09">2024-01-09</h1>
+<ul>
+<li>Added new model architectures based on https://github.com/jlcsilva/segmentation_models.pytorch</li>
+</ul>
+<h1 id="2024-01-10">2024-01-10</h1>
+<ul>
+<li>Added hparam search AML pipeline</li>
+<li>Running a few runs overnight</li>
+</ul>
+<h1 id="2024-01-11">2024-01-11</h1>
+<ul>
+<li>Results after overnight training (Top 5 runs only):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>encoder</th>
+<th>architecture</th>
+<th>val/dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tu-efficientnet_b5</td>
+<td>unet</td>
+<td>0.85854</td>
+</tr>
+<tr>
+<td>tu-seresnext101_32x4d</td>
+<td>unet</td>
+<td>0.85807</td>
+</tr>
+<tr>
+<td>tu-resnest50d_4s2x40d</td>
+<td>unet</td>
+<td>0.85787</td>
+</tr>
+<tr>
+<td>tu-rexnetr_300</td>
+<td>unet</td>
+<td>0.85749</td>
+</tr>
+<tr>
+<td>tu-seresnext26d_32x4d</td>
+<td>unet</td>
+<td>0.85728</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Observation: bigger models = better</li>
+<li>TTA on test set worked for some models and failed for the others</li>
+<li>A lot of models failed due to lack of pre-trained weight - need to investigate more... are the docs lying?</li>
+<li>Very large models failed with OOM errors - neet to retrain with lower batch size + gradient accumulation</li>
+<li>Some model failed because of bad tensor shapes - probably those models require inputs to be divisible
+  by 128 or something</li>
+<li>Looks like checkpoint saving using MLFlow is broken and instead of saving the best model the latest one is saved...</li>
+<li>Added a workaround for this - always load model from checkpoints dir if exists</li>
+<li>New submissions:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>encoder</th>
+<th>architecture</th>
+<th>val/dice</th>
+<th>leaderboard</th>
+<th>notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tu-efficientnet_b5</td>
+<td>unet</td>
+<td>0.85920</td>
+<td>0.7119</td>
+<td>trained on AML + bf16-mixed + dt=0.45 + fixed checkpoint restore</td>
+</tr>
+<tr>
+<td>tu-efficientnet_b5</td>
+<td>unet</td>
+<td>0.85854</td>
+<td>0.7105</td>
+<td>trained on AML + fp32-true</td>
+</tr>
+<tr>
+<td>tu-efficientnet_b5</td>
+<td>unet</td>
+<td>0.85817</td>
+<td>0.7101</td>
+<td>trained locally</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2024-01-12">2024-01-12</h2>
+<ul>
+<li>Update encoder list in hparam search pipeline</li>
+<li>Add option to pass <code>val_check_interval</code></li>
+<li><code>image_size=384</code> + <code>batch_size=16</code> + <code>accumulate_grad_batches=2</code></li>
+<li>Force training with random init when no weights exist</li>
+</ul>
+<h2 id="2024-01-13">2024-01-13</h2>
+<ul>
+<li>Fixed issue with logging images with the same key twice when using sub-1 <code>val_check_interval</code></li>
+</ul>
+<h2 id="2024-01-16">2024-01-16</h2>
+<ul>
+<li>Added support for different LR Schedulers</li>
+<li>New submissions - no breakthroughs</li>
+<li>Training with <code>batch_size=8</code> and <code>accumulate_grad_batches=4</code> resulted in better local eval scores,
+  but did not improve leaderboard scores</li>
+<li>Tried out different resize strategies - padding works best so far</li>
+<li>Some encoder models require input to be both divisible by 32, 7, 8 etc. - I cannot use the same image size</li>
+<li>ConvNext not supported</li>
+</ul>
+<h2 id="2024-01-17">2024-01-17</h2>
+<ul>
+<li>Added new params to AML Model training pipeline</li>
+<li>Added CV split training pipeline</li>
+<li>Fix with param names</li>
+</ul>
+<h2 id="2024-01-18">2024-01-18</h2>
+<ul>
+<li>Resolve issue where sending over model.parameters() to external function caused divergence in model performance</li>
+<li>Update defaults in argparse</li>
+<li>New submissions. Best: <strong>0.7132</strong> - fold #7 + bf16 + dt=0.45</li>
+</ul>
+<h2 id="2024-01-19">2024-01-19</h2>
+<ul>
+<li>Fixed import issue with <code>AdamW</code> being imported from <code>timm</code> instead of <code>torch</code></li>
+<li>Updated model hparam search pipeline - train with smaller batch size, remove all models that do not support
+  image_size = 352 or 384</li>
+<li>New submissions. Best -&gt; <strong>0.7139</strong> - fold #3 + bf16 + dt=0.45</li>
+</ul>
+<h2 id="2024-01-20">2024-01-20</h2>
+<ul>
+<li>Updated model training component. <code>arg=${{inputs.arg}}</code> results in default value being passed.
+  Use <code>arg ${{inputs.arg}}</code> instead.</li>
+<li>New submissions using different CV folds. No improvement.</li>
+</ul>
+<h2 id="2024-01-21">2024-01-21</h2>
+<ul>
+<li>New submissions. Best -&gt; <strong>0.7152</strong> - fold #8 + bf16 + dt=0.45</li>
+<li>Tested a few folds with different dt, precision and tta. Using just bf16 without tta or dt yields best results.
+  Will try it next.</li>
+<li>Running experiments with different architectures and best performing encoders.</li>
+<li>ResUnet++ often results in <code>NaN</code> loss.</li>
+<li>Added guard against <code>NaN</code> loss</li>
+<li>Fixed some typos, minor refactor in eval scripts</li>
+<li>Validate encoder config with - modify <code>image_size</code> if model does not support the one specified by the user</li>
+<li>Removed useless <code>--strategy</code> argument since the images are not RGB - most of the weights are
+  randomly initialized anyway</li>
+</ul>
+<h2 id="2024-01-24">2024-01-24</h2>
+<ul>
+<li>Re-trained best model with unet++ architecture</li>
+<li>Unet++ is not deterministic for some reason...</li>
+<li>Different results each time the training is run</li>
+<li>Tried to submit preds with a model that had the best looking confusion matrix instead (checkpoint with DICE=0.829)
+  vs best checkpoint (DICE=0.846). No improvement -&gt; public dice=0.7055</li>
+<li>Add FCN - model collapses</li>
+<li>Try out a bunch of <code>--benchmark</code> experiments</li>
+</ul>
+<h2 id="2024-01-25">2024-01-25</h2>
+<ul>
+<li>WIP. prediction averaging</li>
+<li>Used all folds for averaging - might not be optimal -&gt; best score so far: <strong>dice=0.7170</strong></li>
+</ul>
+<h2 id="2024-01-26">2024-01-26</h2>
+<ul>
+<li>Added option to ignore folds if weight=0.0</li>
+<li>Added option to automatically plot submission samples after prediction using
+  <code>predict_and_submit.py</code> and <code>average_predictions.py</code></li>
+<li>New submission:<ul>
+<li>Top 3 folds on Public Leaderboard, DT=0.5: no improvement</li>
+<li>Top 3 folds on Public Leaderboard, DT=0.1: no improvement</li>
+<li>Top 6 folds on Public Leaderboard, DT=0.5: no improvement</li>
+</ul>
+</li>
+</ul>
+<h2 id="2024-01-27">2024-01-27</h2>
+<ul>
+<li>Training on random split with 98% of data in train set</li>
+<li>Best submission <strong>dice=0.7090</strong> bf16 + dt=0.45</li>
+<li>Did not work very well compared to fold=8</li>
+<li>WIP. training for longer</li>
+<li>Added data prep script for pixel level training</li>
+<li>Added training script for Random Forest and Gradient Boosting Trees classifiers form <code>scikit-learn</code></li>
+<li>Trained on 0.05% of data -&gt; <strong>dice=0.673</strong></li>
+<li>Forgot to remove samples with corrupted masks...</li>
+</ul>
+<h2 id="2024-01-28">2024-01-28</h2>
+<ul>
+<li>Log more plots and metrics during evaluation</li>
+<li>Fixing dataset</li>
+<li>Add support for xgboost, lightgbm and catboost</li>
+<li>Log sample predictions after training</li>
+<li>Training for longer results (50 epochs):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>split</th>
+<th>10 epochs exp</th>
+<th>50 epochs exp</th>
+<th>10 epoch dice</th>
+<th>50 epoch dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>serene_nose</td>
+<td>strong_door</td>
+<td>0.84391</td>
+<td>0.84374</td>
+</tr>
+<tr>
+<td>1</td>
+<td>teal_pea</td>
+<td>keen_evening</td>
+<td>0.85083</td>
+<td>0.84871</td>
+</tr>
+<tr>
+<td>2</td>
+<td>jovial_neck</td>
+<td>hungry_loquat</td>
+<td>0.84419</td>
+<td>0.84723</td>
+</tr>
+<tr>
+<td>3</td>
+<td>joyful_chain</td>
+<td>elated_atemoya</td>
+<td>0.85997</td>
+<td>0.86425</td>
+</tr>
+<tr>
+<td>4</td>
+<td>brave_ticket</td>
+<td>nice_cheetah</td>
+<td>0.85506</td>
+<td>0.85540</td>
+</tr>
+<tr>
+<td>5</td>
+<td>willing_pin</td>
+<td>gentle_stamp</td>
+<td>0.84931</td>
+<td>0.85120</td>
+</tr>
+<tr>
+<td>6</td>
+<td>boring_eye</td>
+<td>dev_kelp_training_exp_67</td>
+<td>0.85854</td>
+<td>0.85985</td>
+</tr>
+<tr>
+<td>7</td>
+<td>strong_star</td>
+<td>dev_kelp_training_exp_65</td>
+<td>0.86937</td>
+<td>0.87241</td>
+</tr>
+<tr>
+<td>8</td>
+<td>sleepy_feijoa</td>
+<td>yellow_evening</td>
+<td>0.84312</td>
+<td>0.84425</td>
+</tr>
+<tr>
+<td>9</td>
+<td>sincere_pear</td>
+<td>icy_market</td>
+<td>0.85242</td>
+<td>0.85168</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Best score on public LB: <strong>0.7169</strong> - using val/dice scores as weights + dt=0.5</li>
+</ul>
+<h2 id="2024-02-01">2024-02-01</h2>
+<ul>
+<li>Fiddling with <code>xgboost</code> and <code>catboost</code></li>
+<li>Add predict and submit scripts for tree based models, need to refactor the code for NN stuff later to match</li>
+<li>Issues with predictions after moving stuff to different modules... need to debug</li>
+</ul>
+<h2 id="2024-02-02">2024-02-02</h2>
+<ul>
+<li>Fixed issues with empty predictions - train config <code>spectral_indices</code> resolution logic was the source of issues</li>
+<li>Added eval script</li>
+<li>Removed models other than <code>XGBClassifier</code></li>
+<li>New submission with XGB - dice = 0.5 on public LB - abandoning this approach</li>
+<li>Going back to NNs</li>
+</ul>
+<h2 id="2024-02-03">2024-02-03</h2>
+<ul>
+<li>Allow for training with reduced number of bands</li>
+<li>Refactor training stuff a bit (split <code>train.py</code> into smaller files)</li>
+<li>Use band names instead of indices for band order</li>
+<li>Add option to specify interpolation mode</li>
+<li>Update training pipelines</li>
+</ul>
+<h2 id="2024-02-04">2024-02-04</h2>
+<ul>
+<li>Add mask post predict resize transforms with accordance with predict transforms</li>
+<li>Testing out a few transformer-based encoders - did not work - they do not support features only mode</li>
+<li>A few new submissions with single model - retrained with:
+  <div class="highlight"><pre><span></span><code>--has_kelp_importance_factor<span class="w"> </span><span class="m">2</span>
+--kelp_pixels_pct_importance_factor<span class="w"> </span><span class="m">0</span>.5
+--qa_ok_importance_factor<span class="w"> </span><span class="m">0</span>.5
+--qa_corrupted_pixels_pct_importance_factor<span class="w"> </span>-0.5
+--almost_all_water_importance_factor<span class="w"> </span>-1
+--dem_nan_pixels_pct_importance_factor<span class="w"> </span><span class="m">0</span>
+--dem_zero_pixels_pct_importance_factor<span class="w"> </span>-0.25
+</code></pre></div></li>
+<li>Single model dice score in public LB improved from <strong>0.7153</strong> -&gt; <strong>0.7155</strong></li>
+</ul>
+<h2 id="2024-02-05">2024-02-05</h2>
+<ul>
+<li>A few new submissions - no change in public LB - best one is <strong>0.7170</strong></li>
+</ul>
+<h2 id="2024-02-06">2024-02-06</h2>
+<ul>
+<li>Just found a bug in Makefile... Was submitting stuff based on predictions from the first model ensemble...</li>
+<li>Last two model changes were never submitted - the one with training for 50 epochs and the one with updated sampler weights...</li>
+<li>Fuck my life...</li>
+<li>New scores are:<ul>
+<li>Training for 50 epochs, all weights = 1.0: <strong>0.7197</strong></li>
+<li>Training for 50 epochs, weights rescaled based on scores on historical LB using min-max scaler: <strong>0.7200</strong></li>
+<li>New sampler weights: <strong>0.7169</strong></li>
+</ul>
+</li>
+<li>Will build new ensemble of all best models for all splits, regardless of training method</li>
+<li>New ideas: model weight averaging, weighting probabilities instead of decisions as it is now</li>
+</ul>
+<h2 id="2024-02-07">2024-02-07</h2>
+<ul>
+<li>New submissions with a mixture of models - selected best model for each split that was ever produced: <strong>0.7204</strong></li>
+<li>Best dice was for 8 models in total - fold=1 and fold=9 weights were set to 0.0
+as they are the worst on LB individually</li>
+<li>Add support for soft labels - I can now use weighted average of probabilities instead of hard labels</li>
+</ul>
+<h2 id="2024-02-08">2024-02-08</h2>
+<ul>
+<li>Submissions with soft labels - public LB: <strong>0.7206</strong> not much but is something...</li>
+<li>Need to add some validation for the ensemble scores locally - otherwise the submissions are just wasted</li>
+<li>New idea: SAHI -&gt; train on 128x128 crops, inference on sliding window with overlaps and padding, then stitch the preds</li>
+</ul>
+<h2 id="2024-02-10">2024-02-10</h2>
+<ul>
+<li>Added logic to copy split val files to individual dirs</li>
+<li>Added eval scripts for evaluating from folders with masks - evaluating ensemble is now easier</li>
+<li>Tested ensemble with various settings: TTA, decision thresholds, soft labels, tta merge modes, various fold weights</li>
+<li>Best combination:<ul>
+<li>no TTA</li>
+<li>soft labels</li>
+<li>no decision threshold on fold level</li>
+<li>decision threshold = 0.48 for final ensemble</li>
+<li>weights as before -&gt; MinMaxScaler(0.2, 1.0)</li>
+<li>fold=0 -&gt; 0.0 fold=1 -&gt; 0.0, fold=9 -&gt; 0.0</li>
+<li>mix of best model per split</li>
+</ul>
+</li>
+<li>Public LB = <strong>0.7208</strong></li>
+</ul>
+<h2 id="2024-02-12">2024-02-12</h2>
+<ul>
+<li>Added Stochastic Weight Averaging</li>
+<li>Running new experiments for 25-50 epochs with SWA kicking in at 75% of epochs</li>
+</ul>
+<h2 id="2024-02-13">2024-02-13</h2>
+<ul>
+<li>Generated dataset for SAHI training</li>
+<li>New submissions - no improvement with SWA</li>
+</ul>
+<h2 id="2024-02-14">2024-02-14</h2>
+<ul>
+<li>SAHI training - split=8, image_size=128, no overlap between tiles - locally has DICE=0.83 which is disappointing</li>
+<li>XEDice loss - no improvement</li>
+<li>Add option to predict using latest checkpoint instead of the best one</li>
+<li>Train Unet with reduced encoder depth from 5 to 4. Minor improvements. Will investigate further.</li>
+</ul>
+<h2 id="2024-02-15">2024-02-15</h2>
+<ul>
+<li>Add support for providing custom <code>encoder_depth</code> and <code>decoder_channels</code></li>
+<li>Add support for more losses</li>
+<li>New submissions - no improvement</li>
+<li>Test out different <code>decoder_channels</code> configurations <code>512,256,128,64,32</code> seems to bump the performance a bit</li>
+</ul>
+<h2 id="2024-02-16">2024-02-16</h2>
+<ul>
+<li>WIP. SAHI inference</li>
+</ul>
+<h2 id="2024-02-17">2024-02-17</h2>
+<ul>
+<li>Finished SAHI inference scripts</li>
+<li>Trained a model on 128x128 crops with resize to 320x320, which had the best local score</li>
+<li>New submission with SAHI on 8th split =&gt; Public LB=0.68</li>
+<li>Well, that was a waste of 3 days...</li>
+</ul>
+<h2 id="2024-02-18">2024-02-18</h2>
+<ul>
+<li>5-Fold CV</li>
+<li>Re-train 5 Folds</li>
+</ul>
+<h2 id="2024-02-19">2024-02-19</h2>
+<ul>
+<li>New submissions:<ul>
+<li>Fold-0: 0.7135</li>
+<li>Fold-1: 0.7114</li>
+<li>Fold-2: 0.7094</li>
+<li>Fold-3: 0.7133</li>
+<li>Fold-4: 0.7106</li>
+</ul>
+</li>
+</ul>
+<h2 id="2024-02-20">2024-02-20</h2>
+<ul>
+<li>New ensemble: mix of 10-Fold and 5-fold models: <strong>0.7205</strong></li>
+</ul>
+<h2 id="2024-02-21">2024-02-21</h2>
+<ul>
+<li>Final submission with fold=2...fold=8 all 1.0 weights public LB = <strong>0.7210</strong></li>
+<li>No submissions left</li>
+<li>The competition ends today</li>
+<li>It was a good run regardless of final ranking</li>
+<li>But oh boy, do I hope everyone in top 5 over-fitted to public test set :D</li>
+</ul>
+<h2 id="2024-02-22">2024-02-22</h2>
+<ul>
+<li>Checked the LB today - #2 place</li>
+<li>So, yeah... indeed some people over-fitted</li>
+<li>WIP. docs with training guides and docstrings</li>
+</ul>
+<h2 id="2024-02-23">2024-02-23</h2>
+<ul>
+<li>Added more docstrings</li>
+<li>Updated docs</li>
+<li>WIP. Reproducibility guide</li>
+</ul>
+<h2 id="2024-02-24">2024-02-24</h2>
+<ul>
+<li>Added technical report</li>
+</ul>
+<h2 id="2024-02-24_1">2024-02-24</h2>
+<ul>
+<li>Finishing up the technical report</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2023 xultaeculcis
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e1c3ead8.min.js"></script>
+      
+    
+  </body>
+</html>

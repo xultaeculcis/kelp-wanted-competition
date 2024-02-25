@@ -1,0 +1,4580 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Estimating the extent of Giant Kelp Forests by segmenting Landsat imagery">
+      
+      
+      
+      
+        <link rel="prev" href="../dataset/">
+      
+      
+        <link rel="next" href="../utils/">
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
+    
+    
+      
+        <title>transforms - kelp-wanted-competition</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#kelp.nn.data.transforms.MinMaxNormalize" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="kelp-wanted-competition" class="md-header__button md-logo" aria-label="kelp-wanted-competition" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kelp-wanted-competition
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              transforms
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xultaeculcis/kelp-wanted-competition" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="kelp-wanted-competition" class="md-nav__button md-logo" aria-label="kelp-wanted-competition" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    kelp-wanted-competition
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xultaeculcis/kelp-wanted-competition" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../dev-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dev-Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../technical-report/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Technical Report
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/setup-dev-env/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setting up dev environment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/tests/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running tests
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/makefile-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Makefile commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/reproducibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reproducibility of results
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/data-prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Preparing data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/training/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Training models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/mlflow-artifacts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MLFlow artifacts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/evaluation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluating models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/inference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running inference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/submissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Making submissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/xgb-stuff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    XGBoost
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guides/sahi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SAHI
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../consts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kelp.consts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.core
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.core
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/configs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    configs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/indices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    indices
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/settings/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    settings
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/submission/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    submission
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.data_prep
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.data_prep
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/aoi_grouping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    aoi_grouping
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/calculate_band_stats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    calculate_band_stats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/dataset_prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dataset_prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/eda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eda
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/move_split_files/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    move_split_files
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/plot_samples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    plot_samples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/sahi_dataset_prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sahi_dataset_prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_prep/train_val_test_split/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train_val_test_split
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.nn
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.nn
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_1" id="__nav_5_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../band_stats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    band_stats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datamodule/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    datamodule
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    transforms
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    transforms
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.MinMaxNormalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      MinMaxNormalize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleMinMaxNormalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      PerSampleMinMaxNormalize
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PerSampleMinMaxNormalize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleMinMaxNormalize.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleQuantileNormalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      PerSampleQuantileNormalize
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PerSampleQuantileNormalize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleQuantileNormalize.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemoveNaNs" class="md-nav__link">
+    <span class="md-ellipsis">
+      RemoveNaNs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RemoveNaNs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemoveNaNs.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemovePadding" class="md-nav__link">
+    <span class="md-ellipsis">
+      RemovePadding
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RemovePadding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemovePadding.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.build_append_index_transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      build_append_index_transforms
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.min_max_normalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      min_max_normalize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.quantile_min_max_normalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      quantile_min_max_normalize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_normalization_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_normalization_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_normalization_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_normalization_transform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_resize_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_resize_transform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_transforms
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_2" id="__nav_5_5_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/average_predictions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    average_predictions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/fold_weights/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fold_weights
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/predict_and_submit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict_and_submit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/preview_submission/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    preview_submission
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/sahi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sahi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_3" id="__nav_5_5_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    models
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/efficientunetplusplus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    efficientunet++
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/fcn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fcn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/resunet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resunet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/resunetplusplus/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resunet++
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/factories/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    factories
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/losses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    losses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/modules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    modules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/segmentation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    segmentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5_4" id="__nav_5_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/eval/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/eval_from_folders/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval_from_folders
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/train/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    kelp.xgb
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            kelp.xgb
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6_1" id="__nav_5_6_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    inference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            inference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../xgb/inference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../xgb/inference/predict_and_submit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    predict_and_submit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6_2" id="__nav_5_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    training
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            training
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../xgb/training/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../xgb/training/eval/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    eval
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../xgb/training/options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    options
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../xgb/training/train/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    train
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kelp.utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.MinMaxNormalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      MinMaxNormalize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleMinMaxNormalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      PerSampleMinMaxNormalize
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PerSampleMinMaxNormalize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleMinMaxNormalize.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleQuantileNormalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      PerSampleQuantileNormalize
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PerSampleQuantileNormalize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.PerSampleQuantileNormalize.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemoveNaNs" class="md-nav__link">
+    <span class="md-ellipsis">
+      RemoveNaNs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RemoveNaNs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemoveNaNs.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemovePadding" class="md-nav__link">
+    <span class="md-ellipsis">
+      RemovePadding
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RemovePadding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.RemovePadding.forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.build_append_index_transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      build_append_index_transforms
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.min_max_normalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      min_max_normalize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.quantile_min_max_normalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      quantile_min_max_normalize
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_normalization_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_normalization_stats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_normalization_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_normalization_transform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_resize_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_resize_transform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kelp.nn.data.transforms.resolve_transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      resolve_transforms
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>transforms</h1>
+
+<p>The augmentation transforms related classes and helpers.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="kelp.nn.data.transforms.MinMaxNormalize" class="doc doc-heading">
+          <code>kelp.nn.data.transforms.MinMaxNormalize</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="torch.nn.Module">Module</span></code></p>
+
+  
+      <p>Min-Max normalization transform that uses provided min and max per-channel values for image transformation.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>min_vals</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A Tensor of min values per-channel.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>max_vals</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A Tensor of max values per-channel.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+            <details class="quote">
+              <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">MinMaxNormalize</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Min-Max normalization transform that uses provided min and max per-channel values for image transformation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        min_vals: A Tensor of min values per-channel.</span>
+<span class="sd">        max_vals: A Tensor of max values per-channel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_vals</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">max_vals</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mins</span> <span class="o">=</span> <span class="n">min_vals</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxs</span> <span class="o">=</span> <span class="n">max_vals</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">mins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mins</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">maxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxs</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">mins</span><span class="p">,</span> <span class="n">maxs</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mins</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">maxs</span> <span class="o">-</span> <span class="n">mins</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="kelp.nn.data.transforms.PerSampleMinMaxNormalize" class="doc doc-heading">
+          <code>kelp.nn.data.transforms.PerSampleMinMaxNormalize</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="torch.nn.Module">Module</span></code></p>
+
+  
+      <p>A per-sample normalization transform that will calculate min and max per-channel on the fly.</p>
+
+            <details class="quote">
+              <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PerSampleMinMaxNormalize</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A per-sample normalization transform that will calculate min and max per-channel on the fly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the normalization transform for specified batch of images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: The batch of images.</span>
+
+<span class="sd">        Returns: A batch of normalized images.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="kelp.nn.data.transforms.PerSampleMinMaxNormalize.forward" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">PerSampleMinMaxNormalize</span><span class="o">.</span><span class="n">forward</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Runs the normalization transform for specified batch of images.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>x</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The batch of images.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs the normalization transform for specified batch of images.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: The batch of images.</span>
+
+<span class="sd">    Returns: A batch of normalized images.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="kelp.nn.data.transforms.PerSampleQuantileNormalize" class="doc doc-heading">
+          <code>kelp.nn.data.transforms.PerSampleQuantileNormalize</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="torch.nn.Module">Module</span></code></p>
+
+  
+      <p>A per-sample normalization transform that will calculate min and max per-channel on the fly
+using provided quantile values.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>q_low</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The lower quantile value.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>q_high</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The upper quantile value.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+            <details class="quote">
+              <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PerSampleQuantileNormalize</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A per-sample normalization transform that will calculate min and max per-channel on the fly</span>
+<span class="sd">    using provided quantile values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        q_low: The lower quantile value.</span>
+<span class="sd">        q_high: The upper quantile value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q_low</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">q_high</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_low</span> <span class="o">=</span> <span class="n">q_low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_high</span> <span class="o">=</span> <span class="n">q_high</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the normalization transform for specified batch of images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: The batch of images.</span>
+
+<span class="sd">        Returns: A batch of normalized images.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flattened_sample</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">flattened_sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_low</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">flattened_sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_high</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="kelp.nn.data.transforms.PerSampleQuantileNormalize.forward" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">PerSampleQuantileNormalize</span><span class="o">.</span><span class="n">forward</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Runs the normalization transform for specified batch of images.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>x</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The batch of images.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs the normalization transform for specified batch of images.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: The batch of images.</span>
+
+<span class="sd">    Returns: A batch of normalized images.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">flattened_sample</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">flattened_sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_low</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">flattened_sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_high</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="kelp.nn.data.transforms.RemoveNaNs" class="doc doc-heading">
+          <code>kelp.nn.data.transforms.RemoveNaNs</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="torch.nn.Module">Module</span></code></p>
+
+  
+      <p>Removes NaN values from the input tensor.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>min_vals</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The min values per-channel to use when removing NaNs and neg-Inf.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>max_vals</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The min values per-channel to use when removing positive-Inf.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+            <details class="quote">
+              <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RemoveNaNs</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Removes NaN values from the input tensor.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        min_vals: The min values per-channel to use when removing NaNs and neg-Inf.</span>
+<span class="sd">        max_vals: The min values per-channel to use when removing positive-Inf.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_vals</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">max_vals</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mins</span> <span class="o">=</span> <span class="n">min_vals</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxs</span> <span class="o">=</span> <span class="n">max_vals</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the transform for specified batch of images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: The batch of images.</span>
+
+<span class="sd">        Returns: A batch of normalized images.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mins</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">maxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxs</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">mins</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">mins</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">maxs</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="kelp.nn.data.transforms.RemoveNaNs.forward" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">RemoveNaNs</span><span class="o">.</span><span class="n">forward</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Runs the transform for specified batch of images.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>x</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The batch of images.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs the transform for specified batch of images.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: The batch of images.</span>
+
+<span class="sd">    Returns: A batch of normalized images.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mins</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">maxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxs</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">mins</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">mins</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">maxs</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="kelp.nn.data.transforms.RemovePadding" class="doc doc-heading">
+          <code>kelp.nn.data.transforms.RemovePadding</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="torch.nn.Module">Module</span></code></p>
+
+  
+      <p>Removes specified padding from the input tensors.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>image_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The size of the target image after padding removal.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>padded_image_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The size of the padded image before padding removal.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>args</code></td>
+          <td>
+                <code><span title="typing.Any">Any</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Arguments passed to super class.</p>
+            </div>
+          </td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>kwargs</code></td>
+          <td>
+                <code><span title="typing.Any">Any</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Keyword arguments passed to super class.</p>
+            </div>
+          </td>
+          <td>
+                <code>{}</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+            <details class="quote">
+              <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RemovePadding</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Removes specified padding from the input tensors.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_size: The size of the target image after padding removal.</span>
+<span class="sd">        padded_image_size: The size of the padded image before padding removal.</span>
+<span class="sd">        args: Arguments passed to super class.</span>
+<span class="sd">        kwargs: Keyword arguments passed to super class.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">padded_image_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">padding_to_trim</span> <span class="o">=</span> <span class="p">(</span><span class="n">padded_image_size</span> <span class="o">-</span> <span class="n">image_size</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crop_upper_bound</span> <span class="o">=</span> <span class="n">image_size</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_to_trim</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the transform for specified batch of images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: The batch of images.</span>
+
+<span class="sd">        Returns: A batch of normalized images.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_to_trim</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_upper_bound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_to_trim</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_upper_bound</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="kelp.nn.data.transforms.RemovePadding.forward" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">RemovePadding</span><span class="o">.</span><span class="n">forward</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Runs the transform for specified batch of images.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>x</code></td>
+          <td>
+                <code><span title="torch.Tensor">Tensor</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The batch of images.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs the transform for specified batch of images.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: The batch of images.</span>
+
+<span class="sd">    Returns: A batch of normalized images.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_to_trim</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_upper_bound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_to_trim</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_upper_bound</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.build_append_index_transforms" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">build_append_index_transforms</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Build an append index transforms based on specified spectral indices.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>spectral_indices</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A list of spectral indices to use.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_append_index_transforms</span><span class="p">(</span><span class="n">spectral_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build an append index transforms based on specified spectral indices.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spectral_indices: A list of spectral indices to use.</span>
+
+<span class="sd">    Returns: A callable that can be used to transform batch of images.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">transforms</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">AugmentationSequential</span><span class="p">(</span>
+        <span class="n">AppendDEMWM</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="n">index_dem</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;DEM&quot;</span><span class="p">],</span>
+            <span class="n">index_qa</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;QA&quot;</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="o">*</span><span class="p">[</span>
+            <span class="n">SPECTRAL_INDEX_LOOKUP</span><span class="p">[</span><span class="n">index_name</span><span class="p">](</span>
+                <span class="n">index_swir</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;SWIR&quot;</span><span class="p">],</span>
+                <span class="n">index_nir</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;NIR&quot;</span><span class="p">],</span>
+                <span class="n">index_red</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">],</span>
+                <span class="n">index_green</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;G&quot;</span><span class="p">],</span>
+                <span class="n">index_blue</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">],</span>
+                <span class="n">index_dem</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;DEM&quot;</span><span class="p">],</span>
+                <span class="n">index_qa</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;QA&quot;</span><span class="p">],</span>
+                <span class="n">index_water_mask</span><span class="o">=</span><span class="n">BAND_INDEX_LOOKUP</span><span class="p">[</span><span class="s2">&quot;DEMWM&quot;</span><span class="p">],</span>
+                <span class="n">mask_using_qa</span><span class="o">=</span><span class="ow">not</span> <span class="n">index_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;WM&quot;</span><span class="p">),</span>
+                <span class="n">mask_using_water_mask</span><span class="o">=</span><span class="ow">not</span> <span class="n">index_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;WM&quot;</span><span class="p">),</span>
+                <span class="n">fill_val</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">index_name</span> <span class="ow">in</span> <span class="n">spectral_indices</span>
+            <span class="k">if</span> <span class="n">index_name</span> <span class="o">!=</span> <span class="s2">&quot;DEMWM&quot;</span>
+        <span class="p">],</span>
+        <span class="n">data_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">transforms</span>  <span class="c1"># type: ignore[no-any-return]</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.min_max_normalize" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">min_max_normalize</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Runs min-max normalization on the input array by calculating min and max per-channel values on the fly.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>arr</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The array to normalize.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">min_max_normalize</span><span class="p">(</span><span class="n">arr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs min-max normalization on the input array by calculating min and max per-channel values on the fly.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        arr: The array to normalize.</span>
+
+<span class="sd">    Returns: Normalized array.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">arr</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.quantile_min_max_normalize" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">quantile_min_max_normalize</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Runs min-max quantile normalization on the input array by calculating min and max per-channel values on the fly.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>x</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The array to normalize.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>q_lower</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The lower quantile.</p>
+            </div>
+          </td>
+          <td>
+                <code>0.01</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>q_upper</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The upper quantile.</p>
+            </div>
+          </td>
+          <td>
+                <code>0.99</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">quantile_min_max_normalize</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>  <span class="c1"># type: ignore[type-arg]</span>
+    <span class="n">q_lower</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">q_upper</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs min-max quantile normalization on the input array by calculating min and max per-channel values on the fly.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: The array to normalize.</span>
+<span class="sd">        q_lower: The lower quantile.</span>
+<span class="sd">        q_upper: The upper quantile.</span>
+
+<span class="sd">    Returns: Normalized array.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q_lower</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q_upper</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span> <span class="o">+</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">EPS</span><span class="p">)</span>  <span class="c1"># type: ignore[no-any-return]</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.resolve_normalization_stats" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">resolve_normalization_stats</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Resolves normalization stats based on specified bands to use.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>dataset_stats</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Dict">Dict</span>[str, float]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The full per-band dataset statistics.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>bands_to_use</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The list of band names to use.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">resolve_normalization_stats</span><span class="p">(</span>
+    <span class="n">dataset_stats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="n">bands_to_use</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">BandStats</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolves normalization stats based on specified bands to use.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dataset_stats: The full per-band dataset statistics.</span>
+<span class="sd">        bands_to_use: The list of band names to use.</span>
+
+<span class="sd">    Returns: A tuple of stats and the number of bands to use.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">band_stats</span> <span class="o">=</span> <span class="p">{</span><span class="n">band</span><span class="p">:</span> <span class="n">dataset_stats</span><span class="p">[</span><span class="n">band</span><span class="p">]</span> <span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="n">bands_to_use</span><span class="p">}</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">q01</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;q01&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">q99</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;q99&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">BandStats</span><span class="p">(</span>
+        <span class="n">mean</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">mean</span><span class="p">),</span>
+        <span class="n">std</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">std</span><span class="p">),</span>
+        <span class="nb">min</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">vmin</span><span class="p">),</span>
+        <span class="nb">max</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">vmax</span><span class="p">),</span>
+        <span class="n">q01</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">q01</span><span class="p">),</span>
+        <span class="n">q99</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">q99</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">band_stats</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.resolve_normalization_transform" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">resolve_normalization_transform</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Resolves the normalization transform.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>band_stats</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="kelp.nn.data.band_stats.BandStats" href="../band_stats/#kelp.nn.data.band_stats.BandStats">BandStats</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The band statistics.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>normalization_strategy</code></td>
+          <td>
+                <code><span title="typing.Literal">Literal</span>[&#39;min-max&#39;, &#39;quantile&#39;, &#39;per-sample-min-max&#39;, &#39;per-sample-quantile&#39;, &#39;z-score&#39;]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The normalization strategy.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;quantile&#39;</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">resolve_normalization_transform</span><span class="p">(</span>
+    <span class="n">band_stats</span><span class="p">:</span> <span class="n">BandStats</span><span class="p">,</span>
+    <span class="n">normalization_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+        <span class="s2">&quot;min-max&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;quantile&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;per-sample-min-max&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;per-sample-quantile&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;z-score&quot;</span><span class="p">,</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;quantile&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">_AugmentationBase</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolves the normalization transform.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        band_stats: The band statistics.</span>
+<span class="sd">        normalization_strategy: The normalization strategy.</span>
+
+<span class="sd">    Returns: A normalization transform to use for the image batch.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">normalization_strategy</span> <span class="o">==</span> <span class="s2">&quot;z-score&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">band_stats</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">band_stats</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>  <span class="c1"># type: ignore[no-any-return]</span>
+    <span class="k">elif</span> <span class="n">normalization_strategy</span> <span class="o">==</span> <span class="s2">&quot;min-max&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MinMaxNormalize</span><span class="p">(</span><span class="n">min_vals</span><span class="o">=</span><span class="n">band_stats</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">max_vals</span><span class="o">=</span><span class="n">band_stats</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">normalization_strategy</span> <span class="o">==</span> <span class="s2">&quot;quantile&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MinMaxNormalize</span><span class="p">(</span><span class="n">min_vals</span><span class="o">=</span><span class="n">band_stats</span><span class="o">.</span><span class="n">q01</span><span class="p">,</span> <span class="n">max_vals</span><span class="o">=</span><span class="n">band_stats</span><span class="o">.</span><span class="n">q99</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">normalization_strategy</span> <span class="o">==</span> <span class="s2">&quot;per-sample-quantile&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PerSampleQuantileNormalize</span><span class="p">(</span><span class="n">q_low</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">q_high</span><span class="o">=</span><span class="mf">0.99</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">normalization_strategy</span> <span class="o">==</span> <span class="s2">&quot;per-sample-min-max&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PerSampleMinMaxNormalize</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">normalization_strategy</span><span class="si">}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.resolve_resize_transform" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">resolve_resize_transform</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Resolves the input image and mask resize transform.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>image_or_mask</code></td>
+          <td>
+                <code><span title="typing.Literal">Literal</span>[&#39;image&#39;, &#39;mask&#39;]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Indicates if the transform is for an image or a mask.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>resize_strategy</code></td>
+          <td>
+                <code><span title="typing.Literal">Literal</span>[&#39;pad&#39;, &#39;resize&#39;]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The resize strategy to use.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;pad&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>image_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The size of the resized image.</p>
+            </div>
+          </td>
+          <td>
+                <code>352</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>interpolation</code></td>
+          <td>
+                <code><span title="typing.Literal">Literal</span>[&#39;nearest&#39;, &#39;nearest-exact&#39;, &#39;bilinear&#39;, &#39;bicubic&#39;]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The interpolation method to use for the "resize" strategy.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;nearest&#39;</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">resolve_resize_transform</span><span class="p">(</span>
+    <span class="n">image_or_mask</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">],</span>
+    <span class="n">resize_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;pad&quot;</span><span class="p">,</span> <span class="s2">&quot;resize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pad&quot;</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">352</span><span class="p">,</span>
+    <span class="n">interpolation</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span> <span class="s2">&quot;nearest-exact&quot;</span><span class="p">,</span> <span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="s2">&quot;bicubic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolves the input image and mask resize transform.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_or_mask: Indicates if the transform is for an image or a mask.</span>
+<span class="sd">        resize_strategy: The resize strategy to use.</span>
+<span class="sd">        image_size: The size of the resized image.</span>
+<span class="sd">        interpolation: The interpolation method to use for the &quot;resize&quot; strategy.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">interpolation_lookup</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;nearest&quot;</span><span class="p">:</span> <span class="n">InterpolationMode</span><span class="o">.</span><span class="n">NEAREST</span><span class="p">,</span>
+        <span class="s2">&quot;nearest-exact&quot;</span><span class="p">:</span> <span class="n">InterpolationMode</span><span class="o">.</span><span class="n">NEAREST_EXACT</span><span class="p">,</span>
+        <span class="s2">&quot;bilinear&quot;</span><span class="p">:</span> <span class="n">InterpolationMode</span><span class="o">.</span><span class="n">BILINEAR</span><span class="p">,</span>
+        <span class="s2">&quot;bicubic&quot;</span><span class="p">:</span> <span class="n">InterpolationMode</span><span class="o">.</span><span class="n">BICUBIC</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">resize_strategy</span> <span class="o">==</span> <span class="s2">&quot;pad&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">image_size</span> <span class="o">&lt;</span> <span class="mi">352</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid resize strategy. Padding is only applicable when image size is greater than 352.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">T</span><span class="o">.</span><span class="n">Pad</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+            <span class="n">padding</span><span class="o">=</span><span class="p">[</span>
+                <span class="p">(</span><span class="n">image_size</span> <span class="o">-</span> <span class="n">consts</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">TILE_SIZE</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">fill</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">padding_mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">resize_strategy</span> <span class="o">==</span> <span class="s2">&quot;resize&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">T</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+            <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">image_size</span><span class="p">),</span>
+            <span class="n">interpolation</span><span class="o">=</span><span class="n">interpolation_lookup</span><span class="p">[</span><span class="n">interpolation</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">image_or_mask</span> <span class="o">==</span> <span class="s2">&quot;image&quot;</span>
+            <span class="k">else</span> <span class="n">InterpolationMode</span><span class="o">.</span><span class="n">NEAREST</span><span class="p">,</span>
+            <span class="n">antialias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">resize_strategy</span><span class="si">=}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="kelp.nn.data.transforms.resolve_transforms" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">kelp</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">resolve_transforms</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Resolves batch augmentation transformations to be used based on specified configuration.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>spectral_indices</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The list of spectral indices to use.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>band_index_lookup</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The dictionary mapping band name to index in the input tensor.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>band_stats</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="kelp.nn.data.band_stats.BandStats" href="../band_stats/#kelp.nn.data.band_stats.BandStats">BandStats</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The band statistics to use.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mask_using_qa</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A flag indicating whether to mask spectral indices with QA band.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mask_using_water_mask</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A flag indicating whether to mask spectral indices with DEM Water Mask.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>normalization_transform</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="kornia.augmentation.base._AugmentationBase">_AugmentationBase</span>, <span title="torch.nn.Module">Module</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A normalization transformation.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stage</code></td>
+          <td>
+                <code><span title="typing.Literal">Literal</span>[&#39;train&#39;, &#39;val&#39;, &#39;test&#39;, &#39;predict&#39;]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A literal indicating the stage to use. One of ["train", "val", "test", "predict"].</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      
+
+          <details class="quote">
+            <summary>Source code in <code>kelp/nn/data/transforms.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">resolve_transforms</span><span class="p">(</span>
+    <span class="n">spectral_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">band_index_lookup</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">band_stats</span><span class="p">:</span> <span class="n">BandStats</span><span class="p">,</span>
+    <span class="n">mask_using_qa</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">mask_using_water_mask</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">normalization_transform</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">_AugmentationBase</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span>
+    <span class="n">stage</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;predict&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">K</span><span class="o">.</span><span class="n">AugmentationSequential</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolves batch augmentation transformations to be used based on specified configuration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spectral_indices: The list of spectral indices to use.</span>
+<span class="sd">        band_index_lookup: The dictionary mapping band name to index in the input tensor.</span>
+<span class="sd">        band_stats: The band statistics to use.</span>
+<span class="sd">        mask_using_qa: A flag indicating whether to mask spectral indices with QA band.</span>
+<span class="sd">        mask_using_water_mask: A flag indicating whether to mask spectral indices with DEM Water Mask.</span>
+<span class="sd">        normalization_transform: A normalization transformation.</span>
+<span class="sd">        stage: A literal indicating the stage to use. One of [&quot;train&quot;, &quot;val&quot;, &quot;test&quot;, &quot;predict&quot;].</span>
+
+<span class="sd">    Returns: An instance of AugmentationSequential.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">common_transforms</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">index_name</span> <span class="ow">in</span> <span class="n">spectral_indices</span><span class="p">:</span>
+        <span class="n">common_transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">SPECTRAL_INDEX_LOOKUP</span><span class="p">[</span><span class="n">index_name</span><span class="p">](</span>
+                <span class="n">index_swir</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SWIR&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_nir</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NIR&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_red</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_green</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_blue</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_dem</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DEM&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_qa</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QA&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">index_water_mask</span><span class="o">=</span><span class="n">band_index_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DEMWM&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">mask_using_qa</span><span class="o">=</span><span class="kc">False</span> <span class="k">if</span> <span class="n">index_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;WM&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">mask_using_qa</span><span class="p">,</span>
+                <span class="n">mask_using_water_mask</span><span class="o">=</span><span class="kc">False</span> <span class="k">if</span> <span class="n">index_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;WM&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">mask_using_water_mask</span><span class="p">,</span>
+                <span class="n">fill_val</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">common_transforms</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">RemoveNaNs</span><span class="p">(</span><span class="n">min_vals</span><span class="o">=</span><span class="n">band_stats</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">max_vals</span><span class="o">=</span><span class="n">band_stats</span><span class="o">.</span><span class="n">max</span><span class="p">),</span>
+            <span class="n">normalization_transform</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">stage</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">AugmentationSequential</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">common_transforms</span><span class="p">,</span>
+            <span class="n">K</span><span class="o">.</span><span class="n">RandomRotation</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="mi">90</span><span class="p">),</span>
+            <span class="n">K</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">K</span><span class="o">.</span><span class="n">RandomVerticalFlip</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">data_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">AugmentationSequential</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">common_transforms</span><span class="p">,</span>
+            <span class="n">data_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">stage</span> <span class="o">==</span> <span class="s2">&quot;predict&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2023 xultaeculcis
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": [], "search": "../../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.e1c3ead8.min.js"></script>
+      
+    
+  </body>
+</html>
