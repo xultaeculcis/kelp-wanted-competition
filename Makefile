@@ -10,27 +10,46 @@ DATA_DIR=data
 PREDS_INPUT_DIR=data/raw/test/images
 PREDS_OUTPUT_DIR=data/predictions
 SHELL=/bin/bash
-RUN_DIR=mlruns/256237887236640917/2da570bb563e4172b329ef7d50d986e1
 
-AVG_PREDS_VERSION=v18
+RUN_DIR=data/aml/Job_sincere_tangelo_dm0xsbhc_OutputsAndLogs
+
+AVG_PREDS_VERSION=v19
 AVG_PREDS_OUTPUT_DIR=data/submissions/avg
 
-FOLD_0_RUN_DIR=data/aml/Job_sad_pummelo_nv069lvn_OutputsAndLogs
-FOLD_1_RUN_DIR=data/aml/Job_silver_oyster_yppwcpr4_OutputsAndLogs
+BEST_SINGLE_MODEL_RUN_DIR=models/best-single-model/Job_sincere_tangelo_dm0xsbhc_OutputsAndLogs
+
+TOP_1_SUBMISSION_FOLD_0_RUN_DIR=models/top-submission-1/Job_strong_door_yrq9zpmd_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_1_RUN_DIR=models/top-submission-1/Job_keen_evening_3xnlbrsr_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_2_RUN_DIR=models/top-submission-1/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_3_RUN_DIR=models/top-submission-1/Job_elated_atemoya_31s98pwg_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_4_RUN_DIR=models/top-submission-1/Job_nice_cheetah_grnc5x72_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_5_RUN_DIR=models/top-submission-1/Job_willing_pin_72ss6cnc_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_6_RUN_DIR=models/top-submission-1/Job_model_training_exp_67_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_7_RUN_DIR=models/top-submission-1/Job_model_training_exp_65_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_8_RUN_DIR=models/top-submission-1/Job_yellow_evening_cmy9cnv7_OutputsAndLogs
+TOP_1_SUBMISSION_FOLD_9_RUN_DIR=models/top-submission-1/Job_icy_market_4l11bvw2_OutputsAndLogs
+
+TOP_2_SUBMISSION_FOLD_0_RUN_DIR=models/top-submission-2/Job_coral_lion_x39ft9cb_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_1_RUN_DIR=models/top-submission-2/Job_wheat_tongue_mjzjpvjw_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_2_RUN_DIR=models/top-submission-2/Job_tender_foot_07bt1687_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_3_RUN_DIR=models/top-submission-2/Job_dreamy_nut_fkwzmgxh_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_4_RUN_DIR=models/top-submission-2/Job_boring_foot_hb224t08_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_5_RUN_DIR=models/top-submission-2/Job_icy_airport_7r8h9q3c_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_6_RUN_DIR=models/top-submission-2/Job_loving_insect_hvd7v5p9_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_7_RUN_DIR=models/top-submission-2/Job_plum_kettle_36dw15zk_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_8_RUN_DIR=models/top-submission-2/Job_lemon_drop_cxncbygc_OutputsAndLogs
+TOP_2_SUBMISSION_FOLD_9_RUN_DIR=models/top-submission-2/Job_plum_angle_0f163gk5_OutputsAndLogs
+
+FOLD_0_RUN_DIR=data/aml/Job_strong_door_yrq9zpmd_OutputsAndLogs
+FOLD_1_RUN_DIR=data/aml/Job_keen_evening_3xnlbrsr_OutputsAndLogs
 FOLD_2_RUN_DIR=data/aml/Job_hungry_loquat_qkrw2n2p_OutputsAndLogs
 FOLD_3_RUN_DIR=data/aml/Job_elated_atemoya_31s98pwg_OutputsAndLogs
-FOLD_4_RUN_DIR=data/aml/Job_brave_loquat_w4lm7093_OutputsAndLogs
-FOLD_5_RUN_DIR=data/aml/Job_gentle_stamp_wry90x9f_OutputsAndLogs
+FOLD_4_RUN_DIR=data/aml/Job_nice_cheetah_grnc5x72_OutputsAndLogs
+FOLD_5_RUN_DIR=data/aml/Job_willing_pin_72ss6cnc_OutputsAndLogs
 FOLD_6_RUN_DIR=data/aml/Job_model_training_exp_67_OutputsAndLogs
 FOLD_7_RUN_DIR=data/aml/Job_model_training_exp_65_OutputsAndLogs
-FOLD_8_RUN_DIR=data/aml/Job_gentle_eagle_qwsnx2hc_OutputsAndLogs
-FOLD_9_RUN_DIR=data/aml/Job_sharp_iron_dfcsht2c_OutputsAndLogs
-
-FOLD_0_V2_RUN_DIR=mlruns/567580247645556359/a82cc2d0adf4442b97128a87d5067234
-FOLD_1_V2_RUN_DIR=mlruns/567580247645556359/44027b189ede427b9b5f3576cd0cf2d5
-FOLD_2_V2_RUN_DIR=mlruns/567580247645556359/4f138f9da2c648b59abb5716748f73de
-FOLD_3_V2_RUN_DIR=mlruns/567580247645556359/fe0a0cab55d944f0a2cd5219d9e0cef7
-FOLD_4_V2_RUN_DIR=mlruns/567580247645556359/d911c04a75fa474982e77d41c8693515
+FOLD_8_RUN_DIR=data/aml/Job_yellow_evening_cmy9cnv7_OutputsAndLogs
+FOLD_9_RUN_DIR=data/aml/Job_icy_market_4l11bvw2_OutputsAndLogs
 
 FOLD_NUMBER=8
 CHECKPOINT=best
@@ -46,8 +65,8 @@ OLD_FOLD_7_WEIGHT=0.63
 OLD_FOLD_8_WEIGHT=1.0
 OLD_FOLD_9_WEIGHT=0.2
 
-FOLD_0_WEIGHT=0.0
-FOLD_1_WEIGHT=0.0
+FOLD_0_WEIGHT=1
+FOLD_1_WEIGHT=1
 FOLD_2_WEIGHT=1
 FOLD_3_WEIGHT=1
 FOLD_4_WEIGHT=1
@@ -55,13 +74,7 @@ FOLD_5_WEIGHT=1
 FOLD_6_WEIGHT=1
 FOLD_7_WEIGHT=1
 FOLD_8_WEIGHT=1
-FOLD_9_WEIGHT=0.0
-
-FOLD_0_V2_WEIGHT=0.815
-FOLD_1_V2_WEIGHT=0.62
-FOLD_2_V2_WEIGHT=0.435
-FOLD_3_V2_WEIGHT=0.796
-FOLD_4_V2_WEIGHT=0.546
+FOLD_9_WEIGHT=1
 
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
@@ -81,12 +94,14 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-.PHONY: lock-env  ## Creates conda-lock file
-lock-env:
+# Creating environment
+
+.PHONY: lock  ## Creates conda-lock file
+lock:
 	conda-lock --mamba -f ./env.yaml -p linux-64
 
-.PHONY: create-env  ## Creates env from conda-lock file
-create-env:
+.PHONY: env  ## Creates env from conda-lock file
+env:
 	conda-lock install --mamba -n kelp conda-lock.yml
 
 .PHONY: setup-pre-commit  ## Installs pre-commit hooks
@@ -101,8 +116,10 @@ setup-editable:
 configure-torch-ort:
 	$(CONDA_ACTIVATE) kelp ; python -m torch_ort.configure
 
-.PHONY: setup-local-env  ## Creates local environment and installs pre-commit hooks
-setup-local-env: create-env setup-pre-commit setup-editable
+.PHONY: local-env  ## Creates local environment and installs pre-commit hooks
+local-env: env setup-pre-commit setup-editable
+
+# Helper commands
 
 .PHONY: format  ## Runs code formatting (isort, black, flake8)
 format:
@@ -150,11 +167,12 @@ clean:
 	rm -f coverage.*
 	rm -rf build
 	rm -rf perf.data*
-	rm -rf zf-powerbi-mongo/*.so
 	rm -rf .mypy_cache
 	rm -rf .benchmark
 	rm -rf .hypothesis
 	rm -rf docs-site
+
+# Data prep
 
 .PHONY: sample-plotting  ## Runs tile plotting
 sample-plotting:
@@ -167,22 +185,25 @@ sample-plotting:
 aoi-grouping:
 	python ./kelp/data_prep/aoi_grouping.py \
 		--dem_dir data/processed/dem \
- 		--output_dir data/processed/grouped_aoi_results/sim_th=0.95 \
+ 		--output_dir data/processed/grouped_aoi_results/sim_th=0.97 \
  		--metadata_fp data/raw/metadata_fTq0l2T.csv \
  		--batch_size 128 \
- 		--similarity_threshold 0.95
+ 		--similarity_threshold 0.97
 
 .PHONY: eda  ## Runs EDA
 eda:
 	python ./kelp/data_prep/eda.py \
  		--data_dir data/raw \
-		--metadata_fp data/processed/grouped_aoi_results/sim_th=0.95/metadata_similarity_threshold=0.95.parquet \
-		--output_dir data/processed/stats_95
+		--metadata_fp data/processed/grouped_aoi_results/sim_th=0.97/metadata_similarity_threshold=0.97.parquet \
+		--output_dir data/processed/stats_97
 
 .PHONY: calculate-band-stats  ## Runs band statistics calculation
 calculate-band-stats:
 	python ./kelp/data_prep/calculate_band_stats.py \
  		--data_dir data/raw \
+ 		--mask_using_qa \
+ 		--mask_using_water_mask \
+ 		--fill_missing_pixels_with_torch_nan \
 		--output_dir data/processed
 
 .PHONY: train-val-test-split-cv  ## Runs train-val-test split using cross validation
@@ -202,6 +223,8 @@ train-val-test-split-random:
 		--random_split_train_size 0.98 \
 		--seed 42 \
 		--output_dir data/processed
+
+# Model training
 
 .PHONY: train  ## Trains single CV split
 train:
@@ -241,43 +264,29 @@ train:
 		--loss dice \
 		--monitor_metric val/dice \
 		--save_top_k 1 \
-		--early_stopping_patience 25 \
-		--precision bf16-mixed \
-		--epochs 25 \
-		--swa True
+		--early_stopping_patience 50 \
+		--precision 16-mixed \
+		--epochs 50 \
+		--swa False
 
-.PHONY: predict  ## Runs prediction
-predict:
-	python ./kelp/nn/inference/predict.py \
-		--data_dir $(PREDS_INPUT_DIR) \
-		--dataset_stats_dir=data/processed \
-		--output_dir $(PREDS_OUTPUT_DIR) \
-		--run_dir $(RUN_DIR) \
-		--use_checkpoint $(CHECKPOINT) \
-		--soft_labels \
-		--tta_merge_mode=mean \
-		--precision bf16-mixed
+.PHONY: train-all-folds  ## Trains all CV folds
+train-all-folds:
+	make train FOLD_NUMBER=0
+	make train FOLD_NUMBER=1
+	make train FOLD_NUMBER=2
+	make train FOLD_NUMBER=3
+	make train FOLD_NUMBER=4
+	make train FOLD_NUMBER=5
+	make train FOLD_NUMBER=6
+	make train FOLD_NUMBER=7
+	make train FOLD_NUMBER=8
+	make train FOLD_NUMBER=9
 
-.PHONY: submission  ## Generates submission file
-submission:
-	python ./kelp/core/submission.py \
-		--predictions_dir data/predictions \
-		--output_dir data/submissions
-
-.PHONY: predict-and-submit  ## Runs inference and generates submission file
-predict-and-submit:
-	python ./kelp/nn/inference/predict_and_submit.py \
-		--data_dir data/raw/test/images \
-		--dataset_stats_dir=data/processed \
-		--output_dir data/submissions/single-model \
-		--run_dir $(RUN_DIR) \
-		--preview_submission \
-		--decision_threshold 0.48 \
-		--precision bf16-mixed
+# Model evaluation
 
 .PHONY: eval  ## Runs evaluation for selected run
 eval:
-	python ./kelp/nn/training/eval.py \<<<
+	python ./kelp/nn/training/eval.py \
 		--data_dir data/raw \
 		--metadata_dir data/processed \
 		--dataset_stats_dir data/processed \
@@ -287,42 +296,7 @@ eval:
 		--decision_threshold=0.48 \
 		--experiment_name model-eval-exp
 
-.PHONY: average-predictions  ## Runs prediction averaging
-average-predictions:
-	python ./kelp/nn/inference/average_predictions.py \
-		--predictions_dirs \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=2 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=3 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=4 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=5 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=6 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=7 \
-			data/predictions/$(AVG_PREDS_VERSION)/fold=8 \
-		--weights \
-			$(FOLD_2_WEIGHT) \
-			$(FOLD_3_WEIGHT) \
-			$(FOLD_4_WEIGHT) \
-			$(FOLD_5_WEIGHT) \
-			$(FOLD_6_WEIGHT) \
-			$(FOLD_7_WEIGHT) \
-			$(FOLD_8_WEIGHT) \
-		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
-		--decision_threshold=0.48 \
-		--test_data_dir=$(PREDS_INPUT_DIR) \
-		--preview_submission \
-		--preview_first_n=10
-
-.PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
-cv-predict:
-	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
-	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
-	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
-	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
-	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
-	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
-	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
-	make average-predictions
-
+.PHONY: eval-many  ## Runs evaluation for specified runs
 eval-many:
 	make eval RUN_DIR=data/aml/Job_frank_key_k8b7jv40_OutputsAndLogs
 	make eval RUN_DIR=data/aml/Job_bold_street_rcrzx0xq_OutputsAndLogs
@@ -367,22 +341,319 @@ eval-from-folders:
 			tta_merge_mode=mean \
 			precision=bf16-mixed
 
-.PHONY: eval-ensemble
+.PHONY: eval-ensemble  ## Runs ensemble evaluation
 eval-ensemble:
 	rm -rf data/predictions/eval_results
 	make cv-predict AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make average-predictions AVG_PREDS_VERSION=eval PREDS_INPUT_DIR=data/raw/splits/split_8/images AVG_PREDS_OUTPUT_DIR=data/predictions/eval_results
 	make eval-from-folders GT_DIR=data/raw/splits/split_8/masks PREDS_DIR=data/predictions/eval_results
 
-.PHONY: train-all-folds
-train-all-folds:
-	make train FOLD_NUMBER=0
-	make train FOLD_NUMBER=1
-	make train FOLD_NUMBER=2
-	make train FOLD_NUMBER=3
-	make train FOLD_NUMBER=4
-	make train FOLD_NUMBER=5
-	make train FOLD_NUMBER=6
-	make train FOLD_NUMBER=7
-	make train FOLD_NUMBER=8
-	make train FOLD_NUMBER=9
+# Making submissions
+
+.PHONY: predict  ## Runs prediction
+predict:
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir $(PREDS_OUTPUT_DIR) \
+		--run_dir $(RUN_DIR) \
+		--use_checkpoint $(CHECKPOINT) \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+
+.PHONY: submission  ## Generates submission file
+submission:
+	python ./kelp/core/submission.py \
+		--predictions_dir $(PREDS_OUTPUT_DIR) \
+		--output_dir data/submissions/single-model
+
+.PHONY: predict-and-submit  ## Runs inference and generates submission file
+predict-and-submit:
+	python ./kelp/nn/inference/predict_and_submit.py \
+		--data_dir data/raw/test/images \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/submissions/single-model \
+		--run_dir $(RUN_DIR) \
+		--preview_submission \
+		--decision_threshold 0.45 \
+		--precision bf16-mixed
+
+.PHONY: average-predictions  ## Runs prediction averaging
+average-predictions:
+	python ./kelp/nn/inference/average_predictions.py \
+		--predictions_dirs \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=0 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=1 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=2 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=3 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=4 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=5 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=6 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=7 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=8 \
+			data/predictions/$(AVG_PREDS_VERSION)/fold=9 \
+		--weights \
+			$(FOLD_0_WEIGHT) \
+			$(FOLD_1_WEIGHT) \
+			$(FOLD_2_WEIGHT) \
+			$(FOLD_3_WEIGHT) \
+			$(FOLD_4_WEIGHT) \
+			$(FOLD_5_WEIGHT) \
+			$(FOLD_6_WEIGHT) \
+			$(FOLD_7_WEIGHT) \
+			$(FOLD_8_WEIGHT) \
+			$(FOLD_9_WEIGHT) \
+		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
+		--decision_threshold=0.48 \
+		--test_data_dir=$(PREDS_INPUT_DIR) \
+		--preview_submission \
+		--preview_first_n=10
+
+.PHONY: cv-predict  ## Runs inference on specified folds, averages the predictions and generates submission file
+cv-predict:
+	make predict RUN_DIR=$(FOLD_0_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=0
+	make predict RUN_DIR=$(FOLD_1_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=1
+	make predict RUN_DIR=$(FOLD_2_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=2
+	make predict RUN_DIR=$(FOLD_3_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=3
+	make predict RUN_DIR=$(FOLD_4_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=4
+	make predict RUN_DIR=$(FOLD_5_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=5
+	make predict RUN_DIR=$(FOLD_6_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=6
+	make predict RUN_DIR=$(FOLD_7_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=7
+	make predict RUN_DIR=$(FOLD_8_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=8
+	make predict RUN_DIR=$(FOLD_9_RUN_DIR) PREDS_OUTPUT_DIR=data/predictions/$(AVG_PREDS_VERSION)/fold=9
+	make average-predictions
+
+#  Best submissions reproducibility
+
+.PHONY: repro-best-single-model-submission  ## Runs reproduction of best single model submission with Priv LB score = 0.7264
+repro-best-single-model-submission:
+	python ./kelp/nn/inference/predict_and_submit.py \
+		--data_dir data/raw/test/images \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/submissions/single-model \
+		--run_dir $(BEST_SINGLE_MODEL_RUN_DIR) \
+		--preview_submission \
+		--decision_threshold 0.45 \
+		--precision bf16-mixed
+
+.PHONY: repro-top-1-submission   ## Runs reproduction of #1 submission with Priv LB score = 0.7318
+repro-top-1-submission:
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=0 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_0_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=1 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_1_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=2 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_2_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=3 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_3_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=4 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_4_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=5 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_5_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=6 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_6_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=7 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_7_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=8 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_8_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-1-submission/fold=9 \
+		--run_dir $(TOP_1_SUBMISSION_FOLD_9_RUN_DIR) \
+		--use_checkpoint best \
+		--decision_threshold 0.48 \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/average_predictions.py \
+		--predictions_dirs \
+			data/predictions/top-1-submission/fold=0 \
+			data/predictions/top-1-submission/fold=1 \
+			data/predictions/top-1-submission/fold=2 \
+			data/predictions/top-1-submission/fold=3 \
+			data/predictions/top-1-submission/fold=4 \
+			data/predictions/top-1-submission/fold=5 \
+			data/predictions/top-1-submission/fold=6 \
+			data/predictions/top-1-submission/fold=7 \
+			data/predictions/top-1-submission/fold=8 \
+			data/predictions/top-1-submission/fold=9 \
+		--weights \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+			1.0 \
+		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
+		--decision_threshold=0.48 \
+		--test_data_dir=$(PREDS_INPUT_DIR) \
+		--preview_submission \
+		--preview_first_n=10
+
+.PHONY: repro-top-2-submission   ## Runs reproduction of #2 submission with Priv LB score = 0.7318
+repro-top-2-submission:
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=0 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_0_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=1 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_1_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=2 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_2_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=3 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_3_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=4 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_4_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=5 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_5_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=6 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_6_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=7 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_7_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=8 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_8_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/predict.py \
+		--data_dir $(PREDS_INPUT_DIR) \
+		--dataset_stats_dir=data/processed \
+		--output_dir data/predictions/top-2-submission/fold=9 \
+		--run_dir $(TOP_2_SUBMISSION_FOLD_9_RUN_DIR) \
+		--use_checkpoint best \
+		--soft_labels \
+		--precision bf16-mixed
+	python ./kelp/nn/inference/average_predictions.py \
+		--predictions_dirs \
+			data/predictions/top-2-submission/fold=0 \
+			data/predictions/top-2-submission/fold=1 \
+			data/predictions/top-2-submission/fold=2 \
+			data/predictions/top-2-submission/fold=3 \
+			data/predictions/top-2-submission/fold=4 \
+			data/predictions/top-2-submission/fold=5 \
+			data/predictions/top-2-submission/fold=6 \
+			data/predictions/top-2-submission/fold=7 \
+			data/predictions/top-2-submission/fold=8 \
+			data/predictions/top-2-submission/fold=9 \
+		--weights \
+			0.666 \
+			0.5 \
+			0.666 \
+			0.88 \
+			0.637 \
+			0.59 \
+			0.733 \
+			0.63 \
+			1.0 \
+			0.2 \
+		--output_dir=$(AVG_PREDS_OUTPUT_DIR) \
+		--decision_threshold=0.45 \
+		--test_data_dir=$(PREDS_INPUT_DIR) \
+		--preview_submission \
+		--preview_first_n=10

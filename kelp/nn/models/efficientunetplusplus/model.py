@@ -45,7 +45,8 @@ class EfficientUnetPlusPlus(SegmentationModel):
                     (could be **None** to return logits)
 
     Reference:
-        https://arxiv.org/abs/2106.11447
+        [Silva et al. 2021](https://arxiv.org/abs/2106.11447)
+
     """
 
     def __init__(

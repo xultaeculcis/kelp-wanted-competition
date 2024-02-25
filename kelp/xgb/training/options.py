@@ -5,6 +5,12 @@ from kelp.xgb.training.cfg import TrainConfig
 
 
 def parse_args() -> TrainConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of :class:`TrainConfig`.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--train_data_dir", type=str, required=True)
     parser.add_argument("--dataset_fp", type=str, required=True)

@@ -29,7 +29,7 @@ class PreActivatedConv2dReLU(nn.Sequential):
             kernel_size,
             stride=stride,
             padding=padding,
-            bias=not (use_batchnorm),
+            bias=not use_batchnorm,
         )
         super(PreActivatedConv2dReLU, self).__init__(conv, bn, relu)
 

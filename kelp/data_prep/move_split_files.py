@@ -10,12 +10,20 @@ from kelp.core.configs import ConfigBase
 
 
 class MoveSplitFilesConfig(ConfigBase):
+    """A config for moving split files to a new directory."""
+
     data_dir: Path
     metadata_fp: Path
     output_dir: Path
 
 
 def parse_args() -> MoveSplitFilesConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of MoveSplitFilesConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
@@ -28,6 +36,15 @@ def parse_args() -> MoveSplitFilesConfig:
 
 
 def move_split_files(data_dir: Path, output_dir: Path, metadata_fp: Path) -> None:
+    """
+    Move split files to a new directory.
+
+    Args:
+        data_dir: Path to the data directory.
+        output_dir: Path to the output directory.
+        metadata_fp: Path to the metadata parquet file.
+
+    """
     df = pd.read_parquet(metadata_fp)
     split_cols = [col for col in df.columns if col.startswith("split_")]
     for split_col in tqdm(split_cols, desc="Moving CV split files"):
@@ -44,6 +61,7 @@ def move_split_files(data_dir: Path, output_dir: Path, metadata_fp: Path) -> Non
 
 
 def main() -> None:
+    """Main entry point for moving split files."""
     cfg = parse_args()
     move_split_files(data_dir=cfg.data_dir, output_dir=cfg.output_dir, metadata_fp=cfg.metadata_fp)
 

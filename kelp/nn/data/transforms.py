@@ -18,6 +18,14 @@ from kelp.nn.data.band_stats import BandStats
 
 
 class MinMaxNormalize(Module):
+    """
+    Min-Max normalization transform that uses provided min and max per-channel values for image transformation.
+
+    Args:
+        min_vals: A Tensor of min values per-channel.
+        max_vals: A Tensor of max values per-channel.
+    """
+
     def __init__(self, min_vals: Tensor, max_vals: Tensor) -> None:
         super().__init__()
         self.mins = min_vals.view(1, -1, 1, 1)
@@ -32,19 +40,51 @@ class MinMaxNormalize(Module):
 
 
 class PerSampleMinMaxNormalize(Module):
+    """
+    A per-sample normalization transform that will calculate min and max per-channel on the fly.
+    """
+
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Runs the normalization transform for specified batch of images.
+
+        Args:
+            x: The batch of images.
+
+        Returns: A batch of normalized images.
+
+        """
         vmin = torch.amin(x, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         vmax = torch.amax(x, dim=(2, 3)).unsqueeze(2).unsqueeze(3)
         return (x - vmin) / (vmax - vmin + consts.data.EPS)
 
 
 class PerSampleQuantileNormalize(Module):
+    """
+    A per-sample normalization transform that will calculate min and max per-channel on the fly
+    using provided quantile values.
+
+    Args:
+        q_low: The lower quantile value.
+        q_high: The upper quantile value.
+
+    """
+
     def __init__(self, q_low: float, q_high: float) -> None:
         super().__init__()
         self.q_low = q_low
         self.q_high = q_high
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Runs the normalization transform for specified batch of images.
+
+        Args:
+            x: The batch of images.
+
+        Returns: A batch of normalized images.
+
+        """
         flattened_sample = x.view(x.shape[0], x.shape[1], -1)
         vmin = torch.quantile(flattened_sample, self.q_low, dim=2).unsqueeze(2).unsqueeze(3)
         vmax = torch.quantile(flattened_sample, self.q_high, dim=2).unsqueeze(2).unsqueeze(3)
@@ -54,12 +94,30 @@ class PerSampleQuantileNormalize(Module):
 
 
 class RemoveNaNs(Module):
+    """
+    Removes NaN values from the input tensor.
+
+    Args:
+        min_vals: The min values per-channel to use when removing NaNs and neg-Inf.
+        max_vals: The min values per-channel to use when removing positive-Inf.
+
+    """
+
     def __init__(self, min_vals: Tensor, max_vals: Tensor) -> None:
         super().__init__()
         self.mins = min_vals.view(1, -1, 1, 1)
         self.maxs = max_vals.view(1, -1, 1, 1)
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Runs the transform for specified batch of images.
+
+        Args:
+            x: The batch of images.
+
+        Returns: A batch of normalized images.
+
+        """
         mins = torch.as_tensor(self.mins, device=x.device, dtype=x.dtype)
         maxs = torch.as_tensor(self.maxs, device=x.device, dtype=x.dtype)
         x = torch.where(torch.isnan(x), mins, x)
@@ -69,18 +127,47 @@ class RemoveNaNs(Module):
 
 
 class RemovePadding(nn.Module):
+    """
+    Removes specified padding from the input tensors.
+
+    Args:
+        image_size: The size of the target image after padding removal.
+        padded_image_size: The size of the padded image before padding removal.
+        args: Arguments passed to super class.
+        kwargs: Keyword arguments passed to super class.
+
+    """
+
     def __init__(self, image_size: int, padded_image_size: int, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.padding_to_trim = (padded_image_size - image_size) // 2
         self.crop_upper_bound = image_size + self.padding_to_trim
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Runs the transform for specified batch of images.
+
+        Args:
+            x: The batch of images.
+
+        Returns: A batch of normalized images.
+
+        """
         x = x.squeeze()
         x = x[self.padding_to_trim : self.crop_upper_bound, self.padding_to_trim : self.crop_upper_bound]
         return x
 
 
 def min_max_normalize(arr: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Runs min-max normalization on the input array by calculating min and max per-channel values on the fly.
+
+    Args:
+        arr: The array to normalize.
+
+    Returns: Normalized array.
+
+    """
     vmin = np.nanmin(arr, axis=(0, 1))
     vmax = np.nanmax(arr, axis=(0, 1))
     arr = arr.clip(0, vmax)
@@ -94,12 +181,32 @@ def quantile_min_max_normalize(
     q_lower: float = 0.01,
     q_upper: float = 0.99,
 ) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Runs min-max quantile normalization on the input array by calculating min and max per-channel values on the fly.
+
+    Args:
+        x: The array to normalize.
+        q_lower: The lower quantile.
+        q_upper: The upper quantile.
+
+    Returns: Normalized array.
+
+    """
     vmin = np.expand_dims(np.expand_dims(np.quantile(x, q=q_lower, axis=(1, 2)), 1), 2)
     vmax = np.expand_dims(np.expand_dims(np.quantile(x, q=q_upper, axis=(1, 2)), 1), 2)
     return (x - vmin) / (vmax - vmin + consts.data.EPS)  # type: ignore[no-any-return]
 
 
 def build_append_index_transforms(spectral_indices: List[str]) -> Callable[[Tensor], Tensor]:
+    """
+    Build an append index transforms based on specified spectral indices.
+
+    Args:
+        spectral_indices: A list of spectral indices to use.
+
+    Returns: A callable that can be used to transform batch of images.
+
+    """
     transforms = K.AugmentationSequential(
         AppendDEMWM(  # type: ignore
             index_dem=BAND_INDEX_LOOKUP["DEM"],
@@ -136,6 +243,21 @@ def resolve_transforms(
     normalization_transform: Union[_AugmentationBase, nn.Module],
     stage: Literal["train", "val", "test", "predict"],
 ) -> K.AugmentationSequential:
+    """
+    Resolves batch augmentation transformations to be used based on specified configuration.
+
+    Args:
+        spectral_indices: The list of spectral indices to use.
+        band_index_lookup: The dictionary mapping band name to index in the input tensor.
+        band_stats: The band statistics to use.
+        mask_using_qa: A flag indicating whether to mask spectral indices with QA band.
+        mask_using_water_mask: A flag indicating whether to mask spectral indices with DEM Water Mask.
+        normalization_transform: A normalization transformation.
+        stage: A literal indicating the stage to use. One of ["train", "val", "test", "predict"].
+
+    Returns: An instance of AugmentationSequential.
+
+    """
     common_transforms = []
 
     for index_name in spectral_indices:
@@ -181,6 +303,16 @@ def resolve_normalization_stats(
     dataset_stats: Dict[str, Dict[str, float]],
     bands_to_use: List[str],
 ) -> Tuple[BandStats, int]:
+    """
+    Resolves normalization stats based on specified bands to use.
+
+    Args:
+        dataset_stats: The full per-band dataset statistics.
+        bands_to_use: The list of band names to use.
+
+    Returns: A tuple of stats and the number of bands to use.
+
+    """
     band_stats = {band: dataset_stats[band] for band in bands_to_use}
     mean = [val["mean"] for val in band_stats.values()]
     std = [val["std"] for val in band_stats.values()]
@@ -209,6 +341,16 @@ def resolve_normalization_transform(
         "z-score",
     ] = "quantile",
 ) -> Union[_AugmentationBase, nn.Module]:
+    """
+    Resolves the normalization transform.
+
+    Args:
+        band_stats: The band statistics.
+        normalization_strategy: The normalization strategy.
+
+    Returns: A normalization transform to use for the image batch.
+
+    """
     if normalization_strategy == "z-score":
         return K.Normalize(band_stats.mean, band_stats.std)  # type: ignore[no-any-return]
     elif normalization_strategy == "min-max":
@@ -229,6 +371,18 @@ def resolve_resize_transform(
     image_size: int = 352,
     interpolation: Literal["nearest", "nearest-exact", "bilinear", "bicubic"] = "nearest",
 ) -> Callable[[Tensor], Tensor]:
+    """
+    Resolves the input image and mask resize transform.
+
+    Args:
+        image_or_mask: Indicates if the transform is for an image or a mask.
+        resize_strategy: The resize strategy to use.
+        image_size: The size of the resized image.
+        interpolation: The interpolation method to use for the "resize" strategy.
+
+    Returns:
+
+    """
     interpolation_lookup = {
         "nearest": InterpolationMode.NEAREST,
         "nearest-exact": InterpolationMode.NEAREST_EXACT,

@@ -13,11 +13,19 @@ torch.set_float32_matmul_precision("medium")
 
 
 class PredictAndSubmitConfig(PredictConfig):
+    """Config for running prediction and submission file generation in a single pass."""
+
     preview_submission: bool = False
     preview_first_n: int = 10
 
 
 def parse_args() -> PredictAndSubmitConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of PredictAndSubmitConfig.
+
+    """
     parser = build_prediction_arg_parser()
     parser.add_argument("--preview_submission", action="store_true")
     parser.add_argument("--preview_first_n", type=int, default=10)
@@ -29,10 +37,19 @@ def parse_args() -> PredictAndSubmitConfig:
 
 
 def copy_run_artifacts(run_dir: Path, output_dir: Path) -> None:
+    """
+    Copies run artifacts from run_dir to output_dir.
+
+    Args:
+        run_dir: The directory to copy run artifacts from.
+        output_dir: The output directory.
+
+    """
     shutil.copytree(run_dir, output_dir / run_dir.name, dirs_exist_ok=True)
 
 
 def main() -> None:
+    """The main entry point for running prediction and submission file generation."""
     cfg = parse_args()
     now = datetime.utcnow().isoformat()
     out_dir = cfg.output_dir / now

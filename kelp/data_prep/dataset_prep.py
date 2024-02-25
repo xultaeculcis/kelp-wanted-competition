@@ -29,6 +29,8 @@ _transforms = build_append_index_transforms(list(SPECTRAL_INDEX_LOOKUP.keys()))
 
 
 class DataPrepConfig(ConfigBase):
+    """A Config class for running pixel-level dataset prep step."""
+
     data_dir: Path
     output_dir: Path
     metadata_fp: Path
@@ -40,6 +42,12 @@ class DataPrepConfig(ConfigBase):
 
 
 def parse_args() -> DataPrepConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of DataPrepConfig.
+
+    """
     parser = ArgumentParser()
     parser.add_argument("--data_dir", type=Path, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
@@ -57,6 +65,15 @@ def parse_args() -> DataPrepConfig:
 
 
 def load_data(metadata_fp: Path) -> pd.DataFrame:
+    """
+    Loads data from specified metadata parquet file.
+
+    Args:
+        metadata_fp: The path to the metadata parquet file.
+
+    Returns: A pandas DataFrame.
+
+    """
     metadata = pd.read_parquet(metadata_fp).rename(columns={"split": "original_split"})
     metadata = metadata[metadata["high_kelp_pixels_pct"].isin([False, None])]
     return metadata
@@ -64,6 +81,15 @@ def load_data(metadata_fp: Path) -> pd.DataFrame:
 
 @torch.inference_mode()
 def append_indices(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Appends spectral indices to the dataframe as extra columns.
+
+    Args:
+        df: A DataFrame with pixel level values.
+
+    Returns: A DataFrame with appended spectral indices.
+
+    """
     arr = df.values
     x = torch.tensor(arr, dtype=torch.float32, device=DEVICE)
     x = x.reshape(x.size(0), x.size(1), 1, 1)
@@ -79,6 +105,18 @@ def process_single_file(
     buffer_pixels: int = 10,
     random_sample_pixel_fraction: float = 0.05,
 ) -> pd.DataFrame:
+    """
+    Extracts pixel level values from all bands and extra spectral indices for specified Tile ID.
+
+    Args:
+        data_dir: The path to the data directory.
+        tile_id: The Tile ID.
+        buffer_pixels: The number of pixels to use for mask buffering.
+        random_sample_pixel_fraction: The fraction of randomly sampled pixels.
+
+    Returns: A DataFrame with pixel level band and extra spectral indices values.
+
+    """
     input_fp = data_dir / "images" / f"{tile_id}_satellite.tif"
     mask_fp = data_dir / "masks" / f"{tile_id}_kelp.tif"
 
@@ -140,6 +178,18 @@ def split_data(
     test_size: float = 0.5,
     seed: int = 42,
 ) -> pd.DataFrame:
+    """
+    Runs random split on the pixel level dataset.
+
+    Args:
+        df: The pixel level dataset to be split.
+        train_size: The size of the training dataset.
+        test_size: The size of the test dataset.
+        seed: The random seed for reproducibility.
+
+    Returns: A dataframe with splits.
+
+    """
     X_train, X_test = train_test_split(
         df,
         train_size=train_size,
@@ -167,6 +217,19 @@ def extract_labels(
     buffer_pixels: int = 10,
     random_sample_pixel_frac: float = 0.02,
 ) -> pd.DataFrame:
+    """
+    Extracts pixel level values from all original bands
+    and extra spectral indices for all files in the specified directory.
+
+    Args:
+        data_dir: The data directory.
+        metadata: The metadata dataframe.
+        buffer_pixels: The buffer size in pixels around the Kelp Forest masks.
+        random_sample_pixel_frac: The fraction of randomly sampled pixels from the images.
+
+    Returns: A pixel level values dataframe.
+
+    """
     frames = []
     metadata = metadata[metadata["original_split"] == "train"]
     for _, row in tqdm(metadata.iterrows(), desc="Processing files", total=len(metadata)):
@@ -192,6 +255,21 @@ def prepare_dataset(
     random_sample_pixel_frac: float = 0.02,
     seed: int = 42,
 ) -> pd.DataFrame:
+    """
+    Runs pixel level dataset generation and splits the data into training and test sets.
+
+    Args:
+        data_dir: The data directory with input images.
+        metadata: The metadata dataframe containing tile IDs.
+        train_size: The size of the training dataset.
+        test_size: The size of the test dataset.
+        buffer_pixels: The buffer size in pixels around the Kelp Forest masks.
+        random_sample_pixel_frac: The fraction of randomly sampled pixels from the images.
+        seed: The seed for reproducibility.
+
+    Returns: A pixel level values dataframe.
+
+    """
     df = extract_labels(
         data_dir=data_dir,
         metadata=metadata,
@@ -209,11 +287,20 @@ def prepare_dataset(
 
 @timed
 def save_data(df: pd.DataFrame, output_dir: Path) -> None:
+    """
+    Saves pixel level dataset in the specified directory.
+
+    Args:
+        df: The dataframe to be saved.
+        output_dir: The output directory, where the data is saved.
+
+    """
     _logger.info(f"Saving data to {output_dir}. Generated {len(df):,} rows.")
     df.to_parquet(output_dir / "train_val_test_pixel_level_dataset.parquet", index=False)
 
 
 def main() -> None:
+    """Main entrypoint for the pixel level dataset preparation."""
     cfg = parse_args()
     np.random.seed(cfg.seed)
     random.seed(cfg.seed)

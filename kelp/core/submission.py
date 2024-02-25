@@ -14,6 +14,7 @@ class SubmissionConfig(ConfigBase):
 
 
 def parse_args() -> SubmissionConfig:
+    """Parse command line arguments for making a submission file."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--predictions_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
@@ -24,6 +25,15 @@ def parse_args() -> SubmissionConfig:
 
 
 def create_submission_tar(preds_dir: Path, output_dir: Path, submission_file_name: str = "submission.tar") -> None:
+    """
+    Creates submission TAR archive.
+
+    Args:
+        preds_dir: The directory with predictions.
+        output_dir: The output directory where the submission file will be saved.
+        submission_file_name: The name of the submission file.
+
+    """
     # Create a TAR file
     with tarfile.open(output_dir / submission_file_name, "w") as tar:
         for fp in preds_dir.glob("*_kelp.tif"):
@@ -33,6 +43,7 @@ def create_submission_tar(preds_dir: Path, output_dir: Path, submission_file_nam
 
 
 def main() -> None:
+    """Main entrypoint for creating submission from predictions directory."""
     cfg = parse_args()
     cfg.output_dir.mkdir(exist_ok=True, parents=True)
     create_submission_tar(preds_dir=cfg.predictions_dir, output_dir=cfg.output_dir)

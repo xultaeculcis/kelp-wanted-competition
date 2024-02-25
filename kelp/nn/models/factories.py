@@ -51,6 +51,21 @@ def resolve_loss(
     ce_class_weights: Optional[List[float]] = None,
     ignore_index: Optional[int] = None,
 ) -> nn.Module:
+    """
+    Resolves the loss function based on provided arguments.
+
+    Args:
+        loss_fn: The loss function name.
+        objective: The objective.
+        device: The device.
+        num_classes: The number of classes.
+        ce_smooth_factor: The smoothing factor for Cross Entropy Loss.
+        ce_class_weights: The class weights for Cross Entropy Loss.
+        ignore_index: The index to ignore.
+
+    Returns: Resolved Loss Function module.
+
+    """
     if loss_fn not in LOSS_REGISTRY:
         raise ValueError(f"{loss_fn=} is not supported.")
 
@@ -116,6 +131,26 @@ def resolve_model(
     compile_dynamic: Optional[bool] = None,
     ort: bool = False,
 ) -> nn.Module:
+    """
+    Resolves the model based on provided parameters.
+
+    Args:
+        architecture: The architecture.
+        encoder: The encoder.
+        classes: The number of classes.
+        in_channels: The number of input channels.
+        encoder_weights: Optional pre-trained encoder weights.
+        decoder_channels: Optional decoder channels.
+        decoder_attention_type: Optional decoder attention type.
+        pretrained: A flag indicating whether to use pre-trained model weights.
+        compile: A flag indicating whether to compile the model using torch.compile.
+        compile_mode: The compile mode.
+        compile_dynamic: A flag indicating whether to use dynamic compile.
+        ort: A flag indicating whether to use torch ORT compilation.
+
+    Returns: Resolved model.
+
+    """
     if decoder_channels is None:
         decoder_channels = [256, 128, 64, 32, 16]
 
@@ -162,6 +197,16 @@ def resolve_model(
 
 
 def resolve_optimizer(params: Iterator[Parameter], hyperparams: Dict[str, Any]) -> torch.optim.Optimizer:
+    """
+    Resolves the optimizer.
+
+    Args:
+        params: The model parameters.
+        hyperparams: A dictionary of hyperparameters.
+
+    Returns: Resolved optimizer.
+
+    """
     if (optimizer := hyperparams["optimizer"]) == "adam":
         optimizer = Adam(params, lr=hyperparams["lr"], weight_decay=hyperparams["weight_decay"])
     elif optimizer == "adamw":
@@ -179,6 +224,19 @@ def resolve_lr_scheduler(
     steps_per_epoch: int,
     hyperparams: Dict[str, Any],
 ) -> Optional[torch.optim.lr_scheduler.LRScheduler]:
+    """
+    Resolves the learning rate scheduler.
+
+    Args:
+        optimizer: The optimizer.
+        num_training_steps: The number of training steps.
+        steps_per_epoch: The number of training steps per epoch.
+        hyperparams: The hyperparameters.
+
+    Returns: Resolved optimizer if requested, None otherwise.
+
+    """
+
     if (lr_scheduler := hyperparams["lr_scheduler"]) is None:
         return None
     elif lr_scheduler == "onecycle":

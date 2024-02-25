@@ -25,6 +25,13 @@ _test_time_transforms = tta.Compose(
 
 
 class KelpForestSegmentationTask(pl.LightningModule):
+    """
+    A lightning module for segmentation tasks.
+
+    Args:
+        kwargs: Model specific keyword arguments.
+    """
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__()
         self.save_hyperparameters()  # type: ignore[operator]
@@ -118,6 +125,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
 
     @property
     def num_training_steps(self) -> int:
+        """Return the number of training steps."""
         return self.trainer.estimated_stepping_batches  # type: ignore[no-any-return]
 
     def _log_predictions_batch(self, batch: Dict[str, Tensor], batch_idx: int, y_hat_hard: Tensor) -> None:
@@ -226,9 +234,32 @@ class KelpForestSegmentationTask(pl.LightningModule):
             raise ValueError("NaN encountered during training! Aborting.")
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        Forward pass of the model.
+
+        Args:
+            *args: Positional arguments to be passed to the model.
+            **kwargs: Keyword arguments to be passed to the model.
+
+        Returns: Raw model outputs.
+
+        """
         return self.model(*args, **kwargs)
 
     def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """
+        Compute and return the training loss.
+
+        Args:
+            batch: The output of your data iterable, normally a :class:`~torch.utils.data.DataLoader`.
+            batch_idx: The index of this batch.
+            dataloader_idx: The index of the dataloader that produced this batch.
+                (only if multiple dataloaders used)
+
+        Return:
+            - :class:`~torch.Tensor` - The loss tensor
+
+        """
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
@@ -241,10 +272,21 @@ class KelpForestSegmentationTask(pl.LightningModule):
         return cast(Tensor, loss)
 
     def on_train_epoch_end(self) -> None:
+        """Called in the training loop at the very end of the epoch."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Compute the validation loss and log validation metrics and sample predictions.
+
+        Args:
+            batch: The output of your data iterable, normally a :class:`~torch.utils.data.DataLoader`.
+            batch_idx: The index of this batch.
+            dataloader_idx: The index of the dataloader that produced this batch.
+                (only if multiple dataloaders used)
+
+        """
         batch = args[0]
         batch_idx = args[1]
         x = batch["image"]
@@ -258,6 +300,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self._log_predictions_batch(batch, batch_idx, y_hat_hard)
 
     def on_validation_epoch_end(self) -> None:
+        """Called in the validation loop at the very end of the epoch."""
         metrics = self.val_metrics.compute()
         per_class_iou = metrics.pop("val/per_class_iou")
         self._log_confusion_matrices(metrics, stage="val")
@@ -269,6 +312,16 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Compute the test loss and test metrics.
+
+        Args:
+            batch: The output of your data iterable, normally a :class:`~torch.utils.data.DataLoader`.
+            batch_idx: The index of this batch.
+            dataloader_idx: The index of the dataloader that produced this batch.
+                (only if multiple dataloaders used)
+
+        """
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
@@ -279,6 +332,7 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.test_metrics(y_hat_hard, y)
 
     def on_test_epoch_end(self) -> None:
+        """Called in the test loop at the very end of the epoch."""
         metrics = self.test_metrics.compute()
         per_class_iou = metrics.pop("test/per_class_iou")
         self._log_confusion_matrices(metrics, stage="test")
@@ -289,14 +343,32 @@ class KelpForestSegmentationTask(pl.LightningModule):
         self.log_dict(metrics, on_step=False, on_epoch=True)
         self.test_metrics.reset()
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+    def predict_step(self, *args: Any, **kwargs: Any) -> Dict[str, Tensor]:
+        """
+        Runs prediction logic on a single batch of input tensors.
+
+        Args:
+            batch: The output of your data iterable, normally a :class:`~torch.utils.data.DataLoader`.
+            batch_idx: The index of this batch.
+            dataloader_idx: The index of the dataloader that produced this batch.
+                (only if multiple dataloaders used)
+
+        Returns: A dictionary with input batch extended with predictions.
+
+        """
         batch = args[0]
         x = batch.pop("image")
         y_hat, y_hat_hard, y_hat_soft = self._predict_with_extra_steps_if_necessary(x)
         batch["prediction"] = y_hat_soft if self.hyperparams.get("soft_labels", False) else y_hat_hard
-        return batch
+        return batch  # type: ignore[no-any-return]
 
     def configure_optimizers(self) -> Dict[str, Any]:
+        """
+        Configures Optimizer and LR Scheduler based on passed hyperparameters.
+
+        Returns: Optimizer and learning rate scheduler config.
+
+        """
         optimizer = resolve_optimizer(
             params=self.model.parameters(),
             hyperparams=self.hyperparams,

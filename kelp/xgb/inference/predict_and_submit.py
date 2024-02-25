@@ -17,6 +17,12 @@ class PredictAndSubmitConfig(PredictConfig):
 
 
 def parse_args() -> PredictAndSubmitConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of :class:`PredictAndSubmitConfig`.
+
+    """
     parser = build_prediction_arg_parser()
     parser.add_argument("--preview_submission", action="store_true")
     parser.add_argument("--submission_preview_output_dir", type=str)
@@ -29,10 +35,19 @@ def parse_args() -> PredictAndSubmitConfig:
 
 
 def copy_run_artifacts(run_dir: Path, output_dir: Path) -> None:
+    """
+    Copies run artifacts from run_dir to output_dir.
+
+    Args:
+        run_dir: The directory to copy run artifacts from.
+        output_dir: The output directory.
+
+    """
     shutil.copytree(run_dir, output_dir / run_dir.name, dirs_exist_ok=True)
 
 
 def main() -> None:
+    """Main entrypoint for running XGBoost model predictions and creating a submission file."""
     cfg = parse_args()
     now = datetime.utcnow().isoformat()
     out_dir = cfg.output_dir / now

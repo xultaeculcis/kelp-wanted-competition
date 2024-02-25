@@ -28,6 +28,36 @@ warnings.filterwarnings(
 
 
 class KelpForestDataModule(pl.LightningDataModule):
+    """
+    A LightningDataModule that handles all data-related setup for the Kelp Forest Segmentation Task.
+
+    Args:
+        dataset_stats: The per-band statistics dictionary.
+        train_images: The list of training images.
+        train_masks: The list of training masks.
+        val_images: The list of validation images.
+        val_masks: The list of validation mask.
+        test_images: The list of test images.
+        test_masks: The list of test masks.
+        predict_images: The list of prediction images.
+        spectral_indices: The list of spectral indices to append to the input tensor.
+        bands: The list of band names to use.
+        missing_pixels_fill_value: The value to fill missing pixels with.
+        batch_size: The batch size.
+        num_workers: The number of workers to use for data loading.
+        sahi: Flag indicating whether we are using SAHI dataset.
+        image_size: The size of the input image.
+        interpolation: The interpolation to use when performing resize operation.
+        resize_strategy: The resize strategy to use. One of ['pad', 'resize'].
+        normalization_strategy: The normalization strategy to use.
+        mask_using_qa: A flag indicating whether spectral index bands should be masked with QA band.
+        mask_using_water_mask: A flag indicating whether spectral index bands should be masked with DEM Water Mask.
+        use_weighted_sampler: A flag indicating whether to use weighted sampler.
+        samples_per_epoch: The number of samples per epoch if using weighted sampler.
+        image_weights: The weights per input image for weighted sampler if using weighted sampler.
+        **kwargs: Extra keywords. Unused.
+    """
+
     base_bands = [
         "SWIR",
         "NIR",
@@ -342,11 +372,11 @@ class KelpForestDataModule(pl.LightningDataModule):
         )
 
     def plot_sample(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`kelp.lit.data.dataset.KelpForestSegmentationDataset.plot_sample`."""
+        """Run :meth:`kelp.nn.data.dataset.KelpForestSegmentationDataset.plot_sample`."""
         return self.val_dataset.plot_sample(*args, **kwargs)
 
     def plot_batch(self, *args: Any, **kwargs: Any) -> FigureGrids:
-        """Run :meth:`kelp.lit.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
+        """Run :meth:`kelp.nn.data.dataset.KelpForestSegmentationDataset.plot_batch`."""
         return self.val_dataset.plot_batch(*args, **kwargs)
 
     @classmethod
@@ -358,6 +388,19 @@ class KelpForestDataModule(pl.LightningDataModule):
         split: str,
         sahi: bool = False,
     ) -> Tuple[List[Path], List[Path]]:
+        """
+        Resolves file paths using specified metadata dataframe.
+
+        Args:
+            data_dir: The data directory.
+            metadata: The metadata dataframe.
+            cv_split: The CV fold to use.
+            split: The split to use (train, val, test).
+            sahi: A flag indicating whether SAHI dataset is used.
+
+        Returns: A tuple with input image paths and target (mask) image paths
+
+        """
         split_data = metadata[metadata[f"split_{cv_split}"] == split]
         img_folder = consts.data.TRAIN if split in [consts.data.TRAIN, consts.data.VAL] else consts.data.TEST
         image_paths = sorted(
@@ -449,6 +492,27 @@ class KelpForestDataModule(pl.LightningDataModule):
         sahi: bool = False,
         **kwargs: Any,
     ) -> KelpForestDataModule:
+        """
+        Factory method to create the KelpForestDataModule based on metadata file.
+
+        Args:
+            data_dir: The path to the data directory.
+            metadata_fp: The path to the metadata file.
+            dataset_stats: The per-band dataset statistics.
+            cv_split: The CV fold number to use.
+            has_kelp_importance_factor: The importance factor for the has_kelp flag.
+            kelp_pixels_pct_importance_factor: The importance factor for the kelp_pixels_pct value.
+            qa_ok_importance_factor: The importance factor for the has_kelp flag.
+            almost_all_water_importance_factor: The importance factor for the almost_all_water flag.
+            qa_corrupted_pixels_pct_importance_factor: The importance factor for the qa_corrupted_pixels_pct value.
+            dem_nan_pixels_pct_importance_factor: The importance factor for the dem_nan_pixels_pct value.
+            dem_zero_pixels_pct_importance_factor: The importance factor for the dem_zero_pixels_pct value.
+            sahi: A flag indicating whether SAHI dataset is used.
+            **kwargs: Other keyword arguments passed to the KelpForestDataModule constructor.
+
+        Returns: An instance of KelpForestDataModule.
+
+        """
         metadata = cls._calculate_image_weights(
             df=pd.read_parquet(metadata_fp),
             has_kelp_importance_factor=has_kelp_importance_factor,
@@ -493,6 +557,20 @@ class KelpForestDataModule(pl.LightningDataModule):
         predict_data_folder: Optional[Path] = None,
         **kwargs: Any,
     ) -> KelpForestDataModule:
+        """
+        Factory method to create the KelpForestDataModule based on folder paths.
+
+        Args:
+            dataset_stats: The per-band dataset statistics.
+            train_data_folder: The path to the training data folder.
+            val_data_folder: The path to the val data folder.
+            test_data_folder: The path to the test data folder.
+            predict_data_folder: The path to the prediction data folder.
+            **kwargs: Other keyword arguments passed to the KelpForestDataModule constructor.
+
+        Returns: An instance of KelpForestDataModule.
+
+        """
         return cls(
             train_images=sorted(list(train_data_folder.glob("images/*.tif")))
             if train_data_folder and train_data_folder.exists()
@@ -536,6 +614,27 @@ class KelpForestDataModule(pl.LightningDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> KelpForestDataModule:
+        """
+        Factory method to create the KelpForestDataModule based on file paths.
+
+        Args:
+            dataset_stats: The per-band dataset statistics.
+            train_images: The list of training images.
+            train_masks: The list of training masks.
+            val_images: The list of validation images.
+            val_masks: The list of validation mask.
+            test_images: The list of test images.
+            test_masks: The list of test masks.
+            predict_images: The list of prediction images.
+            spectral_indices: The list of spectral indices to append to the input tensor.
+            batch_size: The batch size.
+            num_workers: The number of workers to use for data loading.
+            image_size: The size of the input image.
+            **kwargs: Other keyword arguments passed to the KelpForestDataModule constructor.
+
+        Returns: An instance of KelpForestDataModule.
+
+        """
         return cls(
             train_images=train_images,
             train_masks=train_masks,

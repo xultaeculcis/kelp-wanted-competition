@@ -1,5 +1,6 @@
 """
-Simple fully convolutional neural network (FCN) implementations. Code credit: https://github.com/microsoft/torchgeo/
+Simple fully convolutional neural network (FCN) implementations.
+Code credit: [torchgeo](https://github.com/microsoft/torchgeo/)
 """
 
 from torch import Tensor, nn

@@ -12,6 +12,8 @@ from kelp.core.configs import ConfigBase
 
 
 class SahiDatasetPrepConfig(ConfigBase):
+    """Config class for creating SAHI dataset"""
+
     data_dir: Path
     metadata_fp: Path
     output_dir: Path
@@ -20,6 +22,12 @@ class SahiDatasetPrepConfig(ConfigBase):
 
 
 def parse_args() -> SahiDatasetPrepConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of SahiDatasetPrepConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--metadata_fp", type=str, required=True)
@@ -39,6 +47,19 @@ def generate_tiles_from_image(
     stride: Tuple[int, int],
     output_dir: Path,
 ) -> List[Tuple[int, int, float, float]]:
+    """
+    Generates small tiles from the input image using specified tile size and stride.
+
+    Args:
+        data_dir: The path to the data directory.
+        tile_id: The tile ID.
+        tile_size: The tile size in pixels.
+        stride: The tile stride in pixels.
+        output_dir: The output directory.
+
+    Returns: A list of tuples with the tile coordinates and stats about kelp pixel number and kelp pixel percentage.
+
+    """
     records: List[Tuple[int, int, float, float]] = []
 
     with rasterio.open(data_dir / "images" / f"{tile_id}_satellite.tif") as src:
@@ -105,6 +126,17 @@ def generate_tiles_from_image(
 
 
 def prep_sahi_dataset(data_dir: Path, metadata_fp: Path, output_dir: Path, image_size: int, stride: int) -> None:
+    """
+    Runs data preparation for SAHI model training.
+
+    Args:
+        data_dir: The path to the data directory.
+        metadata_fp: The path to the metadata parquet file.
+        output_dir: The path to the output directory.
+        image_size: The image size to use for tiles.
+        stride: The stride to use for overlap between tiles.
+
+    """
     df = pd.read_parquet(metadata_fp)
     df = df[df["original_split"] == "train"]
     records: List[Tuple[Any, ...]] = []
@@ -128,6 +160,7 @@ def prep_sahi_dataset(data_dir: Path, metadata_fp: Path, output_dir: Path, image
 
 
 def main() -> None:
+    """Main entrypoint for generating SAHI dataset."""
     cfg = parse_args()
     prep_sahi_dataset(**cfg.model_dump())
 

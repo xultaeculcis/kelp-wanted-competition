@@ -23,6 +23,8 @@ from kelp.xgb.training.cfg import TrainConfig
 
 
 class PredictConfig(ConfigBase):
+    """XGBoost prediction config"""
+
     model_config = ConfigDict(protected_namespaces=())
 
     data_dir: Path
@@ -54,6 +56,12 @@ class PredictConfig(ConfigBase):
 
 
 def build_prediction_arg_parser() -> argparse.ArgumentParser:
+    """
+    Builds the base parser for prediction steps.
+
+    Returns: An instance of :class:`argparse.ArgumentParser`.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
@@ -62,6 +70,12 @@ def build_prediction_arg_parser() -> argparse.ArgumentParser:
 
 
 def parse_args() -> PredictConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of PredictConfig.
+
+    """
     parser = build_prediction_arg_parser()
     args = parser.parse_args()
     cfg = PredictConfig(**vars(args))
@@ -82,6 +96,19 @@ def predict_on_single_image(
     columns: List[str],
     decision_threshold: float = 0.5,
 ) -> np.ndarray:  # type: ignore[type-arg]
+    """
+    Runs inference on a single satellite image using specified XGBoost model.
+
+    Args:
+        model: The XGBoost model.
+        x: The array representing the satellite image.
+        transforms: A set of transforms to apply to the input image.
+        columns: The column names for the input array.
+        decision_threshold: The decision threshold.
+
+    Returns: A numpy array with predicted mask.
+
+    """
     tensor = torch.tensor(x, dtype=torch.float32, device=DEVICE).unsqueeze(0)
     tensor = torch.flatten(transforms(tensor), start_dim=2).squeeze().T
     df = pd.DataFrame(tensor.detach().cpu().numpy(), columns=columns).replace({np.nan: -32768.0})
@@ -92,6 +119,16 @@ def predict_on_single_image(
 
 
 def predict(input_dir: Path, model: XGBClassifier, spectral_indices: List[str], output_dir: Path) -> None:
+    """
+    Runs XGBoost prediction on files in the specified input directory.
+
+    Args:
+        input_dir: The input directory.
+        model: The XGBoost model.
+        spectral_indices: The list of spectral indices to append to the input image.
+        output_dir: The output directory.
+
+    """
     fps = sorted(list(input_dir.glob("*.tif")))
     transforms = build_append_index_transforms(spectral_indices)
     for fp in tqdm(fps, "Predicting"):
@@ -115,6 +152,16 @@ def run_prediction(
     model_dir: Path,
     spectral_indices: List[str],
 ) -> None:
+    """
+    Runs the XGBoost inference on specified data directory.
+
+    Args:
+        data_dir: The data directory.
+        output_dir: The output directory.
+        model_dir: The model directory.
+        spectral_indices: The spectral indices to append to the input image.
+
+    """
     model = load_model(model_path=model_dir)
     predict(
         input_dir=data_dir,
@@ -125,6 +172,7 @@ def run_prediction(
 
 
 def main() -> None:
+    """Main entrypoint for running XGBoost inference."""
     cfg = parse_args()
     run_prediction(
         data_dir=cfg.data_dir,

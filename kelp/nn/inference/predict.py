@@ -39,6 +39,8 @@ _logger = get_logger(__name__)
 
 
 class PredictConfig(ConfigBase):
+    """The prediction config"""
+
     model_config = ConfigDict(protected_namespaces=())
 
     data_dir: Path
@@ -108,6 +110,12 @@ class PredictConfig(ConfigBase):
 
 
 def build_prediction_arg_parser() -> argparse.ArgumentParser:
+    """
+    Builds a base prediction argument parser.
+
+    Returns: An instance of :argparse.ArgumentParser.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
@@ -135,6 +143,12 @@ def build_prediction_arg_parser() -> argparse.ArgumentParser:
 
 
 def parse_args() -> PredictConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of PredictConfig.
+
+    """
     parser = build_prediction_arg_parser()
     args = parser.parse_args()
     cfg = PredictConfig(**vars(args))
@@ -173,6 +187,17 @@ def predict(
     output_dir: Path,
     resize_tf: Callable[[Tensor], Tensor],
 ) -> None:
+    """
+    Runs prediction using specified datamodule and model.
+
+    Args:
+        dm: The datamodule to use for prediction.
+        model: The model.
+        train_cfg: The original training configuration.
+        output_dir: The output directory.
+        resize_tf: The resize transform for post-prediction adjustment.
+
+    """
     with torch.no_grad():
         trainer = pl.Trainer(**train_cfg.trainer_kwargs, logger=False)
         preds: List[Dict[str, Union[Tensor, str]]] = trainer.predict(model=model, datamodule=dm)
@@ -194,6 +219,17 @@ def resolve_post_predict_resize_transform(
     source_image_size: int,
     target_image_size: int,
 ) -> Callable[[Tensor], Tensor]:
+    """
+    Resolves the post-predict resize transform.
+
+    Args:
+        resize_strategy: The resize strategy.
+        source_image_size: The source image size.
+        target_image_size: The target image size.
+
+    Returns: The transform to be called on predictions.
+
+    """
     if resize_strategy == "resize":
         resize_tf = T.Resize(
             size=(target_image_size, target_image_size),
@@ -218,6 +254,21 @@ def run_prediction(
     tta_merge_mode: str = "max",
     decision_threshold: Optional[float] = None,
 ) -> None:
+    """
+    Runs the prediction logic for a single model checkpoint.
+
+    Args:
+        data_dir: The path to the data directory.
+        output_dir: The path to the output directory.
+        model_checkpoint: The model checkpoint.
+        use_mlflow: A flag indicating whether to use MLflow to load the model.
+        train_cfg: The original training config used to train the model.
+        tta: A flag indicating whether to use TTA for prediction.
+        soft_labels: A flag indicating whether to use soft labels for prediction.
+        tta_merge_mode: The TTA merge mode.
+        decision_threshold: An optional decision threshold for prediction. torch.argmax will be used by default.
+
+    """
     dm = KelpForestDataModule.from_folders(predict_data_folder=data_dir, **train_cfg.data_module_kwargs)
     model = load_model(
         model_path=model_checkpoint,
@@ -254,6 +305,23 @@ def run_sahi_prediction(
     sahi_tile_size: int = 128,
     sahi_overlap: int = 64,
 ) -> None:
+    """
+    Runs SAHI (Sliced Aided Hyper Inference) using specified model checkpoint.
+
+    Args:
+        data_dir: The path to the data directory.
+        output_dir: The path to the output directory.
+        model_checkpoint: The model checkpoint.
+        use_mlflow: A flag indicating whether to use MLflow to load the model.
+        train_cfg: The original training config used to train the model.
+        tta: A flag indicating whether to use TTA for prediction.
+        soft_labels: A flag indicating whether to use soft labels for prediction.
+        tta_merge_mode: The TTA merge mode.
+        decision_threshold: An optional decision threshold for prediction. torch.argmax will be used by default.
+        sahi_tile_size: The size of the tiles to use when performing SAHI.
+        sahi_overlap: The size of the overlap between tiles to use when performing SAHI
+
+    """
     model = load_model(
         model_path=model_checkpoint,
         use_mlflow=use_mlflow,
@@ -309,7 +377,12 @@ def run_sahi_prediction(
 
 
 def main() -> None:
+    """
+    Main entry point for performing model prediction.
+    Will automatically use SAHI if model was trained with this flag.
+    """
     cfg = parse_args()
+    (cfg.output_dir / "predict_config.yaml").write_text(yaml.dump(cfg.model_dump(mode="json")))
     if cfg.training_config.sahi:
         run_sahi_prediction(
             data_dir=cfg.data_dir,

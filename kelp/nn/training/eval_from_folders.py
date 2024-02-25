@@ -33,6 +33,8 @@ _logger = get_logger(__name__)
 
 
 class EvaluateFromFoldersConfig(ConfigBase):
+    """A config for evaluating from folders."""
+
     gt_dir: Path
     preds_dir: Path
     tags: Optional[Dict[str, str]] = None
@@ -48,6 +50,12 @@ class EvaluateFromFoldersConfig(ConfigBase):
 
 
 def parse_args() -> EvaluateFromFoldersConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of EvaluateFromFoldersConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--gt_dir", type=str, required=True)
     parser.add_argument("--preds_dir", type=str, required=True)
@@ -66,6 +74,18 @@ def eval_from_folders(
     metrics: Optional[MetricCollection] = None,
     prefix: Optional[str] = "test",
 ) -> Dict[str, float]:
+    """
+    Runs model evaluation using specified ground truth and predictions directories.
+
+    Args:
+        gt_dir: The ground truth directory.
+        preds_dir: The predictions' directory.
+        metrics: The metrics to use to evaluate the quality of predictions.
+        prefix: The prefix to use for logged metrics.
+
+    Returns: A dictionary of metric names and values.
+
+    """
     gt_fps = sorted(list(gt_dir.glob("*.tif")))
     preds_fps = sorted(list(preds_dir.rglob("*.tif")))
 
@@ -108,6 +128,7 @@ def eval_from_folders(
 
 
 def main() -> None:
+    """Main entrypoint for model evaluation from folders."""
     cfg = parse_args()
     mlflow.set_experiment(cfg.experiment_name)
     run = mlflow.start_run()

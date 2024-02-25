@@ -19,6 +19,8 @@ warnings.filterwarnings(
 
 
 class PreviewSubmissionConfig(ConfigBase):
+    """Config for previewing the submission files."""
+
     test_data_dir: Path
     output_dir: Path
     submission_dir: Path
@@ -33,6 +35,12 @@ class PreviewSubmissionConfig(ConfigBase):
 
 
 def parse_args() -> PreviewSubmissionConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of PreviewSubmissionConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--test_data_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
@@ -46,6 +54,16 @@ def parse_args() -> PreviewSubmissionConfig:
 
 
 def plot_first_n_samples(data_dir: Path, submission_dir: Path, output_dir: Path, n: int = 10) -> None:
+    """
+    Plots first N samples from the submission directory.
+
+    Args:
+        data_dir: The path to the data directory with files used to generate predictions in the submission dir.
+        submission_dir: The path to the submission directory.
+        output_dir: The path to the output directory.
+        n: The number of samples to plot.
+
+    """
     output_dir.mkdir(exist_ok=True, parents=True)
     for fp in tqdm(sorted(list(data_dir.glob("*.tif")))[:n], "Plotting predictions"):
         tile = fp.stem.split("_")[0]
@@ -63,6 +81,7 @@ def plot_first_n_samples(data_dir: Path, submission_dir: Path, output_dir: Path,
 
 
 def main() -> None:
+    """Main entrypoint for plotting sample predictions from submission directory."""
     cfg = parse_args()
     plot_first_n_samples(
         data_dir=cfg.test_data_dir,

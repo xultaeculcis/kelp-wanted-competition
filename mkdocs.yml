@@ -39,12 +39,75 @@ watch:
   - kelp/
 nav:
   - Home: index.md
+  - Dev-Log: dev-log.md
+  - Technical Report: technical-report.md
   - Guides:
       - Setting up dev environment: "guides/setup-dev-env.md"
       - Contributing: "guides/contributing.md"
       - Running tests: "guides/tests.md"
       - Using Makefile commands: "guides/makefile-usage.md"
+      - Reproducibility of results: "guides/reproducibility.md"
+      - Preparing data: "guides/data-prep.md"
+      - Training models: "guides/training.md"
+      - MLFlow artifacts: "guides/mlflow-artifacts.md"
+      - Evaluating models: "guides/evaluation.md"
+      - Running inference: "guides/inference.md"
+      - Making submissions: "guides/submissions.md"
+      - XGBoost: "guides/xgb-stuff.md"
+      - SAHI: "guides/sahi.md"
   - API reference:
-      - kelp.consts: "api_ref/kelp.consts.md"
-      - kelp.core: "api_ref/kelp.core.md"
-      - kelp.utils: "api_ref/kelp.utils.md"
+      - About: "api_ref/index.md"
+      - kelp.consts: "api_ref/consts.md"
+      - kelp.core:
+          - configs: "api_ref/core/configs.md"
+          - indices: "api_ref/core/indices.md"
+          - settings: "api_ref/core/settings.md"
+          - submission: "api_ref/core/submission.md"
+      - kelp.data_prep:
+          - aoi_grouping: "api_ref/data_prep/aoi_grouping.md"
+          - calculate_band_stats: "api_ref/data_prep/calculate_band_stats.md"
+          - dataset_prep: "api_ref/data_prep/dataset_prep.md"
+          - eda: "api_ref/data_prep/eda.md"
+          - move_split_files: "api_ref/data_prep/move_split_files.md"
+          - plot_samples: "api_ref/data_prep/plot_samples.md"
+          - sahi_dataset_prep: "api_ref/data_prep/sahi_dataset_prep.md"
+          - train_val_test_split: "api_ref/data_prep/train_val_test_split.md"
+      - kelp.nn:
+          - data:
+              - band_stats: "api_ref/nn/data/band_stats.md"
+              - datamodule: "api_ref/nn/data/datamodule.md"
+              - dataset: "api_ref/nn/data/dataset.md"
+              - transforms: "api_ref/nn/data/transforms.md"
+              - utils: "api_ref/nn/data/utils.md"
+          - inference:
+              - average_predictions: "api_ref/nn/inference/average_predictions.md"
+              - fold_weights: "api_ref/nn/inference/fold_weights.md"
+              - predict: "api_ref/nn/inference/predict.md"
+              - predict_and_submit: "api_ref/nn/inference/predict_and_submit.md"
+              - preview_submission: "api_ref/nn/inference/preview_submission.md"
+              - sahi: "api_ref/nn/inference/sahi.md"
+          - models:
+              - efficientunet++: "api_ref/nn/models/efficientunetplusplus.md"
+              - fcn: "api_ref/nn/models/fcn.md"
+              - resunet: "api_ref/nn/models/resunet.md"
+              - resunet++: "api_ref/nn/models/resunetplusplus.md"
+              - factories: "api_ref/nn/models/factories.md"
+              - losses: "api_ref/nn/models/losses.md"
+              - modules: "api_ref/nn/models/modules.md"
+              - segmentation: "api_ref/nn/models/segmentation.md"
+          - training:
+              - config: "api_ref/nn/training/config.md"
+              - eval: "api_ref/nn/training/eval.md"
+              - eval_from_folders: "api_ref/nn/training/eval_from_folders.md"
+              - options: "api_ref/nn/training/options.md"
+              - train: "api_ref/nn/training/train.md"
+      - kelp.xgb:
+          - inference:
+              - predict: "api_ref/xgb/inference/predict.md"
+              - predict_and_submit: "api_ref/xgb/inference/predict_and_submit.md"
+          - training:
+              - config: "api_ref/xgb/training/config.md"
+              - eval: "api_ref/xgb/training/eval.md"
+              - options: "api_ref/xgb/training/options.md"
+              - train: "api_ref/xgb/training/train.md"
+      - kelp.utils: "api_ref/utils.md"

@@ -22,12 +22,20 @@ _logger = get_logger(__name__)
 
 
 class AnalysisConfig(ConfigBase):
+    """A config for plotting samples."""
+
     data_dir: Path
     metadata_fp: Path
     output_dir: Path
 
 
 def parse_args() -> AnalysisConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of AnalysisConfig.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data_dir",
@@ -54,6 +62,17 @@ def parse_args() -> AnalysisConfig:
 
 
 def plot_single_image(tile_id_split_tuple: Tuple[str, str], data_dir: Path, output_dir: Path) -> None:
+    """
+    Plots a single image for visual inspection.
+
+    Args:
+        tile_id_split_tuple: A tuple containing tile ID and split
+        data_dir:
+        output_dir:
+
+    Returns:
+
+    """
     tile_id, split = tile_id_split_tuple
     out_dir = output_dir / "plots"
     out_dir.mkdir(exist_ok=True, parents=True)
@@ -79,6 +98,17 @@ def extract_composite(
     name: str,
     output_dir: Path,
 ) -> None:
+    """
+    Extracts a band composite from given tile.
+
+    Args:
+        tile_id_split_tuple: A tuple with Tile ID and split name.
+        data_dir: The path to the data directory.
+        bands: The band index or indices to create the composite.
+        name: The name of the composite.
+        output_dir: The path to the output directory.
+
+    """
     tile_id, split = tile_id_split_tuple
     src: rasterio.DatasetReader
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
@@ -95,12 +125,30 @@ def extract_composite(
 
 @timed
 def plot_samples(data_dir: Path, output_dir: Path, records: List[Tuple[str, str]]) -> None:
+    """
+    Runs sample plotting for files in specified directory in parallel using Dask.
+
+    Args:
+        data_dir: The path to the data directory.
+        output_dir: The path to the output directory.
+        records: The list of tile ID and split name tuples.
+
+    """
     _logger.info("Running sample plotting")
     (dask.bag.from_sequence(records).map(plot_single_image, data_dir=data_dir, output_dir=output_dir).compute())
 
 
 @timed
 def extract_composites(data_dir: Path, output_dir: Path, records: List[Tuple[str, str]]) -> None:
+    """
+    Extracts composite images from input tiles in the specified directory in parallel using Dask.
+
+    Args:
+        data_dir: The path to the data directory.
+        output_dir: The path to the output directory.
+        records: The list of tile ID and split name tuples.
+
+    """
     for name, bands in zip(["tci", "false_color", "agriculture", "dem"], [[2, 3, 4], [1, 2, 3], [0, 1, 2], 6]):
         if name != "dem":
             continue
@@ -113,6 +161,15 @@ def extract_composites(data_dir: Path, output_dir: Path, records: List[Tuple[str
 
 
 def build_tile_id_and_split_tuples(metadata: pd.DataFrame) -> List[Tuple[str, str]]:
+    """
+    Builds a list of tile ID and split tuples from specified metadata dataframe.
+
+    Args:
+        metadata: The metadata dataframe.
+
+    Returns: A list of tile ID and split tuples.
+
+    """
     records = []
     metadata["split"] = metadata["in_train"].apply(lambda x: "train" if x else "test")
     for _, row in tqdm(metadata.iterrows(), total=len(metadata), desc="Extracting tile_id and split tuples"):
@@ -123,6 +180,7 @@ def build_tile_id_and_split_tuples(metadata: pd.DataFrame) -> List[Tuple[str, st
 
 
 def main() -> None:
+    """The main entrypoint for plotting the input samples."""
     cfg = parse_args()
     metadata = pd.read_csv(cfg.metadata_fp)
     cfg.output_dir.mkdir(exist_ok=True, parents=True)

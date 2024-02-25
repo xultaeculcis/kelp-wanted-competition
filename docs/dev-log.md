@@ -40,8 +40,8 @@ Checklist:
 - [x] Soft labels
 - [x] Model weights averaging
 - [x] SAHI
-- [ ] Prepare docs on how to train and predict
-- [ ] Build a CLI for eda, training, prediction and submission
+- [x] Prepare docs on how to train and predict
+- [x] Build a CLI for eda, training, prediction and submission
 
 ## What worked
 
@@ -63,14 +63,44 @@ Checklist:
     * `dem_nan_pixels_pct_importance_factor=0.25`
     * `dem_zero_pixels_pct_importance_factor=-1.0`
 * Masking indices with QA and DEM Water Mask
-* Extra spectral indices: ATSAVI,AVI,CI,ClGreen,GBNDVI,GVMI,IPVI,KIVU,MCARI,MVI,NormNIR,PNDVI,SABI,WDRVI,mCRIG
+* Extra spectral indices:
+    * DEMWM,
+    * NDVI,
+    * ATSAVI,
+    * AVI,
+    * CI,
+    * ClGreen,
+    * GBNDVI,
+    * GVMI,
+    * IPVI,
+    * KIVU,
+    * MCARI,
+    * MVI,
+    * NormNIR,
+    * PNDVI,
+    * SABI,
+    * WDRVI,
+    * mCRIG
 * Test Time Augmentations (only local runs)
+* EfficientNet-B5
 * Decision threshold change to 0.45-0.48
 * `OneCycleLR`
 * 10-fold CV
-* Training for 50 epochs
+* Training for 50 epochs (best model ensemble)
 * Mixing models with best dice per split in the ensemble
-* Soft labels
+* Soft labels (second-best model used them)
+* Mixing model architectures and encoders such as:
+    * `unet`
+    * `linknet`
+    * `unet++ `
+    * `tu-efficeintnet_b5`
+    * `tu-mobilevitv2_150.cvnets_in22k_ft_in1k_384`
+    * `tu-maxvit_small_tf_384.in1k`
+    * `tu-seresnextaa101d_32x8d.sw_in12k_ft_in1k`
+    * `tu-rexnetr_200.sw_in12k_ft_in1k`
+    * `tu-seresnext26d_32x4d`
+    * `tu-gcresnet33ts.ra2_in1k`
+    * `tu-seresnext101_32x4d`
 
 ## What did not work
 
@@ -88,6 +118,11 @@ Checklist:
 * XGBoost and other tree based models predicting on pixel level
 * More decoder channels
 * SAHI
+* Resize strategy different than `pad`
+* Training with larger images
+* Bigger batches
+* More frequent val checks
+* Smaller batch sizes and `accumulate_grad_batches` > 1
 
 ## 2023-12-02
 
@@ -682,7 +717,7 @@ Findings:
 * Did not work very well compared to fold=8
 * WIP. training for longer
 * Added data prep script for pixel level training
-* Added training script for Random Forest and Gradient Boosting Trees classifiers form `scikit-learn`
+* Added training script for Random Forest and Gradient Boosting Trees classifiers from `scikit-learn`
 * Trained on 0.05% of data -> **dice=0.673**
 * Forgot to remove samples with corrupted masks...
 
@@ -757,9 +792,9 @@ Findings:
 * Last two model changes were never submitted - the one with training for 50 epochs and the one with updated sampler weights...
 * Fuck my life...
 * New scores are:
-  * Training for 50 epochs, all weights = 1.0: **0.7197**
-  * Training for 50 epochs, weights rescaled based on scores on historical LB using min-max scaler: **0.7200**
-  * New sampler weights: **0.7169**
+    * Training for 50 epochs, all weights = 1.0: **0.7197**
+    * Training for 50 epochs, weights rescaled based on scores on historical LB using min-max scaler: **0.7200**
+    * New sampler weights: **0.7169**
 * Will build new ensemble of all best models for all splits, regardless of training method
 * New ideas: model weight averaging, weighting probabilities instead of decisions as it is now
 
@@ -782,13 +817,13 @@ as they are the worst on LB individually
 * Added eval scripts for evaluating from folders with masks - evaluating ensemble is now easier
 * Tested ensemble with various settings: TTA, decision thresholds, soft labels, tta merge modes, various fold weights
 * Best combination:
-  * no TTA
-  * soft labels
-  * no decision threshold on fold level
-  * decision threshold = 0.48 for final ensemble
-  * weights as before -> MinMaxScaler(0.2, 1.0)
-  * fold=0 -> 0.0 fold=1 -> 0.0, fold=9 -> 0.0
-  * mix of best model per split
+    * no TTA
+    * soft labels
+    * no decision threshold on fold level
+    * decision threshold = 0.48 for final ensemble
+    * weights as before -> MinMaxScaler(0.2, 1.0)
+    * fold=0 -> 0.0 fold=1 -> 0.0, fold=9 -> 0.0
+    * mix of best model per split
 * Public LB = **0.7208**
 
 ## 2024-02-12
@@ -834,11 +869,11 @@ as they are the worst on LB individually
 ## 2024-02-19
 
 * New submissions:
-  * Fold-0: 0.7135
-  * Fold-1: 0.7114
-  * Fold-2: 0.7094
-  * Fold-3: 0.7133
-  * Fold-4: 0.7106
+    * Fold-0: 0.7135
+    * Fold-1: 0.7114
+    * Fold-2: 0.7094
+    * Fold-3: 0.7133
+    * Fold-4: 0.7106
 
 ## 2024-02-20
 
@@ -851,3 +886,23 @@ as they are the worst on LB individually
 * The competition ends today
 * It was a good run regardless of final ranking
 * But oh boy, do I hope everyone in top 5 over-fitted to public test set :D
+
+## 2024-02-22
+
+* Checked the LB today - #2 place
+* So, yeah... indeed some people over-fitted
+* WIP. docs with training guides and docstrings
+
+## 2024-02-23
+
+* Added more docstrings
+* Updated docs
+* WIP. Reproducibility guide
+
+## 2024-02-24
+
+* Added technical report
+
+## 2024-02-24
+
+* Finishing up the technical report

@@ -26,6 +26,10 @@ _logger = get_logger(__name__)
 
 
 class SatelliteImageStats(BaseModel):
+    """
+    A data class for holding stats for single satellite image.
+    """
+
     tile_id: str
     aoi_id: Optional[int] = None
     split: str
@@ -54,6 +58,16 @@ class SatelliteImageStats(BaseModel):
 
 
 def calculate_stats(tile_id_aoi_id_split_tuple: Tuple[str, int, str], data_dir: Path) -> SatelliteImageStats:
+    """
+    Calculates statistics for single tile.
+
+    Args:
+        tile_id_aoi_id_split_tuple: A tuple with tile ID, AOI ID and split name.
+        data_dir: The path to the data directory.
+
+    Returns: An instance of SatelliteImageStats class.
+
+    """
     tile_id, aoi_id, split = tile_id_aoi_id_split_tuple
     src: rasterio.DatasetReader
     with rasterio.open(data_dir / split / "images" / f"{tile_id}_satellite.tif") as src:
@@ -116,6 +130,14 @@ def calculate_stats(tile_id_aoi_id_split_tuple: Tuple[str, int, str], data_dir: 
 
 @timed
 def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
+    """
+    Plots statistics about the training dataset.
+
+    Args:
+        df: The dataframe with image statistics.
+        output_dir: The output directory, where plots will be saved.
+
+    """
     out_dir = output_dir / "stats"
     out_dir.mkdir(exist_ok=True, parents=True)
 
@@ -266,12 +288,31 @@ def plot_stats(df: pd.DataFrame, output_dir: Path) -> None:
 
 @timed
 def extract_stats(data_dir: Path, records: List[Tuple[str, int, str]]) -> List[SatelliteImageStats]:
+    """
+    Runs stats extraction from images in specified directory in parallel using Dask.
+
+    Args:
+        data_dir: The path to the directory.
+        records: The list of tuples with tile ID, AOI ID and split per image.
+
+    Returns: A list of SatelliteImageStats instances.
+
+    """
     return (  # type: ignore[no-any-return]
         dask.bag.from_sequence(records).map(calculate_stats, data_dir=data_dir).compute()
     )
 
 
 def build_tile_id_aoi_id_and_split_tuples(metadata: pd.DataFrame) -> List[Tuple[str, int, str]]:
+    """
+    Builds a list of tile ID, AOI ID and split tuples from specified metadata dataframe.
+
+    Args:
+        metadata: The metadata dataframe.
+
+    Returns: A list of tile ID, AOI ID and split tuples.
+
+    """
     records = []
     metadata["split"] = metadata["in_train"].apply(lambda x: "train" if x else "test")
     for _, row in tqdm(metadata.iterrows(), total=len(metadata), desc="Extracting tile_id and split tuples"):
@@ -282,6 +323,7 @@ def build_tile_id_aoi_id_and_split_tuples(metadata: pd.DataFrame) -> List[Tuple[
 
 
 def main() -> None:
+    """Main entry point for performing EDA."""
     cfg = parse_args()
     metadata = pd.read_parquet(cfg.metadata_fp)
     cfg.output_dir.mkdir(exist_ok=True, parents=True)

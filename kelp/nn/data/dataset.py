@@ -29,6 +29,10 @@ warnings.filterwarnings(
 
 @dataclass
 class FigureGrids:
+    """
+    A dataclass for holding figure grids.
+    """
+
     true_color: Optional[plt.Figure] = None
     color_infrared: Optional[plt.Figure] = None
     short_wave_infrared: Optional[plt.Figure] = None
@@ -40,6 +44,18 @@ class FigureGrids:
 
 
 class KelpForestSegmentationDataset(Dataset):
+    """
+    The KelpForestSegmentationDataset.
+
+    Args:
+        image_fps: The input image paths.
+        mask_fps: The mask image paths.
+        transforms: The transforms to apply to the input images and masks.
+        band_order: The order of bands to use.
+        fill_value: The fill value for missing pixels.
+
+    """
+
     classes = consts.data.CLASSES
     cmap = ListedColormap(["black", "lightseagreen"])
 
@@ -58,9 +74,24 @@ class KelpForestSegmentationDataset(Dataset):
         self.band_order = [band_idx + 1 for band_idx in band_order] if band_order else list(range(1, 8))
 
     def __len__(self) -> int:
+        """
+        Returns The number of images in the dataset.
+
+        Returns: The number of images in the dataset.
+
+        """
         return len(self.image_fps)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        """
+        Loads a single image and mask from the dataset.
+
+        Args:
+            index: The index of the image to load.
+
+        Returns: A dictionary with the image and mask tensor pair.
+
+        """
         src: DatasetReader
         with rasterio.open(self.image_fps[index]) as src:
             # we need to replace values to account for corrupted pixels
@@ -134,6 +165,17 @@ class KelpForestSegmentationDataset(Dataset):
         interpolation: Literal["antialiased", "none"] = "antialiased",
         cmap: Optional[str] = None,
     ) -> plt.Figure:
+        """
+        Plot a single tensor.
+
+        Args:
+            tensor: The tensor.
+            interpolation: The interpolation mode.
+            cmap: An optional colormap to use.
+
+        Returns: A matplotlib Figure with the rendered tensor.
+
+        """
         tensor = tensor.float()
         h, w = tensor.shape[-2], tensor.shape[-1]
         fig: plt.Figure
@@ -165,6 +207,29 @@ class KelpForestSegmentationDataset(Dataset):
         qa_mask_cmap: str = "gray",
         mask_cmap: str = consts.data.CMAP,
     ) -> FigureGrids:
+        """
+        Plots a batch of images generated using this dataset.
+
+        Args:
+            batch: The dictionary containing a batch of images with optional masks and predictions.
+            band_index_lookup: The dictionary containing a lookup that matches band name to its index in the tensor.
+            samples_per_row: The number of samples per row to plot in a grid.
+            plot_true_color: A flag indicating whether to plot the True Color composite.
+            plot_color_infrared_grid: A flag indicating whether to plot the Color Infrared composite.
+            plot_short_wave_infrared_grid: A flag indicating whether to plot the Shortwave Infrared composite.
+            plot_spectral_indices: A flag indicating whether to plot the spectral indices.
+            plot_qa_grid: A flag indicating whether to plot the QA band.
+            plot_dem_grid: A flag indicating whether to plot the DEM band.
+            plot_mask_grid: A flag indicating whether to plot the mask grid.
+            plot_prediction_grid: A flag indicating whether to plot the prediction grid.
+            dem_cmap: The matplotlib colormap to use for the DEM band.
+            spectral_indices_cmap: The matplotlib colormap to use for the spectral indices.
+            qa_mask_cmap: The matplotlib colormap to use for the QA band.
+            mask_cmap: The matplotlib colormap to use for the masks and predictions.
+
+        Returns: A FigureGrid instance with plotted grids.
+
+        """
         if plot_mask_grid and "mask" not in batch:
             raise ValueError(
                 "Mask grid cannot be plotted. No 'mask' key is present in the batch. "

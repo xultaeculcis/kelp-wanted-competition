@@ -19,6 +19,8 @@ _logger = get_logger(__name__)
 
 
 class EvalConfig(PredictConfig):
+    """Config for running NN model evaluation."""
+
     metadata_dir: Path
     experiment_name: str = "model-eval-exp"
     log_model: bool = False
@@ -31,6 +33,12 @@ class EvalConfig(PredictConfig):
 
 
 def parse_args() -> EvalConfig:
+    """
+    Parse command line arguments.
+
+    Returns: An instance of EvalConfig.
+
+    """
     parser = build_prediction_arg_parser()
     parser.add_argument("--metadata_dir", type=str, required=True)
     parser.add_argument("--experiment_name", type=str, default="model-eval-exp")
@@ -54,6 +62,22 @@ def run_eval(
     tta_merge_mode: str = "max",
     decision_threshold: Optional[float] = None,
 ) -> None:
+    """
+    Runs model evaluation.
+
+    Args:
+        run_dir: The run directory.
+        output_dir: The output directory.
+        model_checkpoint: The model checkpoint path.
+        use_mlflow: A flag indicating whether to use MLFlow to load the model.
+        train_cfg: The original training config.
+        experiment_name: The experiment name.
+        log_model: A flag indicating whether to log model as an artifact.
+        tta: A flag indicating whether to use TTA.
+        tta_merge_mode: TTA merge mode.
+        decision_threshold: An optional decision threshold. Will use :meth:`torch.argmax` by default.
+
+    """
     set_gpu_power_limit_if_needed()
     mlflow.set_experiment(experiment_name)
     mlflow.pytorch.autolog()
@@ -105,6 +129,7 @@ def run_eval(
 
 
 def main() -> None:
+    """Main entrypoint for model evaluation."""
     cfg = parse_args()
     run_eval(
         run_dir=cfg.run_dir,

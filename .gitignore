@@ -172,6 +172,7 @@ default/
 *.pth
 *.env
 logs/
+models/
 notebooks/*
 !notebooks/*.ipynb
 ml-runs/

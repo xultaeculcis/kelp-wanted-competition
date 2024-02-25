@@ -18,6 +18,8 @@ _logger = get_logger(__name__)
 
 
 class TrainConfig(ConfigBase):
+    """The training configuration."""
+
     # data params
     data_dir: Path
     metadata_fp: Path
