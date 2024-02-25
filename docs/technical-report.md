@@ -788,7 +788,7 @@ Sample predictions:
 If you want to learn more about XGBoost approach and to reproduce the results,
 please see: [XGBoost guide](guides/xgb-stuff.md).
 
-The XGB feature importance at least gave me confidence that the original approach with appending spectral
+The XGB feature importance at least gave the Author confidence that the original approach with appending spectral
 indices to the input tensor was somewhat justified.
 
 ![feature_importance_weight.png](assets/images/xgb/feature_importance_weight.png)
@@ -879,30 +879,30 @@ imagery and deep learning has demonstrated the power of combining advanced machi
 domain-specific knowledge. Used methodology was propelled to the second place, showcasing a robust and effective
 solution for the critical environmental task of mapping and monitoring kelp canopy presence.
 
-The utilization of pre-trained weights laid a strong foundation, allowing our models to learn from relevant,
+The utilization of pre-trained weights laid a strong foundation, allowing the models to learn from relevant,
 pre-existing patterns, significantly accelerating the learning process. The introduction of the
 Normalized Difference Vegetation Index (NDVI) and other spectral indices such as ATSAVI, AVI, CI, and more,
-provided our models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively.
+provided the models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively.
 These indices, especially when coupled with strategy of reordering channels to align more closely with natural
 and scientific observations, significantly improved model performance.
 
 Decision to employ AdamW optimizer, accompanied by a carefully chosen weight decay and learning rate scheduler,
-further optimized our training process, striking a fine balance between fast convergence and avoiding overfitting.
+further optimized the training process, striking a fine balance between fast convergence and avoiding overfitting.
 The choice of a 32 batch size fully leveraged the computational capacity of the Tesla T4 GPUs, ensuring efficient
 use of resources.
 
 The implementation of mixed-precision training and inference not only reduced model's memory footprint
-but also accelerated its computational speed, making our solution both effective and efficient. By adopting
+but also accelerated its computational speed, making the solution both effective and efficient. By adopting
 a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on
 significant areas, reducing the bias towards dominant classes.
 
-The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for our task,
+The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for the task,
 striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
-allowed us to fine-tune our model's sensitivity to kelp presence, which was crucial for achieving high
+allowed us to fine-tune the model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.
 
 Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
-and creating an ensemble of the best-performing models, ensured that our solution was not only robust across
+and creating an ensemble of the best-performing models, ensured that the solution was not only robust across
 different data splits but also generalized well to unseen data.
 
 To conclude, this work underscores the potential of machine learning to contribute significantly to

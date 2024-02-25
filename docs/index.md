@@ -13,14 +13,13 @@ Read the [Setting up dev environment](guides/setup-dev-env.md).
 
 ## Reproducing the results
 
-See the [reproducibility guide](guides/reproducibility.md) for
-details.
+See the [reproducibility guide](guides/reproducibility.md) for details.
 
 The full model training run directories are hosted here:
 
-* Best single model (private LB 0.7264): [link]()
-* Best submission #1 (private LB 0.7318): [link]()
-* Best submission #2 (private LB 0.7318): [link]()
+* Best single model (private LB 0.7264): [link]() **COMING SOON!**
+* Best submission #1 (private LB 0.7318): [link]() **COMING SOON!**
+* Best submission #2 (private LB 0.7318): [link]() **COMING SOON!**
 
 ## Technical report
 
@@ -28,8 +27,7 @@ The technical report is hosted [here](technical-report.md).
 
 ## Dev Log
 
-To see in details what was done to train the model please see the
-[DEV Log page](dev-log.md)
+To see in details what was done to train the model please see the [DEV Log page](dev-log.md).
 
 ## How-to guides
 
