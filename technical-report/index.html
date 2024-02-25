@@ -342,6 +342,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-was-not-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      What was not tested
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#best-single-model" class="md-nav__link">
     <span class="md-ellipsis">
       Best single model
@@ -2471,6 +2480,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-was-not-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      What was not tested
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#best-single-model" class="md-nav__link">
     <span class="md-ellipsis">
       Best single model
@@ -2927,6 +2945,17 @@ technological advancement, aiming for a profound and positive impact on our plan
 <li>Smaller batch sizes and <code>accumulate_grad_batches</code> &gt; 1</li>
 <li>Stochastic Weights Averaging (SWA)</li>
 </ul>
+<h3 id="what-was-not-tested">What was not tested</h3>
+<ul>
+<li><a href="https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M">Prithvi-100M</a> - did not have the time to verify it, also
+it was trained on Harmonised Landsat Sentinel 2 (HLS) data - additional data transforms would need to be implemented.</li>
+<li><a href="https://github.com/nasaharvest/presto">The Pretrained Remote Sensing Transformer (Presto)</a> - again no time,
+also - it requires additional data and was not directly trained on Landsat. Sentinel 2 was the main data source for it.</li>
+<li>Transformer based models such as <a href="https://arxiv.org/abs/2103.14030">Swin transformer</a>
+or <a href="https://arxiv.org/abs/2105.15203">SegFormer</a> - the dev env was already bloated. Including those models would
+mean adding <a href="https://github.com/open-mmlab/mmsegmentation">MMSegmentation</a> package which has completely different
+training configuration than <code>pytorch-lightning</code>.</li>
+</ul>
 <h3 id="best-single-model">Best single model</h3>
 <p>The best single model had private LB score of <strong>0.7264</strong> which would result in 5th place in the final ranking.</p>
 <blockquote>
@@ -2975,7 +3004,7 @@ GPU.</p>
 <li>No <code>torch</code> ORT or <code>torch.compile</code></li>
 <li>No <code>benchmark</code></li>
 <li>Seed: 42</li>
-<li>Training single model took ~1:20h</li>
+<li>Training single model took: ~1:20h</li>
 </ul>
 <p>The submission used:</p>
 <ul>
@@ -3016,7 +3045,7 @@ of 10 models, trained on all 10-fold CV splits. Both submission used <strong>the
 </ul>
 </li>
 <li>Ensemble decision threshold: 0.48</li>
-<li>Inference took: ~3 min</li>
+<li>Inference took: ~4:10 min</li>
 </ul>
 <h4 id="submission-2">Submission #2</h4>
 <p>Trained in the same way as the single model submission with following exceptions:</p>
@@ -3028,7 +3057,7 @@ of 10 models, trained on all 10-fold CV splits. Both submission used <strong>the
 <li>Decoder channels: 512, 256, 128, 64, 32</li>
 <li><code>bf16-mixed</code> precision</li>
 <li>Mixture of all 10 CV-Folds</li>
-<li>Training single model took ~2h</li>
+<li>Training single model took: ~2h</li>
 </ul>
 <p>Inference:</p>
 <ul>
@@ -3049,7 +3078,7 @@ of 10 models, trained on all 10-fold CV splits. Both submission used <strong>the
 </ul>
 </li>
 <li>Ensemble decision threshold: 0.45</li>
-<li>Inference took: ~3 min</li>
+<li>Inference took: ~4:10 min</li>
 </ul>
 <h4 id="private-leaderboard-scores">Private leaderboard scores</h4>
 <p>In the end 11 submissions had the score that would qualify them as 2nd place solutions - 8 of those had score of over
@@ -3129,6 +3158,21 @@ in <a href="../guides/training/#on-azure-ml">Training on Azure ML guide</a>.</p>
 <a href="https://github.com/xultaeculcis/kelp-wanted-competition/blob/main/conda-lock.yml">conda-lock.yml</a> file.
 Specs for Azure ML Docker based Environment are here:
 <a href="https://github.com/xultaeculcis/kelp-wanted-competition/tree/main/aml/environments/acpt_train_env">acpt_train_env</a></p>
+<p>Some packages that were used for this competition include:</p>
+<ul>
+<li><a href="https://pytorch.org/">pytorch</a></li>
+<li><a href="https://pytorch.org/vision/stable/index.html">torchvision</a></li>
+<li><a href="https://lightning.ai/docs/pytorch/stable/">pytorch-lightning</a></li>
+<li><a href="https://kornia.readthedocs.io/en/latest/">kornia</a></li>
+<li><a href="https://rasterio.readthedocs.io/en/latest/index.html">rasterio</a></li>
+<li><a href="https://scikit-learn.org/stable/index.html">scikit-learn</a></li>
+<li><a href="https://pandas.pydata.org/">pandas</a></li>
+<li><a href="https://github.com/qubvel/ttach">ttach</a></li>
+<li><a href="https://segmentation-models-pytorch.readthedocs.io/en/latest/index.html">segmentation-models-pytorch</a></li>
+<li><a href="https://github.com/huggingface/pytorch-image-models">timm</a></li>
+<li><a href="https://www.dask.org/">dask</a></li>
+<li><a href="https://matplotlib.org/">matplotlib</a></li>
+</ul>
 <h3 id="hardware-setup">Hardware setup</h3>
 <p>For running quick experiments, data preparation, training models and making submissions a local PC with Ubuntu 22.04
 was used. This machine was the only one used to make submission files.</p>
@@ -3986,7 +4030,7 @@ such as erosion or dilution would not bump the performance by 20 p.p.</p>
 <p><img alt="OK551533.png" src="../assets/images/xgb/preds/OK551533.png" /></p>
 <p>If you want to learn more about XGBoost approach and to reproduce the results,
 please see: <a href="../guides/xgb-stuff/">XGBoost guide</a>.</p>
-<p>The XGB feature importance at least gave me confidence that the original approach with appending spectral
+<p>The XGB feature importance at least gave the Author confidence that the original approach with appending spectral
 indices to the input tensor was somewhat justified.</p>
 <p><img alt="feature_importance_weight.png" src="../assets/images/xgb/feature_importance_weight.png" /></p>
 <h3 id="sahi">SAHI</h3>
@@ -4154,26 +4198,26 @@ submissions used soft labels - the 2nd best submission included.</p>
 imagery and deep learning has demonstrated the power of combining advanced machine learning techniques with
 domain-specific knowledge. Used methodology was propelled to the second place, showcasing a robust and effective
 solution for the critical environmental task of mapping and monitoring kelp canopy presence.</p>
-<p>The utilization of pre-trained weights laid a strong foundation, allowing our models to learn from relevant,
+<p>The utilization of pre-trained weights laid a strong foundation, allowing the models to learn from relevant,
 pre-existing patterns, significantly accelerating the learning process. The introduction of the
 Normalized Difference Vegetation Index (NDVI) and other spectral indices such as ATSAVI, AVI, CI, and more,
-provided our models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively.
+provided the models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively.
 These indices, especially when coupled with strategy of reordering channels to align more closely with natural
 and scientific observations, significantly improved model performance.</p>
 <p>Decision to employ AdamW optimizer, accompanied by a carefully chosen weight decay and learning rate scheduler,
-further optimized our training process, striking a fine balance between fast convergence and avoiding overfitting.
+further optimized the training process, striking a fine balance between fast convergence and avoiding overfitting.
 The choice of a 32 batch size fully leveraged the computational capacity of the Tesla T4 GPUs, ensuring efficient
 use of resources.</p>
 <p>The implementation of mixed-precision training and inference not only reduced model's memory footprint
-but also accelerated its computational speed, making our solution both effective and efficient. By adopting
+but also accelerated its computational speed, making the solution both effective and efficient. By adopting
 a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on
 significant areas, reducing the bias towards dominant classes.</p>
-<p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for our task,
+<p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for the task,
 striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
-allowed us to fine-tune our model's sensitivity to kelp presence, which was crucial for achieving high
+allowed us to fine-tune the model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.</p>
 <p>Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
-and creating an ensemble of the best-performing models, ensured that our solution was not only robust across
+and creating an ensemble of the best-performing models, ensured that the solution was not only robust across
 different data splits but also generalized well to unseen data.</p>
 <p>To conclude, this work underscores the potential of machine learning to contribute significantly to
 environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis

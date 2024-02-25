@@ -2176,6 +2176,39 @@ model outputs.</li>
 <li>What's more, when <code>--soft_labels</code> flag is passed the model's raw predictions will be passed to <code>torch.sigmoid</code>
 and only the positive class probability will be returned as predicted mask.</li>
 </ul>
+<p>If you want to use model checkpoint directly instead of full experiment run directory you'll need to leverage
+<code>kelp.nn.inference.predict.run_prediction()</code> function. The docs for this function are
+<a href="../../api_ref/nn/inference/predict/">here</a>.</p>
+<p>You can leverage following code snipped to get started.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">kelp.nn.inference.predict</span> <span class="kn">import</span> <span class="n">run_prediction</span>
+
+<span class="n">data_dir</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Path to a directory with prediction images</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Path to output directory where to save the predictions</span>
+<span class="n">model_checkpoint</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Path to model checkpoint - a *.ckpt file or  MLFlow `model` directory</span>
+<span class="n">use_mlflow</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># A flag indicating whether to use MLflow to load the model. `True` if checkpoint path is MLFlow model directory.</span>
+<span class="n">training_config</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Loaded original training config</span>
+<span class="n">tta</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># A flag indicating whether to use TTA for prediction.</span>
+<span class="n">tta_merge_mode</span> <span class="o">=</span> <span class="o">...</span> <span class="c1"># The TTA merge mode.</span>
+<span class="n">soft_labels</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># A flag indicating whether to use soft labels for prediction.</span>
+<span class="n">decision_threshold</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># An optional decision threshold for prediction. `torch.argmax` will be used by default.</span>
+
+<span class="n">run_prediction</span><span class="p">(</span>
+    <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+    <span class="n">model_checkpoint</span><span class="o">=</span><span class="n">model_checkpoint</span><span class="p">,</span>
+    <span class="n">use_mlflow</span><span class="o">=</span><span class="n">use_mlflow</span><span class="p">,</span>
+    <span class="n">train_cfg</span><span class="o">=</span><span class="n">training_config</span><span class="p">,</span>
+    <span class="n">tta</span><span class="o">=</span><span class="n">tta</span><span class="p">,</span>
+    <span class="n">tta_merge_mode</span><span class="o">=</span><span class="n">tta_merge_mode</span><span class="p">,</span>
+    <span class="n">soft_labels</span><span class="o">=</span><span class="n">soft_labels</span><span class="p">,</span>
+    <span class="n">decision_threshold</span><span class="o">=</span><span class="n">decision_threshold</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<blockquote>
+<p>NOTE: See the <code>training_config</code> property on <code>kelp.nn.inference.predict.PredictConfig</code> class
+to see how to load original training config from run artifact. Note that if your dataset stats file path is
+different from the one used for training you must adjust it in for the training config!</p>
+</blockquote>
 <h2 id="ensemble">Ensemble</h2>
 <p>Running inference with model ensemble is impractical in real-world scenarios.
 Which is why it is directly coupled with making a submission file. I expect whoever is working with this repo
