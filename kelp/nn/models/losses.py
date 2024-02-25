@@ -36,12 +36,16 @@ class XEDiceLoss(nn.Module):
 
 class FocalTverskyLoss(nn.Module):
     """
-    More information about this loss, see: https://arxiv.org/pdf/1810.07842.pdf
+    Focal-Tversky Loss.
+
     This loss is similar to Tversky Loss, but with a small adjustment
     With input shape (batch, n_classes, h, w) then TI has shape [batch, n_classes]
     In their paper TI_c is the tensor w.r.t to n_classes index
 
-    FTL = Sum_index_c(1 - TI_c)^gamma
+    References:
+        [This paper](https://arxiv.org/pdf/1810.07842.pdf)
+
+        FTL = Sum_index_c(1 - TI_c)^gamma
     """
 
     def __init__(self, gamma: float = 1.0, beta: float = 0.5, use_softmax: bool = True) -> None:
@@ -68,6 +72,8 @@ class FocalTverskyLoss(nn.Module):
 
 class LogCoshDiceLoss(nn.Module):
     """
+    LogCoshDice Loss.
+
     L_{lc-dce} = log(cosh(DiceLoss)
     """
 
@@ -87,6 +93,8 @@ class LogCoshDiceLoss(nn.Module):
 
 
 class TLoss(nn.Module):
+    """Implementation of the TLoss."""
+
     def __init__(
         self,
         device: torch.device,
@@ -96,7 +104,6 @@ class TLoss(nn.Module):
         reduction: str = "mean",
         use_softmax: bool = True,
     ) -> None:
-        """Implementation of the TLoss."""
         super().__init__()
         self.image_size = image_size
         self.D = torch.tensor(
@@ -147,6 +154,10 @@ class TLoss(nn.Module):
 
 
 class HausdorffLoss(nn.Module):
+    """
+    The Hausdorff loss.
+    """
+
     def __init__(self, use_softmax: bool = True) -> None:
         super().__init__()
         self.hausdorfer = HausdorffERLoss()
@@ -167,10 +178,12 @@ class ComboLoss(nn.Module):
 
     This loss will look like "batch bce-loss" when we consider all pixels flattened are predicted as correct or not
 
-    Paper: https://arxiv.org/pdf/1805.02798.pdf. See the original paper at formula (3)
-    Author's implementation in Keras : https://github.com/asgsaeid/ComboLoss/blob/master/combo_loss.py
-
     This loss is perfect loss when the training loss come to -0.5 (with the default config)
+
+    References:
+        [Paper](https://arxiv.org/pdf/1805.02798.pdf). See the original paper at formula (3)
+        [Author's implementation in Keras](https://github.com/asgsaeid/ComboLoss/blob/master/combo_loss.py)
+
     """
 
     def __init__(self, use_softmax: bool = True, ce_w: float = 0.5, ce_d_w: float = 0.5) -> None:
@@ -211,6 +224,22 @@ def soft_dice_loss(y_pred: Tensor, y_true: Tensor) -> Tensor:
 
 
 class SoftDiceLoss(nn.Module):
+    """
+    SoftDice loss.
+
+    References:
+        [JeremyJordan's
+        Implementation](https://gist.github.com/jeremyjordan/9ea3032a32909f71dd2ab35fe3bacc08#file-soft_dice_loss-py)
+
+        Paper related to this function:
+
+        [Formula for binary segmentation case -
+        A survey of loss functions for semantic segmentation](https://arxiv.org/pdf/2006.14822.pdf)
+
+        [Formula for multiclass segmentation cases - Segmentation of Head and Neck Organs at Risk Using CNN with Batch
+        Dice Loss](https://arxiv.org/pdf/1812.02427.pdf)
+    """
+
     def __init__(self, reduction: str = "mean", use_softmax: bool = True) -> None:
         """
         Args:
@@ -222,17 +251,7 @@ class SoftDiceLoss(nn.Module):
 
     def forward(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
         """
-        References:
-        JeremyJordan's Implementation
-        https://gist.github.com/jeremyjordan/9ea3032a32909f71dd2ab35fe3bacc08#file-soft_dice_loss-py
-
-        Paper related to this function:
-        Formula for binary segmentation case - A survey of loss functions for semantic segmentation
-        https://arxiv.org/pdf/2006.14822.pdf
-
-        Formula for multiclass segmentation cases - Segmentation of Head and Neck Organs at Risk Using CNN with Batch
-        Dice Loss
-        https://arxiv.org/pdf/1812.02427.pdf
+        Calculate SoftDice loss.
 
         Args:
             y_pred: Tensor shape (N, N_Class, H, W), torch.float
@@ -258,6 +277,14 @@ class SoftDiceLoss(nn.Module):
 
 
 class BatchSoftDice(nn.Module):
+    """
+    This is the variance of SoftDiceLoss, it in introduced in this [paper](https://arxiv.org/pdf/1812.02427.pdf)
+
+    References:
+        [Segmentation of Head and Neck Organs at Risk Using CNN with
+        Batch Dice Loss](https://arxiv.org/pdf/1812.02427.pdf)
+    """
+
     def __init__(self, use_square: bool = False) -> None:
         """
         Args:
@@ -268,8 +295,8 @@ class BatchSoftDice(nn.Module):
 
     def forward(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
         """
-        This is the variance of SoftDiceLoss, it in introduced in:
-        https://arxiv.org/pdf/1812.02427.pdf
+        Calculates batch soft-dice loss.
+
         Args:
             y_pred: Tensor shape (N, N_Class, H, W), torch.float
             y_true: Tensor shape (N, H, W)
@@ -294,9 +321,10 @@ class ExponentialLogarithmicLoss(nn.Module):
     This loss is focuses on less accurately predicted structures using the combination of Dice Loss ans Cross Entropy
     Loss
 
-    Original paper: https://arxiv.org/pdf/1809.00076.pdf
+    References:
+        [Original paper](https://arxiv.org/pdf/1809.00076.pdf)
 
-    See the paper at 2.2 w_l = ((Sum k f_k) / f_l) ** 0.5 is the label weight
+        See the paper at 2.2 w_l = ((Sum k f_k) / f_l) ** 0.5 is the label weight
 
     Note:
         - Input for CrossEntropyLoss is the logits - Raw output from the model

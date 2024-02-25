@@ -86,7 +86,8 @@ class AppendNDVI(AppendIndex):
     """
     Normalized Difference Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -118,7 +119,8 @@ class AppendNDWI(AppendIndex):
     """
     Normalized Difference Water Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -150,7 +152,8 @@ class AppendATSAVI(AppendIndex):
     """
     Adjusted transformed soil-adjusted VI
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -186,7 +189,8 @@ class AppendAFRI1600(AppendIndex):
     """
     Aerosol free vegetation index 1600
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -218,7 +222,8 @@ class AppendAVI(AppendIndex):
     """
     Ashburn Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -250,7 +255,8 @@ class AppendARVI(AppendIndex):
     """
     Atmospherically Resistant Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -282,7 +288,8 @@ class AppendBWDRVI(AppendIndex):
     """
     Blue-wide dynamic range vegetation index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -314,7 +321,8 @@ class AppendClGreen(AppendIndex):
     """
     Chlorophyll Index Green
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -346,7 +354,8 @@ class AppendCVI(AppendIndex):
     """
     Chlorophyll vegetation index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -380,7 +389,8 @@ class AppendDEMWM(AppendIndex):
     """
     DEM Water Mask
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -410,7 +420,8 @@ class AppendWDRVI(AppendIndex):
     """
     Wide Dynamic Range Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -442,7 +453,8 @@ class AppendVARIGreen(AppendIndex):
     """
     Visible Atmospherically Resistant Index Green
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -476,7 +488,8 @@ class AppendTVI(AppendIndex):
     """
     Transformed Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -508,7 +521,8 @@ class AppendTNDVI(AppendIndex):
     """
     Transformed NDVI
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -540,7 +554,8 @@ class AppendSQRTNIRR(AppendIndex):
     """
     SQRT(IR/R)
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -572,7 +587,8 @@ class AppendRBNDVI(AppendIndex):
     """
     Red-Blue NDVI
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -606,7 +622,8 @@ class AppendSRSWIRNIR(AppendIndex):
     """
     Simple Ratio SWIR/NIR
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -638,7 +655,8 @@ class AppendSRNIRSWIR(AppendIndex):
     """
     Simple Ratio NIR/SWIR
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -670,7 +688,8 @@ class AppendSRNIRR(AppendIndex):
     """
     Simple Ratio NIR/Red
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -702,7 +721,8 @@ class AppendSRNIRG(AppendIndex):
     """
     Simple Ratio NIR/Green
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -734,7 +754,8 @@ class AppendSRGR(AppendIndex):
     """
     Simple Ratio NIR/Blue
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -766,7 +787,8 @@ class AppendPNDVI(AppendIndex):
     """
         Pan NDVI
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -802,7 +824,8 @@ class AppendNormR(AppendIndex):
     """
     Norm R
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -836,7 +859,8 @@ class AppendNormNIR(AppendIndex):
     """
     Norm NIR
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -870,7 +894,8 @@ class AppendNormG(AppendIndex):
     """
     Norm Green
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -904,7 +929,8 @@ class AppendNDWIWM(AppendIndex):
     """
     NDWI Water Mask
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -936,7 +962,8 @@ class AppendNDVIWM(AppendIndex):
     """
     NDVI Water Mask
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -968,7 +995,8 @@ class AppendNLI(AppendIndex):
     """
     Nonlinear vegetation index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1000,7 +1028,8 @@ class AppendMSAVI(AppendIndex):
     """
     Modified Soil Adjusted Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1032,7 +1061,8 @@ class AppendMSRNirRed(AppendIndex):
     """
     Modified Simple Ratio NIR/RED
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1064,7 +1094,8 @@ class AppendMCARI(AppendIndex):
     """
     Modified Chlorophyll Absorption in Reflectance Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1098,7 +1129,8 @@ class AppendMVI(AppendIndex):
     """
     Mid-infrared vegetation index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1130,7 +1162,8 @@ class AppendMCRIG(AppendIndex):
     """
     mCRIG
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1164,7 +1197,8 @@ class AppendLogR(AppendIndex):
     """
     Log Ratio
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1196,7 +1230,8 @@ class AppendH(AppendIndex):
     """
     Hue
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1230,7 +1265,8 @@ class AppendI(AppendIndex):
     """
     Intensity
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1264,7 +1300,8 @@ class AppendIPVI(AppendIndex):
     """
     Infrared percentage vegetation index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1300,7 +1337,8 @@ class AppendGVMI(AppendIndex):
     """
     Global Vegetation Moisture Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1332,7 +1370,8 @@ class AppendGBNDVI(AppendIndex):
     """
     Green-Blue NDVI
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1366,7 +1405,8 @@ class AppendGRNDVI(AppendIndex):
     """
     Green-Red NDVI
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1400,7 +1440,8 @@ class AppendGNDVI(AppendIndex):
     """
     Green Normalized Difference Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1432,7 +1473,8 @@ class AppendGARI(AppendIndex):
     """
     Green atmospherically resistant vegetation index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1468,7 +1510,8 @@ class AppendEVI22(AppendIndex):
     """
     Enhanced Vegetation Index 2 -2
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1500,7 +1543,8 @@ class AppendEVI2(AppendIndex):
     """
     Enhanced Vegetation Index 2
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1532,7 +1576,8 @@ class AppendEVI(AppendIndex):
     """
     Enhanced Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1570,7 +1615,8 @@ class AppendDVIMSS(AppendIndex):
     """
     Differenced Vegetation Index MSS
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1602,7 +1648,8 @@ class AppendGDVI(AppendIndex):
     """
     Difference NIR/Green Green Difference Vegetation Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1634,7 +1681,8 @@ class AppendCI(AppendIndex):
     """
     Coloration Index
 
-    Source: https://www.indexdatabase.de/
+    References:
+        [Index DataBase](https://www.indexdatabase.de/)
     """
 
     def __init__(
@@ -1666,7 +1714,8 @@ class AppendCHLA(AppendIndex):
     """
     Chlorophyll-a
 
-    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    References:
+        [Se2WaQ - Sentinel-2 Water Quality](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/)
     """
 
     def __init__(
@@ -1701,7 +1750,8 @@ class AppendCYA(AppendIndex):
     """
     Cyanobacteria density
 
-    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    References:
+       [Se2WaQ - Sentinel-2 Water Quality](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/)
     """
 
     def __init__(
@@ -1738,7 +1788,8 @@ class AppendTURB(AppendIndex):
     """
     Water Turbidity
 
-    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    References:
+       [Se2WaQ - Sentinel-2 Water Quality](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/)
     """
 
     def __init__(
@@ -1770,7 +1821,8 @@ class AppendCDOM(AppendIndex):
     """
     Colored Dissolved Organic Matter
 
-    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    References:
+       [Se2WaQ - Sentinel-2 Water Quality](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/)
     """
 
     def __init__(
@@ -1802,7 +1854,8 @@ class AppendDOC(AppendIndex):
     """
     Dissolved Organic Carbon index
 
-    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    References:
+       [Se2WaQ - Sentinel-2 Water Quality](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/)
     """
 
     def __init__(
@@ -1834,7 +1887,8 @@ class AppendWaterColor(AppendIndex):
     """
     Water color index
 
-    Source: https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/
+    References:
+       [Se2WaQ - Sentinel-2 Water Quality](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/se2waq/)
     """
 
     def __init__(
@@ -1866,7 +1920,8 @@ class AppendSABI(AppendIndex):
     """
     Surface Algal Bloom Index
 
-    Source: https://doi.org/10.1002/eap.1708
+    References:
+        [Boucher et al. 2018](https://doi.org/10.1002/eap.1708)
     """
 
     def __init__(
@@ -1902,7 +1957,8 @@ class AppendKIVU(AppendIndex):
     """
     KIVU
 
-    Source: https://doi.org/10.1002/eap.1708
+    References:
+        [Boucher et al. 2018](https://doi.org/10.1002/eap.1708)
     """
 
     def __init__(
@@ -1936,7 +1992,8 @@ class AppendKab1(AppendIndex):
     """
     Kabbara Index 1
 
-    Source: https://doi.org/10.1002/eap.1708
+    References:
+        [Boucher et al. 2018](https://doi.org/10.1002/eap.1708)
     """
 
     def __init__(
@@ -1968,7 +2025,8 @@ class AppendNDAVI(AppendIndex):
     """
     Normalized Difference Aquatic Vegetation Index
 
-    Source: https://doi.org/10.1016/j.jag.2014.01.017
+    References:
+        [Villa et al. 2014](https://doi.org/10.1016/j.jag.2014.01.017)
     """
 
     def __init__(
@@ -2000,7 +2058,8 @@ class AppendWAVI(AppendIndex):
     """
     Water Adjusted Vegetation Index
 
-    Source: https://doi.org/10.1016/j.jag.2014.01.017
+    References:
+        [Villa et al. 2014](https://doi.org/10.1016/j.jag.2014.01.017)
     """
 
     def __init__(
