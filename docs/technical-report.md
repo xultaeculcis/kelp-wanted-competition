@@ -1,15 +1,67 @@
 # Kelp Wanted: Segmenting Kelp Forests - 2nd place solution
 
-Username: xultaeculcis
+Username: [xultaeculcis](https://www.drivendata.org/users/xultaeculcis/)
 
-## Summary
+![kelp-canopy.jpg](assets/images/competition/kelp-canopy.jpg)
+
+Overhead drone footage of giant kelp canopy. Image Credit: Tom Bell, All Rights Reserved.
+
+## Introduction
+
+In the realm of environmental conservation, the urgency to deploy innovative solutions for monitoring critical
+ecosystems has never been more pronounced. Among these ecosystems, kelp forests stand out due to their vital role
+in marine biodiversity and their substantial contribution to global economic value. These underwater habitats,
+predominantly formed by giant kelp, are foundational to coastal marine ecosystems, supporting thousands of species
+while also benefiting human industries significantly. However, the sustainability of kelp forests is under threat
+from climate change, overfishing, and unsustainable harvesting practices. The pressing need for effective monitoring
+methods to preserve these ecosystems is evident.
+
+In response to this challenge, the
+[Kelp Wanted: Segmenting Kelp Forests](https://www.drivendata.org/competitions/255/kelp-forest-segmentation/page/791/)
+competition on the [DrivenData](https://www.drivendata.org/) platform presented an opportunity for machine learning
+enthusiasts and experts to contribute to the conservation efforts of these vital marine habitats.
+The competition aimed to leverage the power of machine learning to analyze coastal satellite imagery,
+enabling the estimation of kelp forests' extent over large areas and over time. This innovative approach marks
+a significant advancement in the field of environmental monitoring, offering a cost-effective and scalable solution
+to understand and protect kelp forest dynamics.
+
+The challenge required participants to develop algorithms capable of detecting the presence or absence of kelp canopy
+using [Landsat](https://www.usgs.gov/landsat-missions/landsat-satellite-missions) satellite imagery.
+This binary semantic segmentation task demanded not only technical expertise in machine learning and image processing
+but also a deep understanding of the environmental context and the data's geospatial nuances.
+
+The competition underscored the importance of applying a combination of advanced machine learning techniques
+and domain-specific knowledge to address environmental challenges. The solution, which secured the 2nd place,
+leveraged a comprehensive strategy that included the use of pre-trained weights, data preprocessing
+methods, and a carefully optimized model architecture. By integrating additional spectral indices,
+adjusting the learning strategy, and employing a robust model ensemble, it was possible to achieve significant
+accuracy in segmenting kelp forests from satellite imagery.
+
+This report details the methodologies and technologies that underpinned the best submissions.
+From data preparation and feature engineering to model development and validation, outlined are the steps
+taken to develop a solution proposed approach demonstrates the potential of machine learning to make
+a meaningful contribution to environmental conservation efforts, paving the way for further research
+and application in this critical field.
+
+The Author extends his deepest gratitude to the organizers of the "Kelp Wanted: Segmenting Kelp Forests" competition,
+including [DrivenData](https://www.drivendata.org/), [Kelpwatch.org](https://kelpwatch.org/),
+[UMass Boston](https://byrneslab.net/), and [Woods Hole Oceanographic Institution](https://www.whoi.edu/),
+for their visionary approach in bridging machine learning with environmental conservation.
+Their dedication to addressing the urgent need for innovative solutions in monitoring kelp forests has not only
+spotlighted the critical state of these ecosystems but has also paved the way for groundbreaking research and
+development. The meticulous organization of the competition, the provision of a rich dataset, and the support offered
+throughout the challenge were instrumental in fostering a collaborative and inspiring environment for all participants.
+In Author's opinion, this competition has not only contributed significantly to the field of environmental science
+but has also empowered the machine learning community to apply their skills for a cause that extends far beyond
+technological advancement, aiming for a profound and positive impact on our planet's future.
+
+## TL;DL - solution summary
 
 This section contains a TL;DR summary for the 2nd place solution.
 
 ### What worked
 
 * Pre-trained weights
-* Appending NDVI
 * Reorder channels into R,G,B,SWIR,NIR,QA,DEM
 * AdamW instead of Adam or SGD
 * Weight decay = 1e-4
@@ -17,7 +69,7 @@ This section contains a TL;DR summary for the 2nd place solution.
 * Batch size = 32 <- full utilization of Tesla T4
 * `16-mixed` precision training
 * `bf16-mixed` precision inference
-* AOI grouping (removing leakage)
+* AOI grouping (removing leakage between CV folds)
 * Quantile normalization
 * Dice Loss
 * Weighted sampler @10240 samples per epoch
@@ -52,7 +104,7 @@ This section contains a TL;DR summary for the 2nd place solution.
 * `OneCycleLR`
 * 10-fold CV
 * Training for 50 epochs (best model ensemble)
-* Mixing models with best dice per split in the ensemble
+* Mixing models with best DICE per split in the ensemble
 * Soft labels (second-best model used them)
 * Mixing model architectures and encoders such as:
     * `unet` <- was the best
@@ -73,7 +125,7 @@ This section contains a TL;DR summary for the 2nd place solution.
 * Larger or smaller `weight_decay`
 * Larger or smaller `lr`
 * `decoder_attention_type="scse"`
-* Losses other than dice (CE with weighting was close)
+* Losses other than DICE (CE with weighting was close)
 * Compiling the model and `torch-ort`
 * Normalization strategies other than `quantile` / `z-score`
 * Bunch of different index combinations
@@ -210,14 +262,25 @@ Inference:
 * Ensemble decision threshold: 0.45
 * Inference took: ~3 min
 
+#### Private leaderboard scores
+
+In the end 11 submissions had the score that would qualify them as 2nd place solutions - 8 of those had score of over
+**0.73**. Furthermore, additional 5 submissions had the same score as the 3rd place solution.
+
+![top-priv-scores-lb.png](assets/images/lb/top-priv-scores-lb.png)
+
+All of those submissions used model ensembles. The best single model was #41 in Author's submissions
+with a score of 0.7264. That would have been 5th place solution.
+
 ## Code
 
-The code is available on
-GitHub: [https://github.com/xultaeculcis/kelp-wanted-competition](https://github.com/xultaeculcis/kelp-wanted-competition)
+The code is available on GitHub:
+[https://github.com/xultaeculcis/kelp-wanted-competition](https://github.com/xultaeculcis/kelp-wanted-competition)
 
 ## Project documentation
 
-Interactive documentation page is available here: [kelp-wanted-competition-docs]()
+Interactive documentation page is available here:
+[https://xultaeculcis.github.io/kelp-wanted-competition/](https://xultaeculcis.github.io/kelp-wanted-competition/)
 
 ### Dev Log
 
@@ -246,61 +309,36 @@ The best place to start with the solution is to review the How-To guides:
 
 To learn more about how the code is structured and what are its functionalities go to: [Code docs](api_ref/index.md).
 
-## Introduction
-
-In the realm of environmental conservation, the urgency to deploy innovative solutions for monitoring critical
-ecosystems has never been more pronounced. Among these ecosystems, kelp forests stand out due to their vital role
-in marine biodiversity and their substantial contribution to global economic value. These underwater habitats,
-predominantly formed by giant kelp, are foundational to coastal marine ecosystems, supporting thousands of species
-while also benefiting human industries significantly. However, the sustainability of kelp forests is under threat
-from climate change, overfishing, and unsustainable harvesting practices. The pressing need for effective monitoring
-methods to preserve these ecosystems is evident.
-
-In response to this challenge, the
-[Kelp Wanted: Segmenting Kelp Forests](https://www.drivendata.org/competitions/255/kelp-forest-segmentation/page/791/)
-competition on the [DrivenData](https://www.drivendata.org/) platform presented an opportunity for machine learning
-enthusiasts and experts to contribute to the conservation efforts of these vital marine habitats.
-The competition aimed to leverage the power of machine learning to analyze coastal satellite imagery,
-enabling the estimation of kelp forests' extent over large areas and over time. This innovative approach marks
-a significant advancement in the field of environmental monitoring, offering a cost-effective and scalable solution
-to understand and protect kelp forest dynamics.
-
-The challenge required participants to develop algorithms capable of detecting the presence or absence of kelp canopy
-using [Landsat](https://www.usgs.gov/landsat-missions/landsat-satellite-missions) satellite imagery.
-This binary semantic segmentation task demanded not only technical expertise in machine learning and image processing
-but also a deep understanding of the environmental context and the data's geospatial nuances.
-
-The competition underscored the importance of applying a combination of advanced machine learning techniques
-and domain-specific knowledge to address environmental challenges. The solution, which secured the 2nd place,
-leveraged a comprehensive strategy that included the use of pre-trained weights, data preprocessing
-methods, and a carefully optimized model architecture. By integrating additional spectral indices,
-adjusting the learning strategy, and employing a robust model ensemble, it was possible to achieve significant
-accuracy in segmenting kelp forests from satellite imagery.
-
-This report details the methodologies and technologies that underpinned the best submissions.
-From data preparation and feature engineering to model development and validation, outlined are the steps
-taken to develop a solution proposed approach demonstrates the potential of machine learning to make
-a meaningful contribution to environmental conservation efforts, paving the way for further research
-and application in this critical field.
-
-I extend my deepest gratitude to the organizers of the "Kelp Wanted: Segmenting Kelp Forests" competition,
-including [DrivenData](https://www.drivendata.org/), [Kelpwatch.org](https://kelpwatch.org/),
-[UMass Boston](https://byrneslab.net/), and [Woods Hole Oceanographic Institution](https://www.whoi.edu/),
-for their visionary approach in bridging machine learning with environmental conservation.
-Their dedication to addressing the urgent need for innovative solutions in monitoring kelp forests has not only
-spotlighted the critical state of these ecosystems but has also paved the way for groundbreaking research and
-development.
-The meticulous organization of the competition, the provision of a rich dataset, and the support offered throughout
-the challenge were instrumental in fostering a collaborative and inspiring environment for all participants.
-In my opinion, this competition has not only contributed significantly to the field of environmental science
-but has also empowered the machine learning community to apply their skills for a cause that extends far beyond
-technological advancement, aiming for a profound and positive impact on our planet's future.
-
 ## Methodology
 
 This section aims to provide a detailed exposition of the methods employed to tackle the complex task of detecting
 kelp canopy presence using satellite imagery. Overall approach was multifaceted, integrating advanced machine learning
 techniques with domain-specific insights to develop a robust and effective model.
+
+### Issues during training
+
+Before discussing the methods and techniques used in this solution, the Author would like to acknowledge a few
+issues with the presented approach.
+
+1. Misaligned DEM and spectral layers - the misalignment became apparent in the last weeks of the competition,
+that being said, aligning the images was not performed since as per competition rules: **"Eligible solutions need
+to be able to run on test samples automatically using the test data as provided".** Test set modification was prohibited.
+Designing an automated band alignment although possible would not be ideal if additional verification and checks
+for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.
+2. DICE score discrepancy between local runs and LB - `torchmetrics` package was used for fast on-GPU metrics
+calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
+This discrepancy was attributed to the test set having different distribution and possibly higher number of false
+positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
+usually resulted in higher LB scores a decision was made to keep using `torchmetrics` DICE implementation.
+After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
+yield better results in the end.
+3. The fold number used to compare the locally trained models changed from fold=0 to fold=6 and finally to fold=9.
+Fold #0 was used mainly during the baseline training phase, where different trainer and dataloader hyperparameters
+were tested. Once all folds were evaluated against public LB - fold #6 was used as it showed the best performance
+on public LB. Fold #8 was only used after training larger more capable models with larger amount of samples / epoch
+and with larger amount of input channels. Latest submissions were always evaluated against fold #8.
+4. Spot instances on Azure ML can be evicted, leading to failed Jobs - in such cases manual Job re-submission is needed.
+
 
 ### Software setup
 
@@ -383,10 +421,13 @@ sample of "duplicated" images below (DEM layer).
 ![duplicated_tiles](assets/images/eda/grouped_aoi_results_sample.png)
 
 You can see that the same Area of Interest is presented on those images. In order to create robust CV split strategy
-each DEM layer image was passed through a pre-trained ResNet network. The resulting embeddings were then compared
-with each other - if cosine similarity between two images was over 0.97 they were placed into a single group.
-The de-duplication resulted in 3313 unique AOI groups. Those groups where then used to perform 10-Fold Stratified CV
-Split.
+each DEM layer was used for embedding generation. DEM layer was chosen for AOI grouping since it does not contain
+any striping artifacts, corrupted or saturated pixels or clouds. Missing values in this layer mark the extent of
+the DEM layer i.e. DEM only goes couple hundred of meters into the sea - there is no point in calculating DEM over
+the water. Missing values were replaced with zeroes. Every DEM image was passed through a pre-trained ResNet network.
+The resulting embeddings were then compared  with each other - if cosine similarity between two images was over 0.97
+they were placed into a single group. The de-duplication resulted in 3313 unique AOI groups. Those groups where
+then used to perform 10-Fold Stratified CV Split.
 
 What's more a few images had been mislabelled as kelp. Those images were filtered out from the training dataset.
 
@@ -398,8 +439,8 @@ the default **SWIR, NIR, R, G, B, QA, DEM** by a small margin - val/dice **0.760
 
 ### Extra channels - spectral indices
 
-In my other projects utilization of additional input channels such as NDVI, EVI, Water Masks and other proved to greatly
-bump model generalization capabilities. To see a list of all implemented spectral indices see:
+In Author's other projects utilization of additional input channels such as NDVI, EVI, Water Masks and other proved
+to greatly bump model predictive capabilities. To see a list of all implemented spectral indices see the
 [indices page](api_ref/core/indices.md).
 
 The best models all used 17 extra spectral indices appended to the input tensor of **R, G, B, SWIR, NIR, QA, DEM**
@@ -480,7 +521,7 @@ Various loss functions were evaluated:
 * `kelp.nn.models.losses.SoftDiceLoss`
 * `kelp.nn.models.losses.BatchSoftDice`
 
-In the end Dice loss was used, since it performed better on public leaderboard. The best two model ensembles with
+In the end Dice loss was used, since it performed best on public leaderboard. The best two model ensembles with
 the same private LB score of 0.7318 used **DICE** and **Jaccard** losses respectively.
 
 ### Weighted sampler
@@ -572,6 +613,7 @@ Multiple training configurations were tested out including:
 * UNet required images to be divisible by 32 - resized the input images to 352x352 using zero-padding - during the
   inference the padding is removed
 * Using other resize strategies and image sizes did not generate better results
+* Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM errors
 * Training with `batch_size=8` and `accumulate_grad_batches=4` resulted in better local eval scores,
   but did not improve leaderboard scores
 * The train augmentations were rather simple:
@@ -581,6 +623,9 @@ Multiple training configurations were tested out including:
 * Using Random Resized Crops did not work better than the base augmentations mentioned above
 * Transforms (including appending spectral indices) were performed on batch of images on GPU using
   [kornia](https://kornia.readthedocs.io/en/latest/index.html) library
+* Compiling the model using `torch-ort` or `torch.compile` did not yield much of speedups, in some configurations
+the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
+training runs where those few % of speedup can really be beneficial.
 
 ### TTA
 
@@ -682,7 +727,7 @@ General observations:
 * ConvNext and SWIN Transformer models not supported
 * The best combo was **UNet** + **EfficientNet-B5**
 
-Results after overnight training (Top 5 runs only):
+Results after overnight training on split=6 (Top 5 runs only):
 
 | encoder               | architecture | val/dice |
 |-----------------------|--------------|----------|
@@ -692,15 +737,177 @@ Results after overnight training (Top 5 runs only):
 | tu-rexnetr_300        | unet         | 0.85749  |
 | tu-seresnext26d_32x4d | unet         | 0.85728  |
 
+As you might have noticed in the screenshot in the [Private leaderboard](#private-leaderboard-scores) subsection
+some of the top performing model ensembles used a mixture of EfficientNet, SE-ResNext, ReXNet-R and other encoders
+trained as part of LinkNet, UNet and UNet++ architectures. Although, best two submissions used an ensemble of just
+UNet + EfficientNet-B5 models.
 
-### SWA
+### Stochastic Weights Averaging (SWA)
+
+SWA was one of the last things that were tested during the competition. In short, SWA performs an equal average of the
+weights traversed by SGD with a modified learning rate schedule
+(see the left panel of figure below). SWA solutions end up in the center of a wide flat region of loss,
+while SGD tends to converge to the boundary of the low-loss region, making it susceptible to the shift between
+train and test error surfaces (see the middle and right panels of figure below).
+
+![swa-figure-1.png](assets/images/swa/swa-figure-1.png)
+
+Source: [Stochastic Weight Averaging in PyTorch](https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/)
+Illustrations of SWA and SGD with a Preactivation ResNet-164 on CIFAR-100 [1].
+Left: test error surface for three FGE samples and the corresponding SWA solution (averaging in weight space).
+Middle and Right: test error and train loss surfaces showing the weights proposed by SGD (at convergence) and SWA,
+starting from the same initialization of SGD after 125 training epochs. Please see [1] for details on how these
+figures were constructed.
+
+The figure below presents and illustration of the learning rate schedule adopted by SWA. Standard decaying schedule
+is used for the first 75% of the training and then a high constant value is used for the remaining 25%.
+The SWA averages are formed during the last 25% of training.
+
+![swa-figure-2.png](assets/images/swa/swa-figure-2.png)
+
+The best model ensemble trained with SWA had public and private LB score of 0.7159 and 0.7285 respectively - thus,
+was not the best. Best single model with SWA had public and private LB score of 0.7147 and 0.7226 respectively.
+
+[1] Averaging Weights Leads to Wider Optima and Better Generalization;
+Pavel Izmailov, Dmitry Podoprikhin, Timur Garipov, Dmitry Vetrov, Andrew Gordon Wilson;
+Uncertainty in Artificial Intelligence (UAI), 2018
 
 ### XGBoost
 
+Another idea that did not work was training XGBoost Classifier on all channels and spectral indices.
+The goal was not to use XGBoost to establish channel and spectral index importance, but rather completely replace the
+deep learning approach with classical tree-based model. Unfortunately best models on public LB had score
+of 0.5125. Which was way too low to try to optimize. Since predictions are done per pixel, TTA cannot be usd.
+Optimizing decision threshold did not improve the scores much. Even applying post-processing operations
+such as erosion or dilution would not bump the performance by 20 p.p.
+
+Sample predictions:
+
+![OK551533.png](assets/images/xgb/preds/OK551533.png)
+
+If you want to learn more about XGBoost approach and to reproduce the results,
+please see: [XGBoost guide](guides/xgb-stuff.md).
+
+The XGB feature importance at least gave me confidence that the original approach with appending spectral
+indices to the input tensor was somewhat justified.
+
+![feature_importance_weight.png](assets/images/xgb/feature_importance_weight.png)
+
 ### SAHI
+
+Slicing Aided Hyper Inference or SAHI is a technique that helps overcome the problem with detecting and segmenting
+small objects in large images by utilizing inference on image slices and prediction merging.
+Because of this it is slower than running inference on full image but at the same time usually ends up
+having better performance, especially for smaller features.
+
+This was the last idea that was tested.
+
+![sahi_gif](https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif)
+Source: [https://github.com/obss/sahi](https://github.com/obss/sahi)
+
+The idea was simple:
+
+1. Generate sliced dataset of small 128x128 non-overlapping tiles from the bigger 350x350 input images
+2. Use this dataset to train new model
+3. During training resize the crops to e.g. 320x320 resolution and train on those
+4. When running inference generate overlapping tiles, inference on those tiles, and merge the predicted masks
+   by averaging the predictions in the overlapping areas
+5. Profit?
+
+A sample of small tiles used for training are visualized below:
+
+![short_wave_infrared_batch_idx=1_epoch=00_step=0320.jpg](assets/images/sahi/short_wave_infrared_batch_idx%3D1_epoch%3D00_step%3D0320.jpg)
+
+Best model trained on **128x128** crops with **320x320 resize** and **nearest interpolation**
+resulted in public LB score of: **0.6848**. As it turns out, the input time size of 350x350 is already too
+small for SAHI to shine. Sliced inference did not result in any meaningful bump in performance.
+
+If you want to learn more about SAHI approach and to reproduce the results,
+please see: [SAHI guide](guides/sahi.md).
 
 ### Ensemble
 
+Averaging model predictions was a natural step to take in the later stages of the competition. The prediction scripts
+were written in a way to allow to optimize both decision threshold and usage of TTA. The final prediction
+averaging was done using per-model weights. The weights were obtained by using `MinMaxScaler` with feature range
+if `(0.2, 1.0)` on public LB scores obtained for each model. This resulted with following weights:
+
+| Fold # | Public LB Score | Calculated Weight |
+|--------|-----------------|-------------------|
+| 0      | 0.7110          | 0.666             |
+| 1      | 0.7086          | 0.5               |
+| 2      | 0.7110          | 0.666             |
+| 3      | 0.7139          | 0.88              |
+| 4      | 0.7106          | 0.637             |
+| 5      | 0.7100          | 0.59              |
+| 6      | 0.7119          | 0.733             |
+| 7      | 0.7105          | 0.63              |
+| 8      | 0.7155          | 1.0               |
+| 9      | 0.7047          | 0.2               |
+
+2nd best submission used those weights. The best submission used following weights:
+
+| Fold # | Public LB Score | Calculated Weight |
+|--------|-----------------|-------------------|
+| 0      | 0.7110          | 1.0               |
+| 1      | 0.7086          | 1.0               |
+| 2      | 0.7110          | 1.0               |
+| 3      | 0.7139          | 1.0               |
+| 4      | 0.7106          | 1.0               |
+| 5      | 0.7100          | 1.0               |
+| 6      | 0.7119          | 1.0               |
+| 7      | 0.7105          | 1.0               |
+| 8      | 0.7155          | 1.0               |
+| 9      | 0.7047          | 1.0               |
+
+Model stacking was not performed.
+
 ### Soft labels
 
+Once the ensemble prediction pipeline was in place soft label prediction was implemented. Using soft labels
+is rather simple - instead of using hard labels i.e. 0 - for `no kelp` and 1 for `kelp` we use probability of
+certain pixel belonging to `kelp` class. We can then use weighted average and decision threshold adjustment to make
+final prediction.
+
+As seen in the LB screenshot in the [Private LB scores](#private-leaderboard-scores) subsection, most of the top performing
+submissions used soft labels - the 2nd best submission included.
+
 ## Conclusion
+
+In this highly competitive and challenging contest, approach to segmenting kelp forests using Landsat satellite
+imagery and deep learning has demonstrated the power of combining advanced machine learning techniques with
+domain-specific knowledge. Used methodology was propelled to the second place, showcasing a robust and effective
+solution for the critical environmental task of mapping and monitoring kelp canopy presence.
+
+The utilization of pre-trained weights laid a strong foundation, allowing our models to learn from relevant,
+pre-existing patterns, significantly accelerating the learning process. The introduction of the
+Normalized Difference Vegetation Index (NDVI) and other spectral indices such as ATSAVI, AVI, CI, and more,
+provided our models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively.
+These indices, especially when coupled with strategy of reordering channels to align more closely with natural
+and scientific observations, significantly improved model performance.
+
+Decision to employ AdamW optimizer, accompanied by a carefully chosen weight decay and learning rate scheduler,
+further optimized our training process, striking a fine balance between fast convergence and avoiding overfitting.
+The choice of a 32 batch size fully leveraged the computational capacity of the Tesla T4 GPUs, ensuring efficient
+use of resources.
+
+The implementation of mixed-precision training and inference not only reduced model's memory footprint
+but also accelerated its computational speed, making our solution both effective and efficient. By adopting
+a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on
+significant areas, reducing the bias towards dominant classes.
+
+The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for our task,
+striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
+allowed us to fine-tune our model's sensitivity to kelp presence, which was crucial for achieving high
+evaluation scores.
+
+Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
+and creating an ensemble of the best-performing models, ensured that our solution was not only robust across
+different data splits but also generalized well to unseen data.
+
+To conclude, this work underscores the potential of machine learning to contribute significantly to
+environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis
+to advanced deep learning models, a scalable and accurate method for monitoring kelp forests was developed.
+This solution not offers a practical tool for ecosystem management and conservation. Success of Deep Learning
+approach in this challenge reaffirms the importance of machine learning in addressing some  of the most pressing
+environmental issues of our time.

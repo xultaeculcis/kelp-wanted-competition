@@ -902,3 +902,7 @@ as they are the worst on LB individually
 ## 2024-02-24
 
 * Added technical report
+
+## 2024-02-24
+
+* Finishing up the technical report
