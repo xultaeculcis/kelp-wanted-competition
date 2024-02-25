@@ -16,12 +16,6 @@ Read the [Setting up dev environment](https://xultaeculcis.github.io/kelp-wanted
 See the [reproducibility guide](https://xultaeculcis.github.io/kelp-wanted-competition/guides/reproducibility/) for
 details.
 
-The full model training run directories are hosted here:
-
-* Best single model (private LB 0.7264): [link]() **COMING SOON!**
-* Best submission #1 (private LB 0.7318): [link]() **COMING SOON!**
-* Best submission #2 (private LB 0.7318): [link]() **COMING SOON!**
-
 ## Technical report
 
 The technical report is hosted [here](https://xultaeculcis.github.io/kelp-wanted-competition/technical-report/).

@@ -142,6 +142,17 @@ This section contains a TL;DR summary for the 2nd place solution.
 * Smaller batch sizes and `accumulate_grad_batches` > 1
 * Stochastic Weights Averaging (SWA)
 
+### What was not tested
+
+* [Prithvi-100M](https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M) - did not have the time to verify it, also
+it was trained on Harmonised Landsat Sentinel 2 (HLS) data - additional data transforms would need to be implemented.
+* [The Pretrained Remote Sensing Transformer (Presto)](https://github.com/nasaharvest/presto) - again no time,
+also - it requires additional data and was not directly trained on Landsat. Sentinel 2 was the main data source for it.
+* Transformer based models such as [Swin transformer](https://arxiv.org/abs/2103.14030)
+or [SegFormer](https://arxiv.org/abs/2105.15203) - the dev env was already bloated. Including those models would
+mean adding [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) package which has completely different
+training configuration than `pytorch-lightning`.
+
 ### Best single model
 
 The best single model had private LB score of **0.7264** which would result in 5th place in the final ranking.
@@ -187,7 +198,7 @@ The model was a **UNet** with **EfficientNet-B5** encoder pretrained on ImageNet
 * No `torch` ORT or `torch.compile`
 * No `benchmark`
 * Seed: 42
-* Training single model took ~1:20h
+* Training single model took: ~1:20h
 
 The submission used:
 
@@ -228,7 +239,7 @@ Inference:
     * fold=8: 1.0
     * fold=9: 1.0
 * Ensemble decision threshold: 0.48
-* Inference took: ~3 min
+* Inference took: ~4:10 min
 
 #### Submission #2
 
@@ -241,7 +252,7 @@ Trained in the same way as the single model submission with following exceptions
 * Decoder channels: 512, 256, 128, 64, 32
 * `bf16-mixed` precision
 * Mixture of all 10 CV-Folds
-* Training single model took ~2h
+* Training single model took: ~2h
 
 Inference:
 
@@ -260,7 +271,7 @@ Inference:
     * fold=8: 1.0
     * fold=9: 0.2
 * Ensemble decision threshold: 0.45
-* Inference took: ~3 min
+* Inference took: ~4:10 min
 
 #### Private leaderboard scores
 
@@ -359,6 +370,21 @@ Full list of packages with their versions can be found in the
 [conda-lock.yml](https://github.com/xultaeculcis/kelp-wanted-competition/blob/main/conda-lock.yml) file.
 Specs for Azure ML Docker based Environment are here:
 [acpt_train_env](https://github.com/xultaeculcis/kelp-wanted-competition/tree/main/aml/environments/acpt_train_env)
+
+Some packages that were used for this competition include:
+
+* [pytorch](https://pytorch.org/)
+* [torchvision](https://pytorch.org/vision/stable/index.html)
+* [pytorch-lightning](https://lightning.ai/docs/pytorch/stable/)
+* [kornia](https://kornia.readthedocs.io/en/latest/)
+* [rasterio](https://rasterio.readthedocs.io/en/latest/index.html)
+* [scikit-learn](https://scikit-learn.org/stable/index.html)
+* [pandas](https://pandas.pydata.org/)
+* [ttach](https://github.com/qubvel/ttach)
+* [segmentation-models-pytorch](https://segmentation-models-pytorch.readthedocs.io/en/latest/index.html)
+* [timm](https://github.com/huggingface/pytorch-image-models)
+* [dask](https://www.dask.org/)
+* [matplotlib](https://matplotlib.org/)
 
 ### Hardware setup
 

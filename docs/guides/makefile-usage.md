@@ -228,3 +228,23 @@ Please see the Makefile definition for more details.
     ```shell
     make cv-predict
     ```
+
+###  Best submissions reproducibility
+
+* **repro-best-single-model-submission** - Runs reproduction of best single model submission with Priv LB score = 0.7264
+
+    ```shell
+    make repro-best-single-model-submission
+    ```
+
+* **repro-top-1-submission** - Runs reproduction of #1 submission with Priv LB score = 0.7318
+
+```shell
+make repro-top-1-submission
+```
+
+* **repro-top-2-submission** - Runs reproduction of #2 submission with Priv LB score = 0.7318
+
+```shell
+make repro-top-2-submission
+```

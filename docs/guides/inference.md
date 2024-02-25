@@ -36,6 +36,42 @@ model outputs.
 * What's more, when `--soft_labels` flag is passed the model's raw predictions will be passed to `torch.sigmoid`
 and only the positive class probability will be returned as predicted mask.
 
+If you want to use model checkpoint directly instead of full experiment run directory you'll need to leverage
+`kelp.nn.inference.predict.run_prediction()` function. The docs for this function are
+[here](../api_ref/nn/inference/predict.md).
+
+You can leverage following code snipped to get started.
+
+```python
+from kelp.nn.inference.predict import run_prediction
+
+data_dir = ...  # Path to a directory with prediction images
+output_dir = ...  # Path to output directory where to save the predictions
+model_checkpoint = ...  # Path to model checkpoint - a *.ckpt file or  MLFlow `model` directory
+use_mlflow = ...  # A flag indicating whether to use MLflow to load the model. `True` if checkpoint path is MLFlow model directory.
+training_config = ...  # Loaded original training config
+tta = ...  # A flag indicating whether to use TTA for prediction.
+tta_merge_mode = ... # The TTA merge mode.
+soft_labels = ...  # A flag indicating whether to use soft labels for prediction.
+decision_threshold = ...  # An optional decision threshold for prediction. `torch.argmax` will be used by default.
+
+run_prediction(
+    data_dir=data_dir,
+    output_dir=output_dir,
+    model_checkpoint=model_checkpoint,
+    use_mlflow=use_mlflow,
+    train_cfg=training_config,
+    tta=tta,
+    tta_merge_mode=tta_merge_mode,
+    soft_labels=soft_labels,
+    decision_threshold=decision_threshold,
+)
+```
+
+> NOTE: See the `training_config` property on `kelp.nn.inference.predict.PredictConfig` class
+> to see how to load original training config from run artifact. Note that if your dataset stats file path is
+> different from the one used for training you must adjust it in for the training config!
+
 ## Ensemble
 
 Running inference with model ensemble is impractical in real-world scenarios.

@@ -106,7 +106,7 @@ def process_single_file(
     random_sample_pixel_fraction: float = 0.05,
 ) -> pd.DataFrame:
     """
-    Extracts pixel level values form all bands and extra spectral indices for specified Tile ID.
+    Extracts pixel level values from all bands and extra spectral indices for specified Tile ID.
 
     Args:
         data_dir: The path to the data directory.

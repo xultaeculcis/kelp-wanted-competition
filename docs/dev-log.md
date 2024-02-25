@@ -717,7 +717,7 @@ Findings:
 * Did not work very well compared to fold=8
 * WIP. training for longer
 * Added data prep script for pixel level training
-* Added training script for Random Forest and Gradient Boosting Trees classifiers form `scikit-learn`
+* Added training script for Random Forest and Gradient Boosting Trees classifiers from `scikit-learn`
 * Trained on 0.05% of data -> **dice=0.673**
 * Forgot to remove samples with corrupted masks...
 
