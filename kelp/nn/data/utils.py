@@ -9,7 +9,7 @@ from torch import Tensor
 def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     """Convert a dictionary of lists to a list of dictionaries.
 
-    Taken from torchgeo.
+    Taken from `torchgeo`.
 
     Args:
         sample: a dictionary of lists
@@ -31,7 +31,7 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     Useful for turning a mini-batch of samples into a list of samples. These individual
     samples can then be plotted using a dataset's ``plot`` method.
 
-    Taken from torchgeo.
+    Taken from `torchgeo`.
 
     Args:
         sample: a mini-batch of samples

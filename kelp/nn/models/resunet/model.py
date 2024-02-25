@@ -47,7 +47,7 @@ class ResUnet(SegmentationModel):
         ``torch.nn.Module``: ResUnet
 
     Reference:
-        https://arxiv.org/abs/1711.10684
+        [Zhang et al. 2017](https://arxiv.org/abs/1711.10684)
     """
 
     def __init__(

@@ -56,6 +56,7 @@ nav:
       - XGBoost: "guides/xgb-stuff.md"
       - SAHI: "guides/sahi.md"
   - API reference:
+      - About: "api_ref/index.md"
       - kelp.consts: "api_ref/consts.md"
       - kelp.core:
           - configs: "api_ref/core/configs.md"

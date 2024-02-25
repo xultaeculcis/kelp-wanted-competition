@@ -52,7 +52,7 @@ class ResUnetPlusPlus(SegmentationModel):
         ``torch.nn.Module``: ResUnetPlusPlus
 
     Reference:
-        https://arxiv.org/abs/1911.07067
+        [Jha et al. 2019](https://arxiv.org/abs/1911.07067)
     """
 
     def __init__(
