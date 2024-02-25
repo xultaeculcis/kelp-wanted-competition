@@ -265,61 +265,52 @@
         <li class="md-nav__item">
   <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
-      Getting Started
+      Getting started
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-env-creation" class="md-nav__link">
+  <a href="#reproducing-the-results" class="md-nav__link">
     <span class="md-ellipsis">
-      Local env creation
+      Reproducing the results
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#docs" class="md-nav__link">
+  <a href="#technical-report" class="md-nav__link">
     <span class="md-ellipsis">
-      Docs
+      Technical report
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-tests" class="md-nav__link">
+  <a href="#dev-log" class="md-nav__link">
     <span class="md-ellipsis">
-      Running tests
+      Dev Log
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#details" class="md-nav__link">
+  <a href="#how-to-guides" class="md-nav__link">
     <span class="md-ellipsis">
-      Details
+      How-to guides
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#final-report" class="md-nav__link">
+  <a href="#code-docs" class="md-nav__link">
     <span class="md-ellipsis">
-      Final report
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reproducibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      Reproducibility
+      Code docs
     </span>
   </a>
   
@@ -2158,61 +2149,52 @@
         <li class="md-nav__item">
   <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
-      Getting Started
+      Getting started
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-env-creation" class="md-nav__link">
+  <a href="#reproducing-the-results" class="md-nav__link">
     <span class="md-ellipsis">
-      Local env creation
+      Reproducing the results
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#docs" class="md-nav__link">
+  <a href="#technical-report" class="md-nav__link">
     <span class="md-ellipsis">
-      Docs
+      Technical report
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-tests" class="md-nav__link">
+  <a href="#dev-log" class="md-nav__link">
     <span class="md-ellipsis">
-      Running tests
+      Dev Log
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#details" class="md-nav__link">
+  <a href="#how-to-guides" class="md-nav__link">
     <span class="md-ellipsis">
-      Details
+      How-to guides
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#final-report" class="md-nav__link">
+  <a href="#code-docs" class="md-nav__link">
     <span class="md-ellipsis">
-      Final report
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reproducibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      Reproducibility
+      Code docs
     </span>
   </a>
   
@@ -2237,25 +2219,42 @@
 
 
 <h1 id="kelp-wanted-competition">kelp-wanted-competition</h1>
-<p>Estimating the extent of Giant Kelp Forests by segmenting Landsat imagery</p>
-<h2 id="getting-started">Getting Started</h2>
-<p>Run <code>make --help</code> for available options.</p>
-<h2 id="local-env-creation">Local env creation</h2>
-<p>See: <a href="guides/setup-dev-env/">Set up pyton env</a> for details.</p>
-<p>You should be able to create local dev env using your <a href="https://docs.conda.io/en/latest/miniconda.html">conda</a>
-installation.</p>
-<h2 id="docs">Docs</h2>
-<p>See <a href="./">interactive documentation</a> web page.</p>
-<h2 id="running-tests">Running tests</h2>
-<p>To run the unit tests execute:</p>
-<div class="highlight"><pre><span></span><code>pytest<span class="w"> </span>tests<span class="w"> </span>-v
-</code></pre></div>
-<h2 id="details">Details</h2>
-<p>See the <a href="dev-log/">Dev Log</a> for details on what was done to train the model.</p>
-<h2 id="final-report">Final report</h2>
-<p>The report can be found <a href="technical-report/">here</a>.</p>
-<h2 id="reproducibility">Reproducibility</h2>
-<p>Please see the <a href="guides/reproducibility/">reproducibility</a> docs for details on how to reproduce the results.</p>
+<p><strong>Estimating the extent of Giant Kelp Forests by segmenting Landsat imagery</strong></p>
+<p><img alt="kelp-canopy.jpg" src="assets/images/competition/kelp-canopy.jpg" /></p>
+<p><em>Overhead drone footage of giant kelp canopy. Image Credit: Tom Bell, All Rights Reserved.</em></p>
+<h2 id="getting-started">Getting started</h2>
+<p>Read the <a href="guides/setup-dev-env/">Setting up dev environment</a>.</p>
+<h2 id="reproducing-the-results">Reproducing the results</h2>
+<p>See the <a href="guides/reproducibility/">reproducibility guide</a> for details.</p>
+<p>The full model training run directories are hosted here:</p>
+<ul>
+<li>Best single model (private LB 0.7264): <a href="">link</a></li>
+<li>Best submission #1 (private LB 0.7318): <a href="">link</a></li>
+<li>Best submission #2 (private LB 0.7318): <a href="">link</a></li>
+</ul>
+<h2 id="technical-report">Technical report</h2>
+<p>The technical report is hosted <a href="technical-report/">here</a>.</p>
+<h2 id="dev-log">Dev Log</h2>
+<p>To see in details what was done to train the model please see the <a href="dev-log/">DEV Log page</a>.</p>
+<h2 id="how-to-guides">How-to guides</h2>
+<p>On the documentation <a href="">page</a> you'll find following How-to guides:</p>
+<ul>
+<li><a href="guides/setup-dev-env/">Setting up dev environment</a></li>
+<li><a href="guides/contributing/">Contributing</a></li>
+<li><a href="guides/tests/">Running tests</a></li>
+<li><a href="guides/makefile-usage/">Using Makefile commands</a></li>
+<li><a href="guides/reproducibility/">Reproducibility of results</a></li>
+<li><a href="guides/data-prep/">Preparing data</a></li>
+<li><a href="guides/training/">Training models</a></li>
+<li><a href="guides/mlflow-artifacts/">MLFlow artifacts</a></li>
+<li><a href="guides/evaluation/">Evaluating models</a></li>
+<li><a href="guides/inference/">Running inference</a></li>
+<li><a href="guides/submissions/">Making submissions</a></li>
+<li><a href="guides/xgb-stuff/">XGBoost</a></li>
+<li><a href="guides/sahi/">SAHI</a></li>
+</ul>
+<h2 id="code-docs">Code docs</h2>
+<p>The code documentation is <a href="api_ref/">here</a>.</p>
 
 
 

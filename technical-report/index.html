@@ -2791,7 +2791,7 @@
 
 
 <h1 id="kelp-wanted-segmenting-kelp-forests-2nd-place-solution">Kelp Wanted: Segmenting Kelp Forests - 2nd place solution</h1>
-<p>Username: xultaeculcis</p>
+<p>Username: <a href="https://www.drivendata.org/users/xultaeculcis/">xultaeculcis</a></p>
 <p><img alt="kelp-canopy.jpg" src="../assets/images/competition/kelp-canopy.jpg" /></p>
 <p>Overhead drone footage of giant kelp canopy. Image Credit: Tom Bell, All Rights Reserved.</p>
 <h2 id="introduction">Introduction</h2>
@@ -3052,16 +3052,17 @@ of 10 models, trained on all 10-fold CV splits. Both submission used <strong>the
 <li>Inference took: ~3 min</li>
 </ul>
 <h4 id="private-leaderboard-scores">Private leaderboard scores</h4>
-<p>In the end 11 submissions had the score that would qualify them as 2nd place solutions - 8 of those had score of over 
-<strong>0.73</strong>. Furthermore, additional 5 submissions had the same score as the 3rd place solution. </p>
+<p>In the end 11 submissions had the score that would qualify them as 2nd place solutions - 8 of those had score of over
+<strong>0.73</strong>. Furthermore, additional 5 submissions had the same score as the 3rd place solution.</p>
 <p><img alt="top-priv-scores-lb.png" src="../assets/images/lb/top-priv-scores-lb.png" /></p>
-<p>All of those submissions used model ensembles. The best single model was #41 in Author's submissions 
+<p>All of those submissions used model ensembles. The best single model was #41 in Author's submissions
 with a score of 0.7264. That would have been 5th place solution.</p>
 <h2 id="code">Code</h2>
-<p>The code is available on
-GitHub: <a href="https://github.com/xultaeculcis/kelp-wanted-competition">https://github.com/xultaeculcis/kelp-wanted-competition</a></p>
+<p>The code is available on GitHub:
+<a href="https://github.com/xultaeculcis/kelp-wanted-competition">https://github.com/xultaeculcis/kelp-wanted-competition</a></p>
 <h2 id="project-documentation">Project documentation</h2>
-<p>Interactive documentation page is available here: <a href="">kelp-wanted-competition-docs</a></p>
+<p>Interactive documentation page is available here:
+<a href="https://xultaeculcis.github.io/kelp-wanted-competition/">https://xultaeculcis.github.io/kelp-wanted-competition/</a></p>
 <h3 id="dev-log">Dev Log</h3>
 <p>A detailed development log has been kept during the competition.
 You can review what was done to train the model in great detail <a href="../dev-log/">here</a>.</p>
@@ -3089,19 +3090,19 @@ You can review what was done to train the model in great detail <a href="../dev-
 kelp canopy presence using satellite imagery. Overall approach was multifaceted, integrating advanced machine learning
 techniques with domain-specific insights to develop a robust and effective model.</p>
 <h3 id="issues-during-training">Issues during training</h3>
-<p>Before discussing the methods and techniques used in this solution, the Author would like to acknowledge a few 
-issues with the presented approach. </p>
+<p>Before discussing the methods and techniques used in this solution, the Author would like to acknowledge a few
+issues with the presented approach.</p>
 <ol>
-<li>Misaligned DEM and spectral layers - the misalignment became apparent in the last weeks of the competition, 
+<li>Misaligned DEM and spectral layers - the misalignment became apparent in the last weeks of the competition,
 that being said, aligning the images was not performed since as per competition rules: <strong>"Eligible solutions need
 to be able to run on test samples automatically using the test data as provided".</strong> Test set modification was prohibited.
 Designing an automated band alignment although possible would not be ideal if additional verification and checks
 for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.</li>
-<li>DICE score discrepancy between local runs and LB - <code>torchmetrics</code> package was used for fast on-GPU metrics 
+<li>DICE score discrepancy between local runs and LB - <code>torchmetrics</code> package was used for fast on-GPU metrics
 calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
 This discrepancy was attributed to the test set having different distribution and possibly higher number of false
 positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
-usually resulted in higher LB scores a decision was made to keep using <code>torchmetrics</code> DICE implementation. 
+usually resulted in higher LB scores a decision was made to keep using <code>torchmetrics</code> DICE implementation.
 After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
 yield better results in the end.</li>
 <li>The fold number used to compare the locally trained models changed from fold=0 to fold=6 and finally to fold=9.
@@ -3184,12 +3185,12 @@ orbits, different platforms or at different times a need for more robust train-t
 sample of "duplicated" images below (DEM layer).</p>
 <p><img alt="duplicated_tiles" src="../assets/images/eda/grouped_aoi_results_sample.png" /></p>
 <p>You can see that the same Area of Interest is presented on those images. In order to create robust CV split strategy
-each DEM layer was used for embedding generation. DEM layer was chosen for AOI grouping since it does not contain 
-any striping artifacts, corrupted or saturated pixels or clouds. Missing values in this layer mark the extent of 
-the DEM layer i.e. DEM only goes couple hundred of meters into the sea - there is no point in calculating DEM over 
+each DEM layer was used for embedding generation. DEM layer was chosen for AOI grouping since it does not contain
+any striping artifacts, corrupted or saturated pixels or clouds. Missing values in this layer mark the extent of
+the DEM layer i.e. DEM only goes couple hundred of meters into the sea - there is no point in calculating DEM over
 the water. Missing values were replaced with zeroes. Every DEM image was passed through a pre-trained ResNet network.
-The resulting embeddings were then compared  with each other - if cosine similarity between two images was over 0.97 
-they were placed into a single group. The de-duplication resulted in 3313 unique AOI groups. Those groups where 
+The resulting embeddings were then compared  with each other - if cosine similarity between two images was over 0.97
+they were placed into a single group. The de-duplication resulted in 3313 unique AOI groups. Those groups where
 then used to perform 10-Fold Stratified CV Split.</p>
 <p>What's more a few images had been mislabelled as kelp. Those images were filtered out from the training dataset.</p>
 <p><img alt="corrupted_images" src="../assets/images/eda/corrupted_images.png" /></p>
@@ -3197,7 +3198,7 @@ then used to perform 10-Fold Stratified CV Split.</p>
 ImageNet and other natural-image datasets. <strong>R, G, B, SWIR, NIR, QA, DEM</strong> band order consistently outperformed
 the default <strong>SWIR, NIR, R, G, B, QA, DEM</strong> by a small margin - val/dice <strong>0.760</strong> vs <strong>0.762</strong></p>
 <h3 id="extra-channels-spectral-indices">Extra channels - spectral indices</h3>
-<p>In Author's other projects utilization of additional input channels such as NDVI, EVI, Water Masks and other proved 
+<p>In Author's other projects utilization of additional input channels such as NDVI, EVI, Water Masks and other proved
 to greatly bump model predictive capabilities. To see a list of all implemented spectral indices see the
 <a href="../api_ref/core/indices/">indices page</a>.</p>
 <p>The best models all used 17 extra spectral indices appended to the input tensor of <strong>R, G, B, SWIR, NIR, QA, DEM</strong>
@@ -3671,7 +3672,7 @@ seemed also to be only slightly important with weights being in rage -1.0 - 1.0.
 <li>UNet required images to be divisible by 32 - resized the input images to 352x352 using zero-padding - during the
   inference the padding is removed</li>
 <li>Using other resize strategies and image sizes did not generate better results</li>
-<li>Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM errors </li>
+<li>Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM errors</li>
 <li>Training with <code>batch_size=8</code> and <code>accumulate_grad_batches=4</code> resulted in better local eval scores,
   but did not improve leaderboard scores</li>
 <li>The train augmentations were rather simple:<ul>
@@ -3685,7 +3686,7 @@ seemed also to be only slightly important with weights being in rage -1.0 - 1.0.
   <a href="https://kornia.readthedocs.io/en/latest/index.html">kornia</a> library</li>
 <li>Compiling the model using <code>torch-ort</code> or <code>torch.compile</code> did not yield much of speedups, in some configurations
 the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
-training runs where those few % of speedup can really be beneficial. </li>
+training runs where those few % of speedup can really be beneficial.</li>
 </ul>
 <h3 id="tta">TTA</h3>
 <p>Test time augmentations were also tested. <a href="https://github.com/qubvel/ttach">ttach</a> library was used for it. Following
@@ -4140,45 +4141,45 @@ if <code>(0.2, 1.0)</code> on public LB scores obtained for each model. This res
 </tr>
 </tbody>
 </table>
-<p>Model stacking was not performed. </p>
+<p>Model stacking was not performed.</p>
 <h3 id="soft-labels">Soft labels</h3>
 <p>Once the ensemble prediction pipeline was in place soft label prediction was implemented. Using soft labels
-is rather simple - instead of using hard labels i.e. 0 - for <code>no kelp</code> and 1 for <code>kelp</code> we use probability of 
+is rather simple - instead of using hard labels i.e. 0 - for <code>no kelp</code> and 1 for <code>kelp</code> we use probability of
 certain pixel belonging to <code>kelp</code> class. We can then use weighted average and decision threshold adjustment to make
 final prediction.</p>
-<p>As seen in the LB screenshot in the <a href="#private-leaderboard-scores">Private LB scores</a> subsection, most of the top performing 
-submissions used soft labels - the 2nd best submission included. </p>
+<p>As seen in the LB screenshot in the <a href="#private-leaderboard-scores">Private LB scores</a> subsection, most of the top performing
+submissions used soft labels - the 2nd best submission included.</p>
 <h2 id="conclusion">Conclusion</h2>
-<p>In this highly competitive and challenging contest, approach to segmenting kelp forests using Landsat satellite 
-imagery and deep learning has demonstrated the power of combining advanced machine learning techniques with 
-domain-specific knowledge. Used methodology was propelled to the second place, showcasing a robust and effective 
+<p>In this highly competitive and challenging contest, approach to segmenting kelp forests using Landsat satellite
+imagery and deep learning has demonstrated the power of combining advanced machine learning techniques with
+domain-specific knowledge. Used methodology was propelled to the second place, showcasing a robust and effective
 solution for the critical environmental task of mapping and monitoring kelp canopy presence.</p>
-<p>The utilization of pre-trained weights laid a strong foundation, allowing our models to learn from relevant, 
-pre-existing patterns, significantly accelerating the learning process. The introduction of the 
-Normalized Difference Vegetation Index (NDVI) and other spectral indices such as ATSAVI, AVI, CI, and more, 
-provided our models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively. 
-These indices, especially when coupled with strategy of reordering channels to align more closely with natural 
+<p>The utilization of pre-trained weights laid a strong foundation, allowing our models to learn from relevant,
+pre-existing patterns, significantly accelerating the learning process. The introduction of the
+Normalized Difference Vegetation Index (NDVI) and other spectral indices such as ATSAVI, AVI, CI, and more,
+provided our models with enhanced capabilities to distinguish between kelp and non-kelp regions effectively.
+These indices, especially when coupled with strategy of reordering channels to align more closely with natural
 and scientific observations, significantly improved model performance.</p>
-<p>Decision to employ AdamW optimizer, accompanied by a carefully chosen weight decay and learning rate scheduler, 
-further optimized our training process, striking a fine balance between fast convergence and avoiding overfitting. 
-The choice of a 32 batch size fully leveraged the computational capacity of the Tesla T4 GPUs, ensuring efficient 
+<p>Decision to employ AdamW optimizer, accompanied by a carefully chosen weight decay and learning rate scheduler,
+further optimized our training process, striking a fine balance between fast convergence and avoiding overfitting.
+The choice of a 32 batch size fully leveraged the computational capacity of the Tesla T4 GPUs, ensuring efficient
 use of resources.</p>
-<p>The implementation of mixed-precision training and inference not only reduced model's memory footprint 
-but also accelerated its computational speed, making our solution both effective and efficient. By adopting 
-a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on 
+<p>The implementation of mixed-precision training and inference not only reduced model's memory footprint
+but also accelerated its computational speed, making our solution both effective and efficient. By adopting
+a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on
 significant areas, reducing the bias towards dominant classes.</p>
-<p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for our task, 
-striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold 
-allowed us to fine-tune our model's sensitivity to kelp presence, which was crucial for achieving high 
+<p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for our task,
+striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
+allowed us to fine-tune our model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.</p>
-<p>Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs, 
-and creating an ensemble of the best-performing models, ensured that our solution was not only robust across 
+<p>Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
+and creating an ensemble of the best-performing models, ensured that our solution was not only robust across
 different data splits but also generalized well to unseen data.</p>
-<p>To conclude, this work underscores the potential of machine learning to contribute significantly to 
-environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis 
-to advanced deep learning models, a scalable and accurate method for monitoring kelp forests was developed. 
-This solution not offers a practical tool for ecosystem management and conservation. Success of Deep Learning 
-approach in this challenge reaffirms the importance of machine learning in addressing some  of the most pressing 
+<p>To conclude, this work underscores the potential of machine learning to contribute significantly to
+environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis
+to advanced deep learning models, a scalable and accurate method for monitoring kelp forests was developed.
+This solution not offers a practical tool for ecosystem management and conservation. Success of Deep Learning
+approach in this challenge reaffirms the importance of machine learning in addressing some  of the most pressing
 environmental issues of our time.</p>
 
 
