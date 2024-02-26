@@ -3248,7 +3248,8 @@ to greatly bump model predictive capabilities. To see a list of all implemented 
 <p>The best models all used 17 extra spectral indices appended to the input tensor of <strong>R, G, B, SWIR, NIR, QA, DEM</strong>
 bands:
 <strong>DEMWM, NDVI, ATSAVI, AVI, CI, ClGreen, GBNDVI, GVMI, IPVI, KIVU, MCARI, MVI, NormNIR, PNDVI, SABI, WDRVI, mCRIG</strong>.</p>
-<p>To see visualization of those indices refer to
+<p><img alt="best-model-indices-visualization.png" src="../assets/images/sample-plotting/best-model-indices-visualization.png" /></p>
+<p>To see more visualization of those indices refer to
 <a href="../guides/mlflow-artifacts/#spectral-indices">MLFlow spectral indices artifacts guide</a>.</p>
 <h3 id="normalization-strategy">Normalization strategy</h3>
 <p>Following normalization strategies were evaluated early on using split=6:</p>
@@ -4214,7 +4215,7 @@ a weighted sampler with a tailored importance factor for each type of pixel, the
 significant areas, reducing the bias towards dominant classes.</p>
 <p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for the task,
 striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
-allowed us to fine-tune the model's sensitivity to kelp presence, which was crucial for achieving high
+allowed for fine-tuning the model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.</p>
 <p>Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
 and creating an ensemble of the best-performing models, ensured that the solution was not only robust across
