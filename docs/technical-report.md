@@ -473,7 +473,9 @@ The best models all used 17 extra spectral indices appended to the input tensor 
 bands:
 **DEMWM, NDVI, ATSAVI, AVI, CI, ClGreen, GBNDVI, GVMI, IPVI, KIVU, MCARI, MVI, NormNIR, PNDVI, SABI, WDRVI, mCRIG**.
 
-To see visualization of those indices refer to
+![best-model-indices-visualization.png](assets/images/sample-plotting/best-model-indices-visualization.png)
+
+To see more visualization of those indices refer to
 [MLFlow spectral indices artifacts guide](guides/mlflow-artifacts.md#spectral-indices).
 
 ### Normalization strategy
@@ -924,7 +926,7 @@ significant areas, reducing the bias towards dominant classes.
 
 The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for the task,
 striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
-allowed us to fine-tune the model's sensitivity to kelp presence, which was crucial for achieving high
+allowed for fine-tuning the model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.
 
 Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
