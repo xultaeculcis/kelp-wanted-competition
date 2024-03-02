@@ -2266,7 +2266,9 @@
 <span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
-<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TrainConfig</span><span class="p">(</span><span class="n">ConfigBase</span><span class="p">):</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TrainConfig</span><span class="p">(</span><span class="n">ConfigBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The XGBoost training configuration.&quot;&quot;&quot;</span>
 
     <span class="n">dataset_fp</span><span class="p">:</span> <span class="n">Path</span>
@@ -2353,6 +2355,8 @@
             <span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">xgb_n_estimators</span><span class="p">,</span>
             <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">xgb_learning_rate</span><span class="p">,</span>
             <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_jobs&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="nd">@property</span>

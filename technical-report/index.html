@@ -351,6 +351,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#most-impactful-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Most impactful decisions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#best-single-model" class="md-nav__link">
     <span class="md-ellipsis">
       Best single model
@@ -2489,6 +2498,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#most-impactful-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Most impactful decisions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#best-single-model" class="md-nav__link">
     <span class="md-ellipsis">
       Best single model
@@ -2948,14 +2966,74 @@ technological advancement, aiming for a profound and positive impact on our plan
 <h3 id="what-was-not-tested">What was not tested</h3>
 <ul>
 <li><a href="https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M">Prithvi-100M</a> - did not have the time to verify it, also
-it was trained on Harmonised Landsat Sentinel 2 (HLS) data - additional data transforms would need to be implemented.</li>
+  it was trained on Harmonised Landsat Sentinel 2 (HLS) data - additional data transforms would need to be implemented.</li>
 <li><a href="https://github.com/nasaharvest/presto">The Pretrained Remote Sensing Transformer (Presto)</a> - again no time,
-also - it requires additional data and was not directly trained on Landsat. Sentinel 2 was the main data source for it.</li>
+  also - it requires additional data and was not directly trained on Landsat. Sentinel 2 was the main data source for
+  it.</li>
 <li>Transformer based models such as <a href="https://arxiv.org/abs/2103.14030">Swin transformer</a>
-or <a href="https://arxiv.org/abs/2105.15203">SegFormer</a> - the dev env was already bloated. Including those models would
-mean adding <a href="https://github.com/open-mmlab/mmsegmentation">MMSegmentation</a> package which has completely different
-training configuration than <code>pytorch-lightning</code>.</li>
+  or <a href="https://arxiv.org/abs/2105.15203">SegFormer</a> - the dev env was already bloated. Including those models would
+  mean adding <a href="https://github.com/open-mmlab/mmsegmentation">MMSegmentation</a> package which has completely different
+  training configuration than <code>pytorch-lightning</code>.</li>
 </ul>
+<h3 id="most-impactful-decisions">Most impactful decisions</h3>
+<p>Some of the most impactful decisions are listed in the table below. Please note that this is not a full list. Along
+the way there were other methods that are not mentioned here.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Public LB score</th>
+<th>Score increase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Baseline UNet + ResNet-50 encoder</td>
+<td>0.6569</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>+ AOI grouping with cosine similarity and more robust CV strategy</td>
+<td>0.6648</td>
+<td>0.0079</td>
+</tr>
+<tr>
+<td>+ Dice loss instead of Cross Entropy</td>
+<td>0.6824</td>
+<td>0.0176</td>
+</tr>
+<tr>
+<td>+ Weighted sampler</td>
+<td>0.6940</td>
+<td>0.0116</td>
+</tr>
+<tr>
+<td>+ Appending 17 extra spectral indices + using water mask to mask land</td>
+<td>0.7083</td>
+<td>0.0143</td>
+</tr>
+<tr>
+<td>+ EfficientNet-B5 instead of ResNet-50</td>
+<td>0.7101</td>
+<td>0.0018</td>
+</tr>
+<tr>
+<td>+ Decision threshold optimization + bf16-mixed inference</td>
+<td>0.7132</td>
+<td>0.0031</td>
+</tr>
+<tr>
+<td>+ 10-fold model ensemble</td>
+<td>0.7169</td>
+<td>0.0037</td>
+</tr>
+<tr>
+<td>+ Training for 50 epochs + weighted average + soft labels</td>
+<td>0.7210</td>
+<td>0.0041</td>
+</tr>
+</tbody>
+</table>
 <h3 id="best-single-model">Best single model</h3>
 <p>The best single model had private LB score of <strong>0.7264</strong> which would result in 5th place in the final ranking.</p>
 <blockquote>
@@ -3001,7 +3079,7 @@ GPU.</p>
 </ul>
 </li>
 <li>Precision: <code>16-mixed</code></li>
-<li>No <code>torch</code> ORT or <code>torch.compile</code></li>
+<li>No <code>torch-ort</code> or <code>torch.compile</code></li>
 <li>No <code>benchmark</code></li>
 <li>Seed: 42</li>
 <li>Training single model took: ~1:20h</li>
@@ -3123,22 +3201,23 @@ techniques with domain-specific insights to develop a robust and effective model
 issues with the presented approach.</p>
 <ol>
 <li>Misaligned DEM and spectral layers - the misalignment became apparent in the last weeks of the competition,
-that being said, aligning the images was not performed since as per competition rules: <strong>"Eligible solutions need
-to be able to run on test samples automatically using the test data as provided".</strong> Test set modification was prohibited.
-Designing an automated band alignment although possible would not be ideal if additional verification and checks
-for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.</li>
+   that being said, aligning the images was not performed since as per competition rules: <strong>"Eligible solutions need
+   to be able to run on test samples automatically using the test data as provided".</strong> Test set modification was
+   prohibited.
+   Designing an automated band alignment although possible would not be ideal if additional verification and checks
+   for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.</li>
 <li>DICE score discrepancy between local runs and LB - <code>torchmetrics</code> package was used for fast on-GPU metrics
-calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
-This discrepancy was attributed to the test set having different distribution and possibly higher number of false
-positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
-usually resulted in higher LB scores a decision was made to keep using <code>torchmetrics</code> DICE implementation.
-After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
-yield better results in the end.</li>
+   calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
+   This discrepancy was attributed to the test set having different distribution and possibly higher number of false
+   positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
+   usually resulted in higher LB scores a decision was made to keep using <code>torchmetrics</code> DICE implementation.
+   After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
+   yield better results in the end.</li>
 <li>The fold number used to compare the locally trained models changed from fold=0 to fold=6 and finally to fold=9.
-Fold #0 was used mainly during the baseline training phase, where different trainer and dataloader hyperparameters
-were tested. Once all folds were evaluated against public LB - fold #6 was used as it showed the best performance
-on public LB. Fold #8 was only used after training larger more capable models with larger amount of samples / epoch
-and with larger amount of input channels. Latest submissions were always evaluated against fold #8.</li>
+   Fold #0 was used mainly during the baseline training phase, where different trainer and dataloader hyperparameters
+   were tested. Once all folds were evaluated against public LB - fold #6 was used as it showed the best performance
+   on public LB. Fold #8 was only used after training larger more capable models with larger amount of samples / epoch
+   and with larger amount of input channels. Latest submissions were always evaluated against fold #8.</li>
 <li>Spot instances on Azure ML can be evicted, leading to failed Jobs - in such cases manual Job re-submission is needed.</li>
 </ol>
 <h3 id="software-setup">Software setup</h3>
@@ -3233,7 +3312,7 @@ each DEM layer was used for embedding generation. DEM layer was chosen for AOI g
 any striping artifacts, corrupted or saturated pixels or clouds. Missing values in this layer mark the extent of
 the DEM layer i.e. DEM only goes couple hundred of meters into the sea - there is no point in calculating DEM over
 the water. Missing values were replaced with zeroes. Every DEM image was passed through a pre-trained ResNet network.
-The resulting embeddings were then compared  with each other - if cosine similarity between two images was over 0.97
+The resulting embeddings were then compared with each other - if cosine similarity between two images was over 0.97
 they were placed into a single group. The de-duplication resulted in 3313 unique AOI groups. Those groups where
 then used to perform 10-Fold Stratified CV Split.</p>
 <p>What's more a few images had been mislabelled as kelp. Those images were filtered out from the training dataset.</p>
@@ -3262,9 +3341,8 @@ bands:
 </ul>
 <p>In the end <code>quantile</code> normalization was used since it produces the most appealing visual samples and was more robust
 against outliers, the learning curve also seemed to converge faster. The idea behind quantile normalization is rather
-simple instead of using global min-max we calculate quantile values for q01 and q99. During training Min-Max
-normalization
-is used.</p>
+simple instead of using global min-max we calculate per-channel quantile values for q01 and q99. During training Min-Max
+normalization is used with q01 and q99 as min and max values respectively.</p>
 <p>You can view the effects of normalization strategies in the figures below.</p>
 <ul>
 <li>Z-Score:</li>
@@ -3717,7 +3795,8 @@ seemed also to be only slightly important with weights being in rage -1.0 - 1.0.
 <li>UNet required images to be divisible by 32 - resized the input images to 352x352 using zero-padding - during the
   inference the padding is removed</li>
 <li>Using other resize strategies and image sizes did not generate better results</li>
-<li>Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM errors</li>
+<li>Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM
+  errors</li>
 <li>Training with <code>batch_size=8</code> and <code>accumulate_grad_batches=4</code> resulted in better local eval scores,
   but did not improve leaderboard scores</li>
 <li>The train augmentations were rather simple:<ul>
@@ -3730,8 +3809,8 @@ seemed also to be only slightly important with weights being in rage -1.0 - 1.0.
 <li>Transforms (including appending spectral indices) were performed on batch of images on GPU using
   <a href="https://kornia.readthedocs.io/en/latest/index.html">kornia</a> library</li>
 <li>Compiling the model using <code>torch-ort</code> or <code>torch.compile</code> did not yield much of speedups, in some configurations
-the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
-training runs where those few % of speedup can really be beneficial.</li>
+  the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
+  training runs where those few % of speedup can really be beneficial.</li>
 </ul>
 <h3 id="tta">TTA</h3>
 <p>Test time augmentations were also tested. <a href="https://github.com/qubvel/ttach">ttach</a> library was used for it. Following
@@ -4062,7 +4141,7 @@ please see: <a href="../guides/sahi/">SAHI guide</a>.</p>
 <p>Averaging model predictions was a natural step to take in the later stages of the competition. The prediction scripts
 were written in a way to allow to optimize both decision threshold and usage of TTA. The final prediction
 averaging was done using per-model weights. The weights were obtained by using <code>MinMaxScaler</code> with feature range
-if <code>(0.2, 1.0)</code> on public LB scores obtained for each model. This resulted with following weights:</p>
+of <code>(0.2, 1.0)</code> on public LB scores obtained for each model. This resulted with following weights:</p>
 <table>
 <thead>
 <tr>
@@ -4192,8 +4271,8 @@ if <code>(0.2, 1.0)</code> on public LB scores obtained for each model. This res
 is rather simple - instead of using hard labels i.e. 0 - for <code>no kelp</code> and 1 for <code>kelp</code> we use probability of
 certain pixel belonging to <code>kelp</code> class. We can then use weighted average and decision threshold adjustment to make
 final prediction.</p>
-<p>As seen in the LB screenshot in the <a href="#private-leaderboard-scores">Private LB scores</a> subsection, most of the top performing
-submissions used soft labels - the 2nd best submission included.</p>
+<p>As seen in the LB screenshot in the <a href="#private-leaderboard-scores">Private LB scores</a> subsection, most of the top
+performing submissions used soft labels - the 2nd best submission included.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>In this highly competitive and challenging contest, approach to segmenting kelp forests using Landsat satellite
 imagery and deep learning has demonstrated the power of combining advanced machine learning techniques with
@@ -4214,17 +4293,17 @@ but also accelerated its computational speed, making the solution both effective
 a weighted sampler with a tailored importance factor for each type of pixel, the models could focus more on
 significant areas, reducing the bias towards dominant classes.</p>
 <p>The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for the task,
-striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
+striking a balance between accuracy and computational efficiency. Adjusting the decision threshold
 allowed for fine-tuning the model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.</p>
 <p>Comprehensive approach, which included ten-fold cross-validation, training models for 50 epochs,
 and creating an ensemble of the best-performing models, ensured that the solution was not only robust across
 different data splits but also generalized well to unseen data.</p>
 <p>To conclude, this work underscores the potential of machine learning to contribute significantly to
-environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis
+environmental conservation efforts. By employing a mix of techniques, from spectral analysis
 to advanced deep learning models, a scalable and accurate method for monitoring kelp forests was developed.
 This solution not offers a practical tool for ecosystem management and conservation. Success of Deep Learning
-approach in this challenge reaffirms the importance of machine learning in addressing some  of the most pressing
+approach in this challenge reaffirms the importance of machine learning in addressing some of the most pressing
 environmental issues of our time.</p>
 
 
