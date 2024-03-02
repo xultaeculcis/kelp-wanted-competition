@@ -903,6 +903,11 @@ as they are the worst on LB individually
 
 * Added technical report
 
-## 2024-02-24
+## 2024-02-25
 
 * Finishing up the technical report
+
+## 2024-02-26
+
+* Minor adjustments
+* New spectral indices visualization figure

@@ -239,12 +239,12 @@ Please see the Makefile definition for more details.
 
 * **repro-top-1-submission** - Runs reproduction of #1 submission with Priv LB score = 0.7318
 
-```shell
-make repro-top-1-submission
-```
+    ```shell
+    make repro-top-1-submission
+    ```
 
 * **repro-top-2-submission** - Runs reproduction of #2 submission with Priv LB score = 0.7318
 
-```shell
-make repro-top-2-submission
-```
+    ```shell
+    make repro-top-2-submission
+    ```
