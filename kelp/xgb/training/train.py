@@ -9,6 +9,7 @@ import pandas as pd
 import rasterio
 import torch
 from matplotlib import pyplot as plt
+from rasterio.errors import NotGeoreferencedWarning
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import ConfusionMatrixDisplay, PrecisionRecallDisplay, RocCurveDisplay, log_loss
 from torchmetrics import AUROC, Accuracy, Dice, F1Score, JaccardIndex, MetricCollection, Precision, Recall
@@ -30,6 +31,13 @@ warnings.filterwarnings(
     category=FutureWarning,
     module="mlflow",
     message="DataFrame.applymap has been deprecated.",
+)
+warnings.filterwarnings(
+    action="ignore",
+    category=NotGeoreferencedWarning,
+)
+warnings.filterwarnings(
+    action="ignore", category=UserWarning, message="Falling back to prediction using DMatrix due to mismatched devices."
 )
 
 
@@ -201,7 +209,7 @@ def log_roc_curve(
 @timed
 def log_model_feature_importance(
     model: XGBClassifier,
-    feature_names: List[str],
+    feature_names: np.ndarray,  # type: ignore[type-arg]
 ) -> None:
     """
     Logs the feature importance to MLFlow.
@@ -212,7 +220,7 @@ def log_model_feature_importance(
 
     """
     sorted_idx = model.feature_importances_.argsort()
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 0.2 * len(feature_names)))
     ax.barh(feature_names[sorted_idx], model.feature_importances_[sorted_idx])
     ax.set_title("XGB Feature importances")
     ax.set_xlabel("Feature")
@@ -243,7 +251,7 @@ def log_permutation_feature_importance(
     """
     result = permutation_importance(model, x, y_true, n_repeats=n_repeats, random_state=seed, n_jobs=4)
     forest_importances = pd.Series(result.importances_mean, index=x.columns.tolist())
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(0.2 * len(x.columns), 8))
     forest_importances.plot.bar(yerr=result.importances_std, ax=ax)
     ax.set_title("Feature importances using permutation on full model")
     ax.set_xlabel("Feature")
@@ -283,7 +291,7 @@ def eval_model(
     log_precision_recall_curve(y_true=y_true, y_pred=y_pred, prefix=prefix)
     log_roc_curve(y_true=y_true, y_pred=y_pred, prefix=prefix)
     if prefix == "test" and explain_model:  # calculate feature importance only once
-        log_model_feature_importance(model=model, feature_names=x.columns.tolist())
+        log_model_feature_importance(model=model, feature_names=x.columns.values)
         log_permutation_feature_importance(model=model, x=x, y_true=y_true, seed=seed)
 
 
@@ -414,7 +422,7 @@ def run_training(
 def main() -> None:
     """Main entrypoint for training XGBClassifier."""
     cfg = parse_args()
-    mlflow.xgboost.autolog()
+    mlflow.xgboost.autolog(model_format="json")
     mlflow.set_experiment(cfg.resolved_experiment_name)
     run = mlflow.start_run(run_id=cfg.run_id_from_context)
     with run:

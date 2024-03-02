@@ -145,13 +145,31 @@ This section contains a TL;DR summary for the 2nd place solution.
 ### What was not tested
 
 * [Prithvi-100M](https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M) - did not have the time to verify it, also
-it was trained on Harmonised Landsat Sentinel 2 (HLS) data - additional data transforms would need to be implemented.
+  it was trained on Harmonised Landsat Sentinel 2 (HLS) data - additional data transforms would need to be implemented.
 * [The Pretrained Remote Sensing Transformer (Presto)](https://github.com/nasaharvest/presto) - again no time,
-also - it requires additional data and was not directly trained on Landsat. Sentinel 2 was the main data source for it.
+  also - it requires additional data and was not directly trained on Landsat. Sentinel 2 was the main data source for
+  it.
 * Transformer based models such as [Swin transformer](https://arxiv.org/abs/2103.14030)
-or [SegFormer](https://arxiv.org/abs/2105.15203) - the dev env was already bloated. Including those models would
-mean adding [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) package which has completely different
-training configuration than `pytorch-lightning`.
+  or [SegFormer](https://arxiv.org/abs/2105.15203) - the dev env was already bloated. Including those models would
+  mean adding [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) package which has completely different
+  training configuration than `pytorch-lightning`.
+
+### Most impactful decisions
+
+Some of the most impactful decisions are listed in the table below. Please note that this is not a full list. Along
+the way there were other methods that are not mentioned here.
+
+| Method                                                                | Public LB score | Score increase |
+|-----------------------------------------------------------------------|-----------------|----------------|
+| Baseline UNet + ResNet-50 encoder                                     | 0.6569          | N/A            |
+| + AOI grouping with cosine similarity and more robust CV strategy     | 0.6648          | 0.0079         |
+| + Dice loss instead of Cross Entropy                                  | 0.6824          | 0.0176         |
+| + Weighted sampler                                                    | 0.6940          | 0.0116         |
+| + Appending 17 extra spectral indices + using water mask to mask land | 0.7083          | 0.0143         |
+| + EfficientNet-B5 instead of ResNet-50                                | 0.7101          | 0.0018         |
+| + Decision threshold optimization + bf16-mixed inference              | 0.7132          | 0.0031         |
+| + 10-fold model ensemble                                              | 0.7169          | 0.0037         |
+| + Training for 50 epochs + weighted average + soft labels             | 0.7210          | 0.0041         |
 
 ### Best single model
 
@@ -195,7 +213,7 @@ The model was a **UNet** with **EfficientNet-B5** encoder pretrained on ImageNet
     * `onecycle_final_div_factor`: 100.0
     * `onecycle_pct_start`: 0.1
 * Precision: `16-mixed`
-* No `torch` ORT or `torch.compile`
+* No `torch-ort` or `torch.compile`
 * No `benchmark`
 * Seed: 42
 * Training single model took: ~1:20h
@@ -332,24 +350,24 @@ Before discussing the methods and techniques used in this solution, the Author w
 issues with the presented approach.
 
 1. Misaligned DEM and spectral layers - the misalignment became apparent in the last weeks of the competition,
-that being said, aligning the images was not performed since as per competition rules: **"Eligible solutions need
-to be able to run on test samples automatically using the test data as provided".** Test set modification was prohibited.
-Designing an automated band alignment although possible would not be ideal if additional verification and checks
-for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.
+   that being said, aligning the images was not performed since as per competition rules: **"Eligible solutions need
+   to be able to run on test samples automatically using the test data as provided".** Test set modification was
+   prohibited.
+   Designing an automated band alignment although possible would not be ideal if additional verification and checks
+   for the final models were needed. Running alignment on the fly would be too expensive to run for each submission.
 2. DICE score discrepancy between local runs and LB - `torchmetrics` package was used for fast on-GPU metrics
-calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
-This discrepancy was attributed to the test set having different distribution and possibly higher number of false
-positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
-usually resulted in higher LB scores a decision was made to keep using `torchmetrics` DICE implementation.
-After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
-yield better results in the end.
+   calculation. While local DICE scores were in the range 0.84-0.86 the public LB scores were in range 0.70-0.72.
+   This discrepancy was attributed to the test set having different distribution and possibly higher number of false
+   positive kelp labels than the training set. Since the scores were consistent over time and increase in local DICE
+   usually resulted in higher LB scores a decision was made to keep using `torchmetrics` DICE implementation.
+   After seeing some scores on the competition forum, perhaps further investigation into score alignment issues would
+   yield better results in the end.
 3. The fold number used to compare the locally trained models changed from fold=0 to fold=6 and finally to fold=9.
-Fold #0 was used mainly during the baseline training phase, where different trainer and dataloader hyperparameters
-were tested. Once all folds were evaluated against public LB - fold #6 was used as it showed the best performance
-on public LB. Fold #8 was only used after training larger more capable models with larger amount of samples / epoch
-and with larger amount of input channels. Latest submissions were always evaluated against fold #8.
+   Fold #0 was used mainly during the baseline training phase, where different trainer and dataloader hyperparameters
+   were tested. Once all folds were evaluated against public LB - fold #6 was used as it showed the best performance
+   on public LB. Fold #8 was only used after training larger more capable models with larger amount of samples / epoch
+   and with larger amount of input channels. Latest submissions were always evaluated against fold #8.
 4. Spot instances on Azure ML can be evicted, leading to failed Jobs - in such cases manual Job re-submission is needed.
-
 
 ### Software setup
 
@@ -451,7 +469,7 @@ each DEM layer was used for embedding generation. DEM layer was chosen for AOI g
 any striping artifacts, corrupted or saturated pixels or clouds. Missing values in this layer mark the extent of
 the DEM layer i.e. DEM only goes couple hundred of meters into the sea - there is no point in calculating DEM over
 the water. Missing values were replaced with zeroes. Every DEM image was passed through a pre-trained ResNet network.
-The resulting embeddings were then compared  with each other - if cosine similarity between two images was over 0.97
+The resulting embeddings were then compared with each other - if cosine similarity between two images was over 0.97
 they were placed into a single group. The de-duplication resulted in 3313 unique AOI groups. Those groups where
 then used to perform 10-Fold Stratified CV Split.
 
@@ -490,9 +508,8 @@ Following normalization strategies were evaluated early on using split=6:
 
 In the end `quantile` normalization was used since it produces the most appealing visual samples and was more robust
 against outliers, the learning curve also seemed to converge faster. The idea behind quantile normalization is rather
-simple instead of using global min-max we calculate quantile values for q01 and q99. During training Min-Max
-normalization
-is used.
+simple instead of using global min-max we calculate per-channel quantile values for q01 and q99. During training Min-Max
+normalization is used with q01 and q99 as min and max values respectively.
 
 You can view the effects of normalization strategies in the figures below.
 
@@ -641,7 +658,8 @@ Multiple training configurations were tested out including:
 * UNet required images to be divisible by 32 - resized the input images to 352x352 using zero-padding - during the
   inference the padding is removed
 * Using other resize strategies and image sizes did not generate better results
-* Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM errors
+* Batch size of 32 was selected mainly to keep Tesla T4 GPUs fully saturated, almost at the edge of running into OOM
+  errors
 * Training with `batch_size=8` and `accumulate_grad_batches=4` resulted in better local eval scores,
   but did not improve leaderboard scores
 * The train augmentations were rather simple:
@@ -652,8 +670,8 @@ Multiple training configurations were tested out including:
 * Transforms (including appending spectral indices) were performed on batch of images on GPU using
   [kornia](https://kornia.readthedocs.io/en/latest/index.html) library
 * Compiling the model using `torch-ort` or `torch.compile` did not yield much of speedups, in some configurations
-the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
-training runs where those few % of speedup can really be beneficial.
+  the compilation phase took 50% of training time - in this case it is better suited for large multi-day and multi-GPU
+  training runs where those few % of speedup can really be beneficial.
 
 ### TTA
 
@@ -858,7 +876,7 @@ please see: [SAHI guide](guides/sahi.md).
 Averaging model predictions was a natural step to take in the later stages of the competition. The prediction scripts
 were written in a way to allow to optimize both decision threshold and usage of TTA. The final prediction
 averaging was done using per-model weights. The weights were obtained by using `MinMaxScaler` with feature range
-if `(0.2, 1.0)` on public LB scores obtained for each model. This resulted with following weights:
+of `(0.2, 1.0)` on public LB scores obtained for each model. This resulted with following weights:
 
 | Fold # | Public LB Score | Calculated Weight |
 |--------|-----------------|-------------------|
@@ -897,8 +915,8 @@ is rather simple - instead of using hard labels i.e. 0 - for `no kelp` and 1 for
 certain pixel belonging to `kelp` class. We can then use weighted average and decision threshold adjustment to make
 final prediction.
 
-As seen in the LB screenshot in the [Private LB scores](#private-leaderboard-scores) subsection, most of the top performing
-submissions used soft labels - the 2nd best submission included.
+As seen in the LB screenshot in the [Private LB scores](#private-leaderboard-scores) subsection, most of the top
+performing submissions used soft labels - the 2nd best submission included.
 
 ## Conclusion
 
@@ -925,7 +943,7 @@ a weighted sampler with a tailored importance factor for each type of pixel, the
 significant areas, reducing the bias towards dominant classes.
 
 The UNet architecture, augmented with an EfficientNet-B5 encoder, proved to be the best combination for the task,
-striking an excellent balance between accuracy and computational efficiency. Adjusting the decision threshold
+striking a balance between accuracy and computational efficiency. Adjusting the decision threshold
 allowed for fine-tuning the model's sensitivity to kelp presence, which was crucial for achieving high
 evaluation scores.
 
@@ -934,8 +952,8 @@ and creating an ensemble of the best-performing models, ensured that the solutio
 different data splits but also generalized well to unseen data.
 
 To conclude, this work underscores the potential of machine learning to contribute significantly to
-environmental conservation efforts. By employing a mix of sophisticated techniques, from spectral analysis
+environmental conservation efforts. By employing a mix of techniques, from spectral analysis
 to advanced deep learning models, a scalable and accurate method for monitoring kelp forests was developed.
 This solution not offers a practical tool for ecosystem management and conservation. Success of Deep Learning
-approach in this challenge reaffirms the importance of machine learning in addressing some  of the most pressing
+approach in this challenge reaffirms the importance of machine learning in addressing some of the most pressing
 environmental issues of our time.

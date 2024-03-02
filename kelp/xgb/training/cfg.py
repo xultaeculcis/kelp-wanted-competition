@@ -100,6 +100,8 @@ class TrainConfig(ConfigBase):
             "n_estimators": self.xgb_n_estimators,
             "learning_rate": self.xgb_learning_rate,
             "random_state": self.seed,
+            "device": "cuda",
+            "n_jobs": -1,
         }
 
     @property
